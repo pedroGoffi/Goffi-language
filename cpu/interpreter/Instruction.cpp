@@ -1,6 +1,8 @@
 #ifndef INSTRUCTIONS
 #define INSTRUCTIONS
+
 #include "../atom/stack.cpp"
+#include "../../includes/Instruction/stdNum.cpp"
 #include <cstdint>
 #include <iostream>
 
@@ -37,6 +39,7 @@ namespace testVM{
             switch(ip->op_code)
             {
                 case EXIT:
+                    exit(ip->ri16);
                     ip = nullptr;
                     break;
                 case PRINT_INT:{
@@ -54,8 +57,6 @@ namespace testVM{
                 case PUSH_INT:
                     stackVM.push(ip->ri16);
                     ++ip;
-                    break;
-                case NUM_INSTRUCTION:
                     break;
             }
         }

@@ -7,7 +7,9 @@ template<typename T> class stack
         T len;
         T MAX;
         T* Estrutura;
+
     public:
+        std::string aloc;
         stack(T MAX){
             this->len = 0;
             this->MAX = MAX;
@@ -41,6 +43,9 @@ template<typename T> class stack
         }
         T Len() { return this->len; }
         T last(){ return this->Estrutura[this->len-1]; }
+        void str(std::string aloc){
+          this->aloc = aloc;
+        }
 };
 
 #endif /* ifndef STACK_HPP */

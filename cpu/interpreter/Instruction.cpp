@@ -2,14 +2,16 @@
 #define INSTRUCTIONS
 
 #include "../atom/stack.cpp"
-#include "../../includes/Instruction/stdNum.cpp"
 #include <cstdint>
 #include <iostream>
+#include <string>
 
 enum OpCode: uint8_t {
     EXIT,
     ADD_INT,
     PUSH_INT,
+    PUSH_STR,
+    PRINT_STR,
     PRINT_INT,
     NUM_INSTRUCTION
 };
@@ -19,6 +21,7 @@ class Instruction
         OpCode op_code;
         uint8_t  ri8; // primary   interpreted register
         uint16_t ri16; // secondary interpreted register
+        std::string ristr; // register interpreted for string
 
 };
 namespace testVM{
@@ -53,6 +56,19 @@ namespace testVM{
                     stackVM.push(LHS+RHS);
                     ++ip;
                     break;
+                }
+                case PUSH_STR: {
+                  stackVM.str(ip->ristr); 
+                  ++ip;
+                  break;
+                }
+                case PRINT_STR: {
+                  std::cout 
+                    << stackVM.aloc
+                    << "\n";
+                  ++ip;
+                  break;
+
                 }
                 case PUSH_INT:
                     stackVM.push(ip->ri16);

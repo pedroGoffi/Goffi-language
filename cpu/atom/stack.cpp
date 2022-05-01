@@ -1,17 +1,17 @@
 #ifndef STACK_HPP
 #define STACK_HPP
 #include <iostream>
-template<class T> class stack
+template<typename T> class stack
 {
     private:
         T len;
         T MAX;
-        T Estrutura;
+        T* Estrutura;
     public:
         stack(T MAX){
             this->len = 0;
             this->MAX = MAX;
-            this->Estrutura = new void* [this->MAX];
+            this->Estrutura = new T [this->MAX];
         }
         ~stack(){ delete[] this->Estrutura; }
         bool isFull()  { return (this->len == this->MAX); }

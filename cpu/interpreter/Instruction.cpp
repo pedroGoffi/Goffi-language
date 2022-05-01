@@ -40,8 +40,7 @@ namespace testVM{
                     ip = nullptr;
                     break;
                 case PRINT_INT:{
-                    int last_num = stackVM.last();
-                    std::cout << last_num << "\n";
+                    std::cout << stackVM.last() << "\n";
                     ++ip;
                     break;
                 }

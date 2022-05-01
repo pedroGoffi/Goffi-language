@@ -17,18 +17,18 @@ template<typename T> class stack
         bool isFull()  { return (this->len == this->MAX); }
         bool isEmpty() { return (this->len == 0); }
         void display(){
-            std::cout<<"STACK: [ ";
-            for( T i=0; this->len; i++ ){
-                std::cout << this->Estrutura[i] << ", ";
+            class stack<T> tmp = this->Estrutura;
+            for( T i=0; i <= this->len; i++ ){
+                std::cout << this->tmp[i] << " ";
             }
-            std::cout << "]\n";                                 
+            delete tmp;
         }
         void push(T item){
             if(this->isFull()){
                 std::cout << "[ERROR] Stack is full\n";
                 return;
             }
-            this->Estrutura[this->len+1] = item;
+            this->Estrutura[this->len] = item;
             ++this->len;
 
         }
@@ -40,7 +40,7 @@ template<typename T> class stack
             return this->Estrutura[this->len];
         }
         T Len() { return this->len; }
-        T last(){ return this->Estrutura[this->MAX]; }
+        T last(){ return this->Estrutura[this->len-1]; }
 };
 
 #endif /* ifndef STACK_HPP */

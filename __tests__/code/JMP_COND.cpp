@@ -1,4 +1,4 @@
-#include "../cpu/interpreter/Instruction.cpp"
+#include "../../cpu/interpreter/Instruction.cpp"
 // store var
 //  put char on buffer
 //  put value in ri16

@@ -1,4 +1,4 @@
-#include "../cpu/interpreter/Instruction.cpp"
+#include "../../cpu/interpreter/Instruction.cpp"
 
 int main(void)
 {

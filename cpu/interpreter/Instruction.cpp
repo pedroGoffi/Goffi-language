@@ -29,11 +29,13 @@ class Instruction
     public:
         OpCode op_code;
 
-        uint8_t  ri8;       // register8    interpreted register
-        uint16_t ri16;      // register16   interpreted register
-        std::string ristr;  // register     interpreted for string
+        uint8_t  ri8;       // register8        interpreted register
+        uint16_t ri16;      // register16       interpreted register
+        std::string ristr;  // registerstr      interpreted for string
 
 };
+
+
 namespace testVM{
 
     std::string VMVersion = "1.0";
@@ -50,7 +52,7 @@ namespace testVM{
             << "\n";
 
         class stack<int16_t> stackVM(1024);
-        Instruction *ip = code;
+        class Instruction *ip = code;
 
         // ByteCodeInterpreted 
         while(ip != nullptr)
@@ -71,7 +73,8 @@ namespace testVM{
                 // exit with exit_code exit code
                 case EXIT:
                     ip = nullptr;
-                    exit(ip->ri16);
+                    //exit(ip->ri16);
+
                     break;
 
 
@@ -98,18 +101,17 @@ namespace testVM{
                 // PUSH_STR N N STR
                 // PUSH STR FOR THE TEMPORARY BUFFER
                 case PUSH_STR: {
-                                  std::cout << "[PUSH_STR]: value = " << ip->ristr << "\n";
-                                  stackVM.buffer(ip->ristr);
-                                  ++ip;
-                                  break;
+                                    std::cout << "[PUSH_STR]: value = " << ip->ristr << "\n";
+                                    stackVM.buffer(ip->ristr);
+                                    ++ip;
+                                    break;
                                 }
 
 
                 // PRINT_STR N N N
                 // WILL PRINT THE TEMPORARY BUFFER
                 case PRINT_STR: {  
-                                  std::cout << "[PRINT]: value = " << stackVM.buffer_value << "\n";
-                                  //std::cout << stackVM.buffer_value;
+                                  std::cout << stackVM.buffer_value;
                                   ++ip;
                                   break;
                                 }
@@ -158,7 +160,6 @@ namespace testVM{
                 // NAME IN THE TEMPORARY BUFFER INSIDE THE STACK HASH MAP
                 case STORE_INT: {
                                   std::cout << "[STORE INT]: value = " << stackVM.last() << "\n";
-                                  std::cout << "name | value " << ip->ristr << stackVM.last() << "\n";
                                   stackVM.storeAt(ip->ristr, stackVM.pop());
                                   ++ip;
                                   break;                              
@@ -196,7 +197,7 @@ namespace testVM{
 
             }
         }
-        delete (ip);
+        delete(ip);
         return 0;
 
     }

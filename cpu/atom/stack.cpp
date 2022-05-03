@@ -43,12 +43,13 @@ template<typename T> class stack
         T last(){ return this->Estrutura[this->len-1]; }
 
         void storeAt(std::string name, T value){
-          //this->bss.insert(std::pair<T, std::string>(value, name));
+          // FIXME
+          //    this->bss.insert(std::pair<T, std::string>(value, name));
           
         }
         T loadAt(std::string name){
-            return 1;
-            //return this->bss[name];
+            // FIXME            
+            //  return this->bss[name];
         }
         void buffer(std::string buff){
           this->buffer_value = buff;

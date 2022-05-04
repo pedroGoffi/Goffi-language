@@ -3,24 +3,31 @@
 
 #include <iostream>
 //#include <stdexcept>
-#include <unordered_map>
+//#include <unordered_map>
+#include "./Hash.cpp"
 
-template<typename T> class stack
-{
+template<typename T> class stack{
     private:
         T MAX;
 
     public:
         T len;
-        std::unordered_map<T, std::string> bss;
         T* Estrutura;
         std::string buffer_value;
-        stack(T MAX){
+
+        Hash *bss;
+
+        stack(T MAX)
+        {
             this->len = 0;
             this->MAX = MAX;
             this->Estrutura = new T [this->MAX];
+            this->bss = new Hash(50, 50);
         }
-        ~stack(){ delete[] this->Estrutura; }
+        ~stack(){ 
+            delete[]    this->Estrutura; 
+            delete      this->bss;
+        }
         bool isFull()  { return (this->len == this->MAX);}
         bool isEmpty() { return (this->len == 0); }
         void push(T item){
@@ -42,14 +49,14 @@ template<typename T> class stack
         T Len() { return this->len; }
         T last(){ return this->Estrutura[this->len-1]; }
 
-        void storeAt(std::string name, T value){
+        void storeAt(std::string name, T key){
           // FIXME
           //    this->bss.insert(std::pair<T, std::string>(value, name));
+          this->bss->insert(key, name);
           
         }
         T loadAt(std::string name){
-            // FIXME            
-            //  return this->bss[name];
+            return (this->bss->searchForStr(name));
         }
         void buffer(std::string buff){
           this->buffer_value = buff;

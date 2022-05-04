@@ -22,21 +22,9 @@ int main(void)
 
         Instruction{PUSH_STR,   0,  0,  "x"},
         Instruction{LOAD_INT},
+        Instruction{PRINT_INT},
         Instruction{PRINT_STR},
         Instruction{EXIT},
-        Instruction{},
-        Instruction{},
-        Instruction{},
-        Instruction{},
-        Instruction{},
-        Instruction{},
-        Instruction{},
-        Instruction{},
-        Instruction{},
-        Instruction{},
-        Instruction{},
-        Instruction{},
-        Instruction{},
 
         
 

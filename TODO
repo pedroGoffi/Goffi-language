@@ -1,5 +1,6 @@
-- [] Hash table 
+- [x] Hash table 
+- [] Solve Hash bug in load str
 - [] store variable
-- [] if statements
+- [x] if statements
 - [] functions call
 - [] functions return

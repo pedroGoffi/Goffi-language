@@ -32,6 +32,7 @@ template<typename T> class stack{
         bool isEmpty() { return (this->len == 0); }
         void push(T item){
             if(this->isFull()){
+                // TODO handle exception
                 std::cout << "[ERROR] Stack is full\n";
                 return;
             }

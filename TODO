@@ -1,6 +1,6 @@
 - [x] Hash table 
-- [] Solve Hash bug in load str
-- [] store variable
+- [x] Solve Hash bug in load str
+- [x] store variable
 - [x] if statements
 - [] functions call
 - [] functions return

@@ -17,7 +17,7 @@ enum OpCode: uint8_t {
     CMP_INT_LT,         // CMP_INT_LT N N N
     LOAD_INT,           // LOAD_INT N N N
     STORE_INT,          // STORE_INT N N N
-    JMP_BY_IF_ZERO,     // JMP_BY_IF_ZERO N N jumpLength
+    JMP_BY_IF_ZERO,     // JMP_BY_IF_ZERO N  jumpLength N
     JMP_BACK,           // JMP_BACK N N N
     DISPLAY,            // DISPLAY N N N
     NUM_INSTRUCTION     // NUM_INSTRUCTION N N N
@@ -53,6 +53,7 @@ namespace testVM{
 
         class stack<int16_t> stackVM(1024);
         class Instruction *ip = code;
+    
 
         // ByteCodeInterpreted 
         while(ip != nullptr)
@@ -81,7 +82,7 @@ namespace testVM{
                 // PRINT_INT N N N
                 // PRINT THE LAST ELEMENT OF THE STACK
                 case PRINT_INT:{                                
-                                 std::cout <<"[PRINT]: value = "<< stackVM.last() << "\n";
+                                 std::cout << stackVM.last() << "\n";
                                  ++ip;
                                  break;
                                }
@@ -89,10 +90,8 @@ namespace testVM{
                 // ADD_INT N N N
                 // ADD THE LAST TWO ELEMENTS OF THE STACK
                 case ADD_INT:{
-                                std::cout << "[ADD_INT]: value = ";
                                 int16_t RHS = stackVM.pop();
                                 stackVM.push(stackVM.pop()+RHS);
-                                std::cout << stackVM.last() << "\n";
                                 ++ip;                            
                                 break;
                              }
@@ -101,7 +100,6 @@ namespace testVM{
                 // PUSH_STR N N STR
                 // PUSH STR FOR THE TEMPORARY BUFFER
                 case PUSH_STR: {
-                                    std::cout << "[PUSH_STR]: value = " << ip->ristr << "\n";
                                     stackVM.buffer(ip->ristr);
                                     ++ip;
                                     break;
@@ -120,7 +118,6 @@ namespace testVM{
                 // PUSH_INT N value N
                 // WILL BRING TO THE TOP OF THE STACK value
                 case PUSH_INT:
-                    std::cout << "[PUSH_INT]: value = " << ip->ri16 << "\n";
                     stackVM.push(ip->ri16);
                     ++ip;
                     break;
@@ -137,9 +134,7 @@ namespace testVM{
                 // THEN FINALLY WILL BRING TO THE TOP OF THE STACK 1 IF IT IS
                 // TRUE OR 0 IF IT IS FALSE
                 case CMP_INT_LT: {
-                                   std::cout << "[COMPARE_INT_LT]: value = ";
                                    int16_t ans = (stackVM.pop()  > stackVM.pop())? 1 : 0;
-                                   std::cout << ans << "\n";
                                    stackVM.push(ans);
                                    ++ip;
                                    break;
@@ -149,7 +144,6 @@ namespace testVM{
                 // LOAD_INT WILL BRING TO THE TOP OF THE STACK THE VARIABLE
                 // WITH THE NAME OF THE TEMPORARY BUFFER
                 case LOAD_INT:{
-                                std::cout << "[LOAD INT]: value = " << stackVM.loadAt(stackVM.buffer_value) << "\n";
                                 stackVM.push(stackVM.loadAt(stackVM.buffer_value));
                                 ++ip;
                                 break;
@@ -159,24 +153,20 @@ namespace testVM{
                 // STORE_INT WILL STORE THE VARIABLE OF INTEGER TYPE WIDTH THE
                 // NAME IN THE TEMPORARY BUFFER INSIDE THE STACK HASH MAP
                 case STORE_INT: {
-                                  std::cout << "[STORE INT]: value = " << stackVM.last() << "\n";
-                                  stackVM.storeAt(ip->ristr, stackVM.pop());
+                                  stackVM.storeAt(stackVM.buffer_value, stackVM.pop());
                                   ++ip;
                                   break;                              
                                 }
                 
 
-                // JMP_BY_IF_ZERO N N jumpLength
+                // JMP_BY_IF_ZERO N  jumpLength N
                 // WILL JUMP jumpLength EVERYTIME STACK HAS VALUE OF 1 THAT
                 // MEANS TRUE
                 case JMP_BY_IF_ZERO: {
-                                       std::cout << "[IF]: [CASE] = ";
                                        if (stackVM.pop() == 0) {
                                            ip += ip->ri16;
-                                           std::cout << "FALSE\n";
                                        } else {
                                            ++ip;
-                                           std::cout << "TRUE\n";
                                        }
                                        break;
                                      }
@@ -185,7 +175,6 @@ namespace testVM{
                 // JMP_BACK N jumpLength
                 // WILL JUMP BACK ALWAYS jumpLength STEPS
                 case JMP_BACK: {
-                                 std::cout << "[JUMP_BACK]:= value = " << ip->ri16 << "\n";
                                  ip -= ip->ri16;
                                  break;
                                }

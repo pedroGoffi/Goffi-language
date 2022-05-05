@@ -2,19 +2,33 @@
 #define INSTRUCTIONS
 
 #include "../atom/stack.cpp"
+#include "./Panic.cpp"
+#include <stdexcept>
 #include <cstdint>
 #include <iostream>
 #include <string>
 
 enum OpCode: uint8_t {
-    // N can be any value because this will not use it 
+    /*
+     * NOTE: 
+     *     @args N can be any value because this will not use it 
+     */
+
     EXIT,               // exit N EXITCODE N
+    PANIC,              // PANIC N N N
+
     ADD_INT,            // ADD N N N
     PUSH_INT,           // PUSH_INT N value N
     PUSH_STR,           // PUSH_STR N N string
     PRINT_STR,          // PRINT_STR N N N
     PRINT_INT,          // PRINT_INT N N N
+
     CMP_INT_LT,         // CMP_INT_LT N N N
+    CMP_INT_GT,         // CMP_INT_GT
+    CMP_INT_EQU,        // CMP_INT_EQU
+    CMP_INT_LTE,        // CMP_INT_LTE
+    CMP_INT_GTE,        // CMP_INT_GTE
+
     LOAD_INT,           // LOAD_INT N N N
     STORE_INT,          // STORE_INT N N N
     JMP_BY_IF_ZERO,     // JMP_BY_IF_ZERO N  jumpLength N
@@ -44,12 +58,12 @@ namespace testVM{
     // THIS FUNCTION WILL BE THE CORE OF THE LANGUAGE
     int run(Instruction code[])
     {
-        std::cout 
-            << "This VM is been developed by "
-            << testVM::author
-            << "\nVersion: "
-            << testVM::VMVersion 
-            << "\n";
+        //std::cout 
+        //    << "This VM is been developed by "
+        //    << testVM::author
+        //    << "\nVersion: "
+        //    << testVM::VMVersion 
+        //    << "\n";
 
         class stack<int16_t> stackVM(1024);
         class Instruction *ip = code;
@@ -75,8 +89,22 @@ namespace testVM{
                 case EXIT:
                     ip = nullptr;
                     //exit(ip->ri16);
-
                     break;
+
+
+                // PANIC N N N
+                // will send a message to the console output
+                // telling that in <this> position
+                // something went wrong
+                case PANIC: {
+                                /*  TODO:
+                                 *      SWITCH CASE WITH RI8 FOR OPTIONAL
+                                 *      EXTIS OR NOTH
+                                 */
+                                throw Panic(ip->ri16, stackVM.buffer_value);
+                                exit(ip->ri16);
+                                break;
+                            }
 
 
                 // PRINT_INT N N N
@@ -85,7 +113,8 @@ namespace testVM{
                                  std::cout << stackVM.last() << "\n";
                                  ++ip;
                                  break;
-                               }
+                                  }
+
 
                 // ADD_INT N N N
                 // ADD THE LAST TWO ELEMENTS OF THE STACK
@@ -123,7 +152,7 @@ namespace testVM{
                     break;
 
 
-                // CMP_INT+LT N N N
+                // CMP_INT_LT N N N
                 // WILL COMPARE THE LAST TWO ELEMENTS OF THE STACK IF .POP_1
                 // IS BIGGER THAN THE .POP_2
                 // BECAUSE ON THE STACK THEY LOOKS LIKE X_1 X_2
@@ -139,6 +168,79 @@ namespace testVM{
                                    ++ip;
                                    break;
                                  }
+
+
+                // CMP_INT_GT N N N
+                // WILL COMPARE THE LAST TWO ELEMENTS OF THE STACK IF .POP_1
+                // IS LESS THAN THE .POP_2
+                // BECAUSE ON THE STACK THEY LOOKS LIKE X_1 X_2
+                // IF X_1 < X_2
+                // THEN POP_1 = X_2
+                // AND  POP_2 = X_1                
+                // IF X_1 > X_2 THEN POP_1 < POP_2
+                // THEN FINALLY WILL BRING TO THE TOP OF THE STACK 1 IF IT IS
+                // TRUE OR 0 IF IT IS FALSE
+                case CMP_INT_GT: {
+                                     int16_t ans = (stackVM.pop() < stackVM.pop())? 1 : 0;
+                                     stackVM.push(ans);
+                                     ++ip;
+                                     break;
+                                 }
+
+
+
+                // CMP_INT_EQU N N N
+                // WILL COMPARE THE LAST TWO ELEMENTS OF THE STACK IF .POP_1
+                // IS EQUAL THAN THE .POP_2
+                // BECAUSE ON THE STACK THEY LOOKS LIKE X_1 X_2
+                // IF X_1 < X_2
+                // THEN POP_1 = X_2
+                // AND  POP_2 = X_1                
+                // IF X_1 == X_2 THEN POP_1 == POP_2
+                // THEN FINALLY WILL BRING TO THE TOP OF THE STACK 1 IF IT IS
+                // TRUE OR 0 IF IT IS FALSE
+                case CMP_INT_EQU: {
+                                      int16_t ans = (stackVM.pop() == stackVM.pop())? 1 : 0;
+                                      stackVM.push(ans);
+                                      ++ip;
+                                      break;
+                                  }
+
+
+                // CMP_INT_LTE N N N
+                // WILL COMPARE THE LAST TWO ELEMENTS OF THE STACK IF .POP_1
+                // IS BIGGER OR EQUAL THAN THE .POP_2
+                // BECAUSE ON THE STACK THEY LOOKS LIKE X_1 X_2
+                // IF X_1 =< X_2
+                // THEN POP_1 = X_2
+                // AND  POP_2 = X_1                
+                // IF X_1 =< X_2 THEN POP_1 => POP_2
+                // THEN FINALLY WILL BRING TO THE TOP OF THE STACK 1 IF IT IS
+                // TRUE OR 0 IF IT IS FALSE
+                case CMP_INT_LTE: {
+                                      int16_t ans = (stackVM.pop() >= stackVM.pop())? 1 : 0;
+                                      stackVM.push(ans);
+                                      ++ip;
+                                      break;
+                                  }
+
+
+                // CMP_INT_GTE N N N
+                // WILL COMPARE THE LAST TWO ELEMENTS OF THE STACK IF .POP_1
+                // IS BIGGER THAN THE .POP_2
+                // BECAUSE ON THE STACK THEY LOOKS LIKE X_1 X_2
+                // IF X_1 >= X_2
+                // THEN POP_1 = X_2
+                // AND  POP_2 = X_1                
+                // IF X_1 >= X_2 THEN POP_1 <= POP_2
+                // THEN FINALLY WILL BRING TO THE TOP OF THE STACK 1 IF IT IS
+                // TRUE OR 0 IF IT IS FALSE
+                case CMP_INT_GTE: {
+                                      int16_t ans = (stackVM.pop() <= stackVM.pop())? 1 : 0;
+                                      stackVM.push(ans);
+                                      ++ip;
+                                      break;
+                                  }
 
 
                 // LOAD_INT WILL BRING TO THE TOP OF THE STACK THE VARIABLE

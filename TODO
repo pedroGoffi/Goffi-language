@@ -7,5 +7,7 @@
 - [x] var re-asign
 - [x] for loop
 
+- [x] PANIC impl
+- [] OPTIONAL PANIC EXITS
 - [] functions call
 - [] functions return

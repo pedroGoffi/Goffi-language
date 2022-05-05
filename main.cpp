@@ -4,7 +4,7 @@
 
 #define  OPEN_FILE
 #include "./includes/stdGoffi.h"
-#include "./src/parser.hpp"
+#include "./src/Parser.cpp"
 
 
 

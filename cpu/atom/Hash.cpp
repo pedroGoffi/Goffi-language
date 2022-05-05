@@ -1,35 +1,35 @@
 #ifndef HASH_H
 #define HASH_H
 #include <iostream>
-#include <string>
-#include <iterator>
-#include <list>
+// TODO: impl my own hash func
 
-class Hash
-{
+#include "./Hashing/GeneralHashFunctions.cpp"
+#include "./Hashing/GeneralHashFunctions.h"
+#include <string>
+#include <vector>
+#define max_hash_value 1024
+
+class Hash{
 private:
     int maxItens;
     int maxPosition;
     int len;
-    std::list<std::pair<int, std::string>> _hash;
+    std::vector<std::pair<int, std::string>> _hash = std::vector<std::pair<int, std::string>>(max_hash_value);
 
 private:
-    int HashFunction(int __key){
-        return (__key % this->maxPosition);
+    int HashFunction(std::string __key){
+        return ELFHash(__key);
     }
 public:
     Hash(int max_i,int max_p){
+        this->len   = 0;
         this->maxItens      = max_i;
         this->maxPosition   = max_p;
-
-        this->len   = 0;
-        //this->_hash = new std::list<std::pair<int, std::string>>;
-    }
-    virtual ~Hash(){
-        //delete this->_hash;
     }
 
-    //bool isEmpty();
+    bool isEmpty(){
+        return (this->len == 0);
+    }
     bool isFull(){
         return (this->len == this->maxItens);
     }
@@ -38,52 +38,31 @@ public:
     }
     void insert(int __key, std::string __item){
         {
-            this->_hash.push_back(std::pair<int, std::string>(__key, __item));
+            this->_hash[this->HashFunction(__item)] = (std::pair<int, std::string>(__key, __item));
         }
         this->len++;
     }
-    void remove(int __key){
+    void remove(std::string __key){
         {
-            this->_hash.remove_if([__key, this](auto it){
-                return it.first == __key;
-                
-            });
-        }
+            this->_hash.erase(this->_hash.begin() + this->HashFunction(__key));
+        }        
         this->len--;
         
     }
-    std::string searchFor(int __key){
-        for (
-                auto it = this->_hash.begin();
-                it != this->_hash.end();
-                ++it
-            ){
-                    if (it->first == __key){
-                        return it->second;
-                    }
-                }
-        return 0;
-    }
     int searchForStr(std::string __key){
-        for (
-                auto it = this->_hash.begin();
-                it != this->_hash.end();
-                ++it
-            ){
-                if (it->second == __key){
-                    return it->first;
-                }
+        for(auto& v : this->_hash){
+            if (v.second == __key) {
+                return (v.first);
+            }
         }
         return -1;
-
     }
     void display(){
-        for (
-                auto it = this->_hash.begin();
-                it != this->_hash.end();
-                ++it
-            ){
-                std::cout << it->second << ", ";
+        for (auto it = this->_hash.begin();it != this->_hash.end();++it){
+            std::cout 
+                << "("  << it->first
+                << ", " << it->second
+                << ")";
         }
 
     }

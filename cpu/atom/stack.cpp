@@ -51,8 +51,6 @@ template<typename T> class stack{
         T last(){ return this->Estrutura[this->len-1]; }
 
         void storeAt(std::string name, T key){
-          // FIXME
-          //    this->bss.insert(std::pair<T, std::string>(value, name));
           this->bss->insert(key, name);
           
         }

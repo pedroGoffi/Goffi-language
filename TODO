@@ -2,5 +2,9 @@
 - [x] Solve Hash bug in load str
 - [x] store variable
 - [x] if statements
+
+
+- [] var re-asign
+- [] for loop
 - [] functions call
 - [] functions return

@@ -4,43 +4,17 @@
 
 #ifndef LEXER_CPP
 #define LEXER_CPP 
+
+
+
+
+#include "./../includes/stdGoffi.cpp"
 #include <iostream>
 #include <ctype.h>
 #include <string>
 #include <fstream>
 #include <vector>
 #include <memory> 
-
-#define debug                               true
-
-#define sPtrType                            unsigned
-#define ptrType                             std::shared_ptr<sPtrType>
-#define sPtr                                std::make_shared<sPtrType>
-
-#define tokenAtom                           char
-#define tokenType                           std::string
-#define tokenName                           std::string
-#define tokenList                           std::vector<tokenPair>
-#define tokenPair                           std::pair<tokenName, tokenType>
-
-#define tokensPair(value, type)             std::pair<tokenName, tokenType>(value, type)
-#define skipblank(vec, idx)                 if (vec[*idx].second == "__BLANK__") incPtr(idx)
-#define space(x)                            std::isspace(x)
-#define digit(x)                            std::isdigit(x)
-#define letter(x)                           std::isalpha(x)
-
-#define chrcmp(x, y)                        (x == y)
-#define strcmp(x, y)                        (std::string(&x) == y)
-
-#define loadPtr(var, initValue)             ptrType var = (sPtr)(initValue)
-
-#define incPtr(ptr)                         ptr = sPtr(*ptr+1)
-#define resetPtr(ptr)                       ptr = sPtr(0)
-#define thisTk(src, idx)                    token_type(src[idx])
-#define reset(str)                          str = ""
-#define initTmp(name)                       std::string name = "";
-
-#define debug_lexer(x, type)                if (debug) std::cout << "[LEXER][WORD-PARSED] :\t" << x << "\t[TYPE] :\t"<< type << "\n"
 
 typedef enum {
     INT
@@ -105,13 +79,13 @@ namespace Lexer{
             if (this_tk != next_tk){
                 if (this_tk != "__BLANK__")
                     tkVec.push_back(tokensPair(tmp, this_tk));
-                debug_lexer(tmp, this_tk);
-                reset(tmp);
+                debug_lexer(tmp, this_tk, *idx);
+                reset_str(tmp);
             }
 
             incPtr(idx);
         }
-        debug_lexer(tmp, next_tk);
+        debug_lexer(tmp, next_tk, *idx);
     }
 }
 #endif /* ifndef LEXER_CPP */

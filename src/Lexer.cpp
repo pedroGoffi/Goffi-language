@@ -5,6 +5,8 @@
 #ifndef LEXER_CPP
 #define LEXER_CPP 
 
+#define DOUBLE_QUOTES 0x22
+#define SINGLE_QUOTES 0x27
 
 
 
@@ -16,17 +18,7 @@
 #include <vector>
 #include <memory> 
 
-typedef enum {
-    INT
-} tkType;
 
-typedef enum {
-    OP_PLUS,         // +
-    OP_DIV,          // /
-    OP_SUB,          // -
-    OP_MULT,         // *
-    OP_ASIGN_VAR     // =    
-} opType;
 
 namespace Lexer{
     tokenType token_type(tokenAtom atom){
@@ -53,8 +45,8 @@ namespace Lexer{
         else if(chrcmp(atom, ';'))       return "OP_EOL";
     
     
-        else if(chrcmp(atom, '"'))       return "STR_INIT_DQ";
-        else if(strcmp(atom, "'"))       return "STR_INIT_SQ";
+        else if(chrcmp(atom, '\"'))       return "STR_INIT_DQ";
+        else if(chrcmp(atom, '\''))       return "STR_INIT_SQ";
     
     
         else if(chrcmp(atom, ','))       return "COMMA";
@@ -66,15 +58,50 @@ namespace Lexer{
 
         return "UNKNOWN-TOKEN";
     }
+    void lex_string_literal(tokenName src, ptrType& idx, tokenList tkvec, tokenAtom expect_tk){
+        { /*  ADDING THE INITIAL QUOTES */
+
+            tokenName tmpSrc = (&src[*idx]);
+            tokenType tmpTk  = thisTk(src, *idx);
+            tkvec.push_back(tokensPair(std::string(&tmpSrc[0]), tmpTk));
+            debug_lexer(tmpSrc[0], tmpTk, *idx);
+            incPtr(idx);
+        }
+        /*   STRING LEXING ITSELF */
+
+        tokenName str;
+        for(;src[*idx] != expect_tk;){
+            str += src[*idx];
+            incPtr(idx);
+        }
+        tkvec.push_back(tokensPair(str, "STRING_LITERAL"));
+        debug_lexer(str, "STRING LITERAL", *idx);
+        /*  END OF LEXING STRING */
+        {
+            tokenName tmpSrc = (&src[*idx]);
+            tokenType tmpTk  = thisTk(src, *idx);
+            tkvec.push_back(tokensPair(std::string(&tmpSrc[0]), tmpTk));
+            debug_lexer(tmpSrc[0], tmpTk, *idx);
+            incPtr(idx);
+
+        }
+    }
     void run(tokenName src, ptrType& idx, tokenList& tkVec){
         tokenType this_tk;
         tokenType next_tk;    
         initTmp(tmp);
-        src[src.length() + 1] = EOF; 
-        
+        src[src.length() + 1] = EOF;         
         for (;src[*idx] != EOF;){
             this_tk = thisTk(src, *idx);
             next_tk = thisTk(src, *idx + 1);
+            /*  string literal  */            
+    
+
+
+            lexer_literal_macro("STR_INIT_DQ", DOUBLE_QUOTES);
+            lexer_literal_macro("STR_INIT_SQ", SINGLE_QUOTES);
+
+
             tmp += src[*idx];
             if (this_tk != next_tk){
                 if (this_tk != "__BLANK__")

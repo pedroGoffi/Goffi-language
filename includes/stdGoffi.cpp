@@ -35,10 +35,13 @@
 #define initTmp(name)                       std::string name = "";
 
 #define debug_lexer(x, type, idx)           \
-    if(debug) std::cout<<"[INDEX]:("<<idx<<")[LEXER][WORD-PARSED] :\t"<<x<<"\t[TYPE] :\t"<<type<<"\n"
+    if(debug) std::cout<<"[INDEX : "<<idx<<"][LEXER][WORD-PARSED] :\t"<<x<<"\t[TYPE] :\t"<<type<<"\n"
+
+#define lexer_literal_macro(strTk, expect)         if (this_tk == strTk)Lexer::lex_string_literal(src, idx, tkVec, expect)
+
 
 #define debug_parser(x, type, idx)          \
-    if(debug) std::cout<<"[INDEX]:("<<idx<<")[PARSER][WORD-PARSER] :\t"<<x<<"\t[TYPE] :\t"<<type<<"\n"
+    if(debug) std::cout<<"[INDEX : "<<idx<<"][PARSER][WORD-PARSER] :\t"<<x<<"\t[TYPE] :\t"<<type<<"\n"
 
 
 

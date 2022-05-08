@@ -58,12 +58,12 @@ namespace Lexer{
 
         return "UNKNOWN-TOKEN";
     }
-    void lex_string_literal(tokenName src, ptrType& idx, tokenList tkvec, tokenAtom expect_tk){
+    void lex_string_literal(tokenName src, ptrType& idx, tokenList& tkvec, tokenAtom expect_tk){
         { /*  ADDING THE INITIAL QUOTES */
 
-            tokenName tmpSrc = (&src[*idx]);
+            const tokenName tmpSrc = std::string(&expect_tk);
             tokenType tmpTk  = thisTk(src, *idx);
-            tkvec.push_back(tokensPair(std::string(&tmpSrc[0]), tmpTk));
+            tkvec.push_back(tokensPair(std::string((&tmpSrc)[0]), tmpTk));
             debug_lexer(tmpSrc[0], tmpTk, *idx);
             incPtr(idx);
         }
@@ -78,17 +78,20 @@ namespace Lexer{
         debug_lexer(str, "STRING LITERAL", *idx);
         /*  END OF LEXING STRING */
         {
-            tokenName tmpSrc = (&src[*idx]);
+            const tokenName tmpSrc = std::string(&expect_tk);
             tokenType tmpTk  = thisTk(src, *idx);
-            tkvec.push_back(tokensPair(std::string(&tmpSrc[0]), tmpTk));
+            tkvec.push_back(tokensPair(std::string((&tmpSrc)[0]), tmpTk));
             debug_lexer(tmpSrc[0], tmpTk, *idx);
+            
+
             incPtr(idx);
 
         }
     }
-    void run(tokenName src, ptrType& idx, tokenList& tkVec){
+    tokenList run(tokenName src, ptrType& idx){
         tokenType this_tk;
         tokenType next_tk;    
+        tokenList tkVec;
         initTmp(tmp);
         src[src.length() + 1] = EOF;         
         for (;src[*idx] != EOF;){
@@ -111,8 +114,12 @@ namespace Lexer{
             }
 
             incPtr(idx);
+            if (next_tk == "__EOF__"){
+                break;
+            }
         }
-        debug_lexer(tmp, next_tk, *idx);
+        debug_lexer(tmp, next_tk, *idx);        
+        return tkVec;
     }
 }
 #endif /* ifndef LEXER_CPP */

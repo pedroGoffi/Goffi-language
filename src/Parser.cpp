@@ -2,65 +2,110 @@
 #define PARSER_CPP 
 #define ptr
 #define token_usage
+#include "./Parser.h"
 
-#include "./../includes/stdGoffi.cpp"
-#include "./../includes/stdNum.cpp"
-#include "./Lexer.cpp"
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <sstream>
+Parser::~Parser(){}
+void Parser::eval_expr(expr_type expr, tokenList Node){
+    (void) expr;
+    (void) Node;
+}
+void Parser::eval_op(op_type op){
+    (void) op;
+}
+void Parser::eval(op_type op, tokenName value){
+    switch(op){
+        case OP_PUSH_INT:
+            pushStack(PUSH_INT, 0,  static_cast<uint16_t>(std::stoi(value)), "");
+            break;
+        case OP_PUSH_STR:
+            pushStack(PUSH_STR, 0,  0,  value);
+            break;
 
-/*  BYTECODE SPACE */
-typedef enum {
-    INT
-} var_type;
+        case OP_EXIT:            
+            pushStack(EXIT, 0, 0, "");
+            break;
+        case OP_PANIC:
+            pushStack(PANIC, 0, 0, "");
+            break;
+        case OP_ADD_INT:
+            pushStack(ADD_INT, 0,  0, "");
+            break;
 
-typedef enum {
-    PUTS
-} op_type;
-typedef enum {
-    IF
-} expr_type;
+        case OP_SUB_INT:
+            pushStack(SUB_INT,  0,  0,  "");
+            break;
 
-namespace Parser{
-    void eval_expr(expr_type expr, tokenList Node){
-        switch(expr){
-            case IF:
-                //if(expr){ statement }
-                break;
-        }
-    }
-    void eval_op(op_type op){
-        switch(op){
-            case PUTS:
-                /*  TODO */
-                break;
-        }
-    }
-    void eval_int(int value){
+        case OP_DIV_INT:
+            pushStack(DIV_INT,  0,  0,  "");
+            break;
 
-        std::cout << "TODO: PUSH INTEGER TO STACK\n";
-    }
-    void compile_to_bytecode(tokenList tkvec, ptrType& idx){
-        for(auto& chr:tkvec){
-            if(gff::is_number(chr.first)){                
-                Parser::eval_int(std::stoi(chr.first));                
-            }
-            else if (chr.first == "puts"){
-                Parser::eval_op(PUTS);
-            }
-        }
+        case OP_MULT_INT:
+            pushStack(MULT_INT, 0,  0,  "");
+            break;
+
+
+        case OP_PRINT_STR:
+            pushStack(PRINT_STR, 0, 0, "");
+            break;
+
+        case OP_PRINT_INT:
+            pushStack(PRINT_INT,    0,  0,  "");
+            break;
+
+        case OP_CMP_INT_LT:
+            break;
+
+        case OP_CMP_INT_GT:
+            break;
+            
+        case OP_CMP_INT_EQU:
+            break;
+
+        case OP_CMP_INT_LTE:
+            break;
+
+        case OP_CMP_INT_GTE:
+            break;
+
+        case OP_LOAD_INT:
+            break;
+
+        case OP_STORE_INT:
+            break;
+
+        case OP_JMP_BY_IF_ZERO:
+            break;
+
+        case OP_JMP_BACK:
+            break;
+        case OP_DISPLAY:
+            break;
+
+        case OP_NUM_INSTRUCTION:                        
+            pushStack(EXIT, 0,  0, "");
+            break;
     }
 }
+Parser::Parser(tokenList tkvec, ptrType& idx){    
+    this->index = 0;    
+    for(auto& v : tkvec){
+        debug_parser(v.first, v.second);
 
-/*  NATIVE CODE SPACE */
-namespace Parser {
-    void compile_to_nativecode(tokenList tkvec, ptrType& idx){
-        std::cout << "[TODO]\n";
-        (void) tkvec;
-        (void) idx;
-        exit(69);
+        if      (v.second == "INT")             this->eval(OP_PUSH_INT,     v.first);        
+        else if (v.second == "STRING_LITERAL")  this->eval(OP_PUSH_STR,     v.first);
+        else if (v.second == "OP_PLUS")         this->eval(OP_ADD_INT,      v.first);
+        else if (v.second == "OP_SUB")          this->eval(OP_SUB_INT,      v.first);
+        else if (v.second == "OP_DIV")          this->eval(OP_DIV_INT,      v.first);
+        else if (v.second == "OP_MULT")         this->eval(OP_MULT_INT,     v.first);
+        else if (v.second == "__EOF__")         this->eval(OP_EXIT,         v.first);
+        else if (v.first  == "puts" )           this->eval(OP_PRINT_INT,    v.first);
+        else if (v.first  == "print" )          this->eval(OP_PRINT_STR,    v.first);
+        else if (v.first  == "exit")            this->eval(OP_EXIT,         v.first);
+
+        ++this->index;
     }
+    
+    debug_parser("[START CODE RUNTIME]","");
+    testVM::run(this->code);
 }
 #endif /* ifndef PARSER_CPP */

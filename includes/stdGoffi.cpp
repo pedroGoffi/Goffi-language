@@ -6,7 +6,7 @@
 #ifndef GENERAL_FUNCTIONS_USE
 #define GENERAL_FUNCTIONS_USE 
 
-#define debug                               true
+#define debug                               false
 
 #define sPtrType                            unsigned
 #define ptrType                             std::shared_ptr<sPtrType>
@@ -40,8 +40,8 @@
 #define lexer_literal_macro(strTk, expect)         if (this_tk == strTk)Lexer::lex_string_literal(src, idx, tkVec, expect)
 
 
-#define debug_parser(x, type, idx)          \
-    if(debug) std::cout<<"[INDEX : "<<idx<<"][PARSER][WORD-PARSER] :\t"<<x<<"\t[TYPE] :\t"<<type<<"\n"
+#define debug_parser(x, type)          \
+    if(debug) std::cout<<"[PARSER][WORD-PARSER] :\t"<<x<<"\t[TYPE] :\t"<<type<<"\n"
 
 
 

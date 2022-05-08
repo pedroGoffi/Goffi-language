@@ -38,16 +38,15 @@ int main(int argc, char* argv[])
     //assert(compile_byte_code || compile_to_nativecode);
     eat_file(file, line) src += line;
     
-    tokenList token_vector;
     loadPtr(index, 0);
-    Lexer::run(src, index, token_vector);
-    resetPtr(index);
+    tokenList token_vector = Lexer::run(src, index);
     if(compile_byte_code){
-        Parser::compile_to_bytecode(token_vector, index);
+        Parser(token_vector, index);
 
     }
     if(compile_to_nativecode){
-        Parser::compile_to_nativecode(token_vector, index);
+        exit(69);
+        //Parser::compile_to_nativecode(token_vector, index);
     }
     return 0;
 }

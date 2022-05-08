@@ -4,6 +4,7 @@
 #include "../atom/stack.cpp"
 #include "./Panic.cpp"
 #include <stdexcept>
+#include <vector>
 #include <cstdint>
 #include <iostream>
 #include <string>
@@ -18,6 +19,9 @@ enum OpCode: uint8_t {
     PANIC,              // PANIC N N N
 
     ADD_INT,            // ADD N N N
+    SUB_INT,
+    DIV_INT,
+    MULT_INT,
     PUSH_INT,           // PUSH_INT N value N
     PUSH_STR,           // PUSH_STR N N string
     PRINT_STR,          // PRINT_STR N N N
@@ -56,8 +60,7 @@ namespace testVM{
     std::string author = "Pedro Henrique goffi de paulo";
 
     // THIS FUNCTION WILL BE THE CORE OF THE LANGUAGE
-    int run(Instruction code[])
-    {
+    int run(std::vector<Instruction> code){
         //std::cout 
         //    << "This VM is been developed by "
         //    << testVM::author
@@ -66,12 +69,13 @@ namespace testVM{
         //    << "\n";
 
         class stack<int16_t> stackVM(1024);
-        class Instruction *ip = code;
-    
+        //std::vector<Instruction>::iterator ip = code.begin();
+
 
         // ByteCodeInterpreted 
-        while(ip != nullptr)
-        {
+        auto ip = code.begin();
+
+        while(ip != code.end()){
             switch(ip->op_code)
             {
 
@@ -87,8 +91,7 @@ namespace testVM{
                 // EXIT N exit_code N 
                 // exit with exit_code exit code
                 case EXIT:
-                    ip = nullptr;
-                    //exit(ip->ri16);
+                    exit(ip->ri16);
                     break;
 
 
@@ -110,10 +113,10 @@ namespace testVM{
                 // PRINT_INT N N N
                 // PRINT THE LAST ELEMENT OF THE STACK
                 case PRINT_INT:{                                
-                                 std::cout << stackVM.last() << "\n";
-                                 ++ip;
-                                 break;
-                                  }
+                                std::cout << stackVM.pop();
+                                ++ip;
+                                break;
+                                }
 
 
                 // ADD_INT N N N
@@ -121,7 +124,7 @@ namespace testVM{
                 case ADD_INT:{
                                 int16_t RHS = stackVM.pop();
                                 stackVM.push(stackVM.pop()+RHS);
-                                ++ip;                            
+                                ++ip;
                                 break;
                              }
 
@@ -286,9 +289,13 @@ namespace testVM{
                 case NUM_INSTRUCTION:
                                 break;
 
+
+                default:
+                                exit(1);
+
             }
-        }
-        delete(ip);
+        } 
+
         return 0;
 
     }

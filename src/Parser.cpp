@@ -8,6 +8,11 @@ Parser::~Parser(){}
 void Parser::eval_expr(expr_type expr, tokenList Node){
     (void) expr;
     (void) Node;
+    switch(expr){
+        case IF:
+            /*  TODO */
+            break;
+    }
 }
 void Parser::eval_op(op_type op){
     (void) op;
@@ -51,8 +56,9 @@ void Parser::eval(op_type op, tokenName value){
         case OP_PRINT_INT:
             pushStack(PRINT_INT,    0,  0,  "");
             break;
-
+        
         case OP_CMP_INT_LT:
+            pushStack(CMP_INT_LT,   0,  0,  "");
             break;
 
         case OP_CMP_INT_GT:
@@ -88,28 +94,38 @@ void Parser::eval(op_type op, tokenName value){
             break;
     }
 }
-Parser::Parser(tokenList tkvec, ptrType& idx){    
-    this->index = 0;    
-    for(auto& v : tkvec){
-        /*  TODO:   
-         *      In puts parse the data type for diferent types of printing
-         */
-        debug_parser(v.first, v.second);
+Parser::Parser(tokenList tkvec, ptrType& idx){        
 
-        if      (v.second == "INT")             this->eval(OP_PUSH_INT,     v.first);        
-        else if (v.second == "STRING_LITERAL")  this->eval(OP_PUSH_STR,     v.first);
-        else if (v.second == "OP_PLUS")         this->eval(OP_ADD_INT,      v.first);
-        else if (v.second == "OP_SUB")          this->eval(OP_SUB_INT,      v.first);
-        else if (v.second == "OP_DIV")          this->eval(OP_DIV_INT,      v.first);
-        else if (v.second == "OP_MULT")         this->eval(OP_MULT_INT,     v.first);
-        else if (v.second == "__EOF__")         this->eval(OP_EXIT,         v.first);
+    resetPtr(idx);
+    unsigned int MAX_LEN = tkvec.size();
+    for(; *idx < MAX_LEN ;){
+        debug_parser(tkvec[index].first, tkvec[index].second);
+        if      (tkvec[*idx].second == "INT")             this->eval(OP_PUSH_INT,       tkvec[*idx].first);     
+        else if (tkvec[*idx].second == "STRING_LITERAL")  this->eval(OP_PUSH_STR,       tkvec[*idx].first);
 
-        else if (v.first  == "puts" )           this->eval(OP_PRINT_INT,    v.first);
-        else if (v.first  == "print" )          this->eval(OP_PRINT_STR,    v.first);
-        else if (v.first  == "exit")            this->eval(OP_EXIT,         v.first);
-        else if (v.first  == "__stack__")       this->eval(OP_DISPLAY,      v.first);
+        else if (tkvec[*idx].second == "CMP_LT")          this->eval(OP_CMP_INT_LT,     tkvec[*idx].first);
+        else if (tkvec[*idx].second == "OP_PLUS")         this->eval(OP_ADD_INT,        tkvec[*idx].first);
+        else if (tkvec[*idx].second == "OP_SUB")          this->eval(OP_SUB_INT,        tkvec[*idx].first);
+        else if (tkvec[*idx].second == "OP_DIV")          this->eval(OP_DIV_INT,        tkvec[*idx].first);
+        else if (tkvec[*idx].second == "OP_MULT")         this->eval(OP_MULT_INT,       tkvec[*idx].first);
+        else if (tkvec[*idx].second == "__EOF__")         this->eval(OP_EXIT,           tkvec[*idx].first);
 
+
+        else if (tkvec[*idx].first  == "puts" )           this->eval(OP_PRINT_INT,      tkvec[*idx].first);
+        else if (tkvec[*idx].first  == "if")              this->eval_expr(IF,           tkvec);
+        else if (tkvec[*idx].first  == "panic" )          this->eval(OP_PANIC,          tkvec[*idx].first);
+        else if (tkvec[*idx].first  == "print" )          this->eval(OP_PRINT_STR,      tkvec[*idx].first);
+        else if (tkvec[*idx].first  == "exit")            this->eval(OP_EXIT,           tkvec[*idx].first);
+        else if (tkvec[*idx].first  == "__stack__")       this->eval(OP_DISPLAY,        tkvec[*idx].first);
+        else if (tkvec[*idx].first  == "\"")              continue;
+        else{
+            /*  UNREACHABLE */
+            char err_log[128];
+            sprintf(err_log, "Unreachable OP_TYPe, or Native Function call at (%s)", tkvec[index].first.c_str());
+            gassert(false, err_log);
+        }
         ++this->index;
+
     }
     
     debug_parser("[START CODE RUNTIME]","");

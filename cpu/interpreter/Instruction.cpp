@@ -73,19 +73,20 @@ namespace testVM{
 
 
         // ByteCodeInterpreted 
-        auto ip = code.begin();
-
-        while(ip != code.end()){
+        auto ip  = code.begin();
+        auto end = code.end();
+        while(ip != end){
             switch(ip->op_code)
             {
 
                 // DISPLAY N N N
                 // DISPLAY all the stack : usage on debuging
                 case DISPLAY:
-                    while(1){
+                    while(stackVM.Len() > 0){
                         std::cout << stackVM.pop() << ", ";
-                        break;
                     }
+                    ++ip;
+                    break;
 
 
                 // EXIT N exit_code N 

@@ -16,6 +16,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <cstdio>
 #include <memory> 
 
 
@@ -51,12 +52,15 @@ namespace Lexer{
     
         else if(chrcmp(atom, ','))       return "COMMA";
         else if(chrcmp(atom, '_'))       return "STR";
-
+	else if(chrcmp(atom, '>'))	 return "CMP_GT";
+	else if(chrcmp(atom, '<'))	 return "CMP_LT";
 
         else if(chrcmp(atom, EOF))       return "__EOF__";
         else if(chrcmp(atom, '\0'))      return "__EOF__";
 
-        return "UNKNOWN-TOKEN";
+        char err_log[128];
+        sprintf(err_log, "Unreachable token at the word: (%c)", atom);
+        gassert(false, err_log);
     }
     void lex_string_literal(tokenName src, ptrType& idx, tokenList& tkvec, tokenAtom expect_tk){
         { /*  ADDING THE INITIAL QUOTES */
@@ -81,29 +85,24 @@ namespace Lexer{
             const tokenName tmpSrc = std::string(&expect_tk);
             tokenType tmpTk  = thisTk(src, *idx);
             tkvec.push_back(tokensPair(std::string((&tmpSrc)[0]), tmpTk));
-            debug_lexer(tmpSrc[0], tmpTk, *idx);
-            
-
+            debug_lexer(tmpSrc[0], tmpTk, *idx);        
             incPtr(idx);
 
         }
     }
     tokenList run(tokenName src, ptrType& idx){
-        tokenType this_tk;
-        tokenType next_tk;    
+        tokenType this_tk = thisTk(src, *idx);
+        tokenType next_tk = thisTk(src, *idx + 1);    
         tokenList tkVec;
         initTmp(tmp);
         src[src.length() + 1] = EOF;         
         for (;src[*idx] != EOF;){
-            this_tk = thisTk(src, *idx);
-            next_tk = thisTk(src, *idx + 1);
-            /*  string literal  */            
-    
-
-
+           
             lexer_literal_macro("STR_INIT_DQ", DOUBLE_QUOTES);
             lexer_literal_macro("STR_INIT_SQ", SINGLE_QUOTES);
 
+            this_tk = thisTk(src, *idx);
+            next_tk = thisTk(src, *idx + 1);
 
             tmp += src[*idx];
             if (this_tk != next_tk){

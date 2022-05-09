@@ -2,11 +2,13 @@
  *      Document this better
  */
 
-
 #ifndef GENERAL_FUNCTIONS_USE
 #define GENERAL_FUNCTIONS_USE 
 
-#define debug                               false
+#include <cstdlib>
+#include <cstdio>
+
+#define debug                               true
 
 #define sPtrType                            unsigned
 #define ptrType                             std::shared_ptr<sPtrType>
@@ -44,5 +46,6 @@
     if(debug) std::cout<<"[PARSER][WORD-PARSER] :\t"<<x<<"\t[TYPE] :\t"<<type<<"\n"
 
 
+#define gassert(x, message) if (!(x)) {printf("\x1b[38m[File: %s] [Line: %d] [Functions: %s] [Assert: %s] \n\t[Message]:\x1B[31m %s\n\x1B[0m",__FILE__, __LINE__,__func__, #x, message); exit(1);}
 
 #endif /* ifndef GENERAL_FUNCTIONS_USE */

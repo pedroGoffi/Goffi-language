@@ -1,4 +1,4 @@
-cf= -std=c++20
+cf= -std=c++20 -Wall -Wextra -pedantic
 cc=g++
 main=main.cpp
 output=goffi

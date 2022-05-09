@@ -35,7 +35,14 @@ int main(int argc, char* argv[])
     std::ifstream file(target_file, std::ios::in);
 
     /*  TODO: assertions */
-    //assert(compile_byte_code || compile_to_nativecode);
+    gassert(
+        file.is_open(), 
+        "Could not open the file"
+    );
+    gassert(
+        compile_byte_code || compile_to_nativecode,
+        "You must specify if you want byte-interpreter or compiled version"
+    );
     eat_file(file, line) src += line;
     
     loadPtr(index, 0);

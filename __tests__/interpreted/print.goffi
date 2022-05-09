@@ -1,2 +1,5 @@
-"Hello world!\n" print
+
+"===================" print
+"|  Hello world    |" print
+"===================" print
 

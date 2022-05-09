@@ -77,8 +77,10 @@ void Parser::eval(op_type op, tokenName value){
             break;
 
         case OP_JMP_BACK:
+            pushStack(JMP_BACK, 0,  static_cast<uint8_t>(std::stoi(value)), "");
             break;
         case OP_DISPLAY:
+            pushStack(DISPLAY,   0,  0, "");
             break;
 
         case OP_NUM_INSTRUCTION:                        
@@ -89,6 +91,9 @@ void Parser::eval(op_type op, tokenName value){
 Parser::Parser(tokenList tkvec, ptrType& idx){    
     this->index = 0;    
     for(auto& v : tkvec){
+        /*  TODO:   
+         *      In puts parse the data type for diferent types of printing
+         */
         debug_parser(v.first, v.second);
 
         if      (v.second == "INT")             this->eval(OP_PUSH_INT,     v.first);        
@@ -98,9 +103,11 @@ Parser::Parser(tokenList tkvec, ptrType& idx){
         else if (v.second == "OP_DIV")          this->eval(OP_DIV_INT,      v.first);
         else if (v.second == "OP_MULT")         this->eval(OP_MULT_INT,     v.first);
         else if (v.second == "__EOF__")         this->eval(OP_EXIT,         v.first);
+
         else if (v.first  == "puts" )           this->eval(OP_PRINT_INT,    v.first);
         else if (v.first  == "print" )          this->eval(OP_PRINT_STR,    v.first);
         else if (v.first  == "exit")            this->eval(OP_EXIT,         v.first);
+        else if (v.first  == "__stack__")       this->eval(OP_DISPLAY,      v.first);
 
         ++this->index;
     }

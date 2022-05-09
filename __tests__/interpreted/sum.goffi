@@ -1,3 +1,5 @@
-1 68 + puts
+" 1 + 68 = " 	print
+1 68 + 		puts
+"" 		printLine
 
 

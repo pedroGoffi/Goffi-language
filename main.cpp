@@ -40,6 +40,7 @@ int main(int argc, char* argv[])
     
     loadPtr(index, 0);
     tokenList token_vector = Lexer::run(src, index);
+    resetPtr(index);
     if(compile_byte_code){
         Parser(token_vector, index);
 

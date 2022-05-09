@@ -49,12 +49,11 @@ int main(int argc, char* argv[])
     tokenList token_vector = Lexer::run(src, index);
     resetPtr(index);
     if(compile_byte_code){
-        Parser(token_vector, index);
+        Parser(token_vector, index, 1);
 
     }
     if(compile_to_nativecode){
-        exit(69);
-        //Parser::compile_to_nativecode(token_vector, index);
+        Parser(token_vector, index, 2);
     }
     return 0;
 }

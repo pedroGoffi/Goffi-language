@@ -105,7 +105,11 @@ void Parser::eval_op(op_type op, tokenName value){
     }
 }
 
-Parser::Parser(tokenList tkvec, ptrType& idx){
+Parser::Parser(
+        tokenList tkvec, 
+        ptrType& idx,
+        int howContinueAfterParsing
+    ){
     resetPtr(idx);
     this->index = idx;
     this->tkvec = tkvec;
@@ -114,7 +118,18 @@ Parser::Parser(tokenList tkvec, ptrType& idx){
         this->eval(this->tkvec[*this->index]);
         incPtr(this->index);
     }
-    testVM::run(this->code);
+    pushStack(EXIT, 0,  0,  "");
+    switch(howContinueAfterParsing){
+        /*  CASE 1 THIS WILL SIMULATE THE PROGRAM */
+        case 1:
+            testVM::run(this->code);
+            break;
+
+        /*  CASE 2 THIS WILL COMPILE THE PROGRAM TO ASSEMBLY */
+        case 2:
+            testVM::compile_asm(this->code);
+            break;
+    }
 }
 void Parser::eval(tokenPair op){
     debug_parser(op.first, op.second);

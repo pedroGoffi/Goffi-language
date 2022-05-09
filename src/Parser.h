@@ -3,7 +3,10 @@
 #define ptr
 #define token_usage
 
+
 #include "./../cpu/interpreter/Instruction.cpp"
+#include "./../cpu/interpreter/Compiler.cpp"
+
 #include "./../includes/stdGoffi.cpp"
 #include "./../includes/stdNum.cpp"
 #include "./Lexer.cpp"
@@ -48,7 +51,7 @@ class Parser{
     ptrType                     index;
     std::vector<Instruction>    code;
 public:
-    Parser(tokenList, ptrType&);
+    Parser(tokenList, ptrType&, int);
     ~Parser();
     void eval_expr(expr_type);
     void eval_op(op_type, tokenName);

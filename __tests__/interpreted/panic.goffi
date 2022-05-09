@@ -1,3 +1,4 @@
-if 1 68 + 69 < do
-	panic	
-end
+1 68 + puts 
+"	Some error" panic	
+
+

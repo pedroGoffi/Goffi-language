@@ -45,14 +45,14 @@ typedef enum{
 } expr_type;
 class Parser{
     tokenList                   tkvec;
-    unsigned int                index;
+    ptrType                     index;
     std::vector<Instruction>    code;
 public:
     Parser(tokenList, ptrType&);
     ~Parser();
-    void eval_expr(expr_type, tokenList);
-    void eval_op(op_type op);
-    void eval(op_type, tokenName);
+    void eval_expr(expr_type);
+    void eval_op(op_type, tokenName);
+    void eval(tokenPair);
 };
 
 #endif /* ifndef PARSER_HEADER_FILE */

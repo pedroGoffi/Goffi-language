@@ -34,29 +34,29 @@ namespace Lexer{
     
         else if(chrcmp(atom, '='))      return "OP_ASIGN_VAR";
     
-        else if(chrcmp(atom, '('))       return "OPEN_CIRCULAR_BRACKETS";
-        else if(chrcmp(atom, ')'))       return "CLOSE_CIRCULAR_BRACKETS";
+        else if(chrcmp(atom, '('))      return "OPEN_CIRCULAR_BRACKETS";
+        else if(chrcmp(atom, ')'))      return "CLOSE_CIRCULAR_BRACKETS";
     
-        else if(chrcmp(atom, '['))       return "CLOSE_SQUARE_BRACKETS";
-        else if(chrcmp(atom, ']'))       return "CLOSE_SQUARE_BRACKETS";
+        else if(chrcmp(atom, '['))      return "CLOSE_SQUARE_BRACKETS";
+        else if(chrcmp(atom, ']'))      return "CLOSE_SQUARE_BRACKETS";
     
-        else if(chrcmp(atom, '{'))       return "OPEN_CURLY_BRACKETS";
-        else if(chrcmp(atom, '}'))       return "CLOSE_CURLY_BRACKETS";
+        else if(chrcmp(atom, '{'))      return "OPEN_CURLY_BRACKETS";
+        else if(chrcmp(atom, '}'))      return "CLOSE_CURLY_BRACKETS";
     
-        else if(chrcmp(atom, ';'))       return "OP_EOL";
-    
-    
-        else if(chrcmp(atom, '\"'))       return "STR_INIT_DQ";
-        else if(chrcmp(atom, '\''))       return "STR_INIT_SQ";
+        else if(chrcmp(atom, ';'))      return "OP_EOL";
     
     
-        else if(chrcmp(atom, ','))       return "COMMA";
-        else if(chrcmp(atom, '_'))       return "STR";
-	else if(chrcmp(atom, '>'))	 return "CMP_GT";
-	else if(chrcmp(atom, '<'))	 return "CMP_LT";
+        else if(chrcmp(atom, '\"'))     return "STR_INIT_DQ";
+        else if(chrcmp(atom, '\''))     return "STR_INIT_SQ";
+    
+    
+        else if(chrcmp(atom, ','))      return "COMMA";
+        else if(chrcmp(atom, '_'))      return "STR";  
+        else if(chrcmp(atom, '>'))      return "CMP_GT";
+        else if(chrcmp(atom, '<'))      return "CMP_LT";
 
-        else if(chrcmp(atom, EOF))       return "__EOF__";
-        else if(chrcmp(atom, '\0'))      return "__EOF__";
+        else if(chrcmp(atom, EOF))      return "__EOF__";
+        else if(chrcmp(atom, '\0'))     return "__EOF__";
 
         char err_log[128];
         sprintf(err_log, "Unreachable token at the word: (%c)", atom);
@@ -69,12 +69,13 @@ namespace Lexer{
             tokenType tmpTk  = thisTk(src, *idx);
             tkvec.push_back(tokensPair(std::string((&tmpSrc)[0]), tmpTk));
             debug_lexer(tmpSrc[0], tmpTk, *idx);
+
             incPtr(idx);
         }
         /*   STRING LEXING ITSELF */
 
         tokenName str;
-        for(;src[*idx] != expect_tk;){
+        for(;src[*idx] != expect_tk;){            
             str += src[*idx];
             incPtr(idx);
         }

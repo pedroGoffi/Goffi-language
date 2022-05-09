@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <cstdio>
 
-#define debug                               true
+#define debug                               false
 
 #define sPtrType                            unsigned
 #define ptrType                             std::shared_ptr<sPtrType>

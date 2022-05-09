@@ -2,6 +2,7 @@
 #define INSTRUCTIONS
 
 #include "../atom/stack.cpp"
+#include "./../../includes/stdGoffi.cpp"
 #include "./Panic.cpp"
 #include <stdexcept>
 #include <vector>
@@ -75,6 +76,7 @@ namespace testVM{
         // ByteCodeInterpreted 
         auto ip  = code.begin();
         auto end = code.end();
+        gassert(NUM_INSTRUCTION == 20, "New functions not implemented in the Interpreter");
         while(ip != end){
             switch(ip->op_code)
             {

@@ -56,6 +56,7 @@ public:
     void eval_expr(expr_type);
     void eval_op(op_type, tokenName);
     void eval(tokenPair);
+    argType eval_args(int);
 };
 
 #endif /* ifndef PARSER_HEADER_FILE */

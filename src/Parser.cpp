@@ -4,6 +4,36 @@
 #define token_usage
 #include "./Parser.h"
 Parser::~Parser(){}
+
+argType Parser::eval_args(int MAX_ARGS){
+    /*  NOTE:
+     *      argType is a pair of an integer that stands for how much arguments
+     *      the expression has and a vector that stands for the inside
+     *      arguments
+     *          Acess:
+     *              first   == arg_count
+     *              second  == arg_values
+     */
+    int                     arg_count = 1;
+    std::vector<tokenPair>  arg_values(MAX_ARGS);
+    incPtr(this->index);
+    gassert(
+        this->tkvec[*this->index].second == "OPEN_CIRCULAR_BRACKETS",
+        "Argument blocks are only open with CIRCULAR BRACKETS, AKA: `(`"
+    );
+    incPtr(this->index);
+    for(;this->tkvec[*this->index].second != "CLOSE_CIRCULAR_BRACKETS";){
+        /*  TODO:
+         *      Take the args and put inside arg_values
+         */
+        arg_values.push_back(this->tkvec[*this->index]);
+        if(this->tkvec[*this->index].second == "COMMA")
+            ++arg_count;
+        incPtr(this->index);
+    }
+    incPtr(this->index);
+    return std::pair<int, std::vector<tokenPair>>(arg_count, arg_values);
+}
 void Parser::eval_expr(expr_type expr){
     (void) expr;
     switch(expr){
@@ -13,6 +43,7 @@ void Parser::eval_expr(expr_type expr){
                  *      A linked list to specify where it starts and where it
                  *      ends
                  */
+
                 incPtr(this->index);
                 this->eval(this->tkvec[*this->index]);
             }
@@ -22,16 +53,24 @@ void Parser::eval_expr(expr_type expr){
 void Parser::eval_op(op_type op, tokenName value){
     switch(op){
         case OP_PUSH_INT:
-            pushStack(PUSH_INT, 0,  static_cast<uint16_t>(std::stoi(value)), "");
+            pushStack(PUSH_INT, 0,  parseSTRtoUINT8_T(value), "");
             break;
             
         case OP_PUSH_STR:
             pushStack(PUSH_STR, 0,  0,  value);
             break;
 
-        case OP_EXIT:            
-            pushStack(EXIT, 0, 0, "");
+        case OP_EXIT: {
+            //std::shared_ptr<argType> args = std::make_shared<argType>(this->eval_args());
+            // 1 padding
+            std::shared_ptr<argType> args = std::make_shared<argType>(this->eval_args(1));
+            gassert(
+                args->first == 1, 
+                "Exit function only handle one argument, the exit call"
+            );
+            pushStack(EXIT, 0, parseSTRtoUINT8_T(args->second[1].first), "");
             break;
+        }
         case OP_PANIC:
             pushStack(PANIC, 0, 0, "");
             break;
@@ -93,7 +132,7 @@ void Parser::eval_op(op_type op, tokenName value){
             break;
 
         case OP_JMP_BACK:
-            pushStack(JMP_BACK, 0,  static_cast<uint8_t>(std::stoi(value)), "");
+            pushStack(JMP_BACK, 0,  parseSTRtoUINT8_T(value), "");
             break;
         case OP_DISPLAY:
             pushStack(DISPLAY,   0,  0, "");
@@ -133,6 +172,7 @@ Parser::Parser(
 }
 void Parser::eval(tokenPair op){
     debug_parser(op.first, op.second);
+
     if      (op.second == "INT")                    this->eval_op(OP_PUSH_INT,       op.first);     
     else if (op.second == "STRING_LITERAL")         this->eval_op(OP_PUSH_STR,       op.first);
 

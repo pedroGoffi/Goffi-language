@@ -39,13 +39,16 @@
 #define debug_lexer(x, type, idx)           \
     if(debug) std::cout<<"[INDEX : "<<idx<<"][LEXER][WORD-PARSED] :\t"<<x<<"\t[TYPE] :\t"<<type<<"\n"
 
-#define lexer_literal_macro(strTk, expect)         if (this_tk == strTk)Lexer::lex_string_literal(src, idx, tkVec, expect)
+#define lexer_literal_macro(strTk, expect)         if (this_tk == strTk)Lexer::lex_string_literal(src, idx, tkVec, expect); 
 
 
 #define debug_parser(x, type)          \
     if(debug) std::cout<<"[PARSER][WORD-PARSER] :\t"<<x<<"\t[TYPE] :\t"<<type<<"\n"
 
+#define argType std::pair<int, std::vector<tokenPair>>
 
 #define gassert(x, message) if (!(x)) {printf("\x1b[38m[File: %s] [Line: %d] [Functions: %s] [Assert: %s] \n\t[Message]:\x1B[31m %s\n\x1B[0m",__FILE__, __LINE__,__func__, #x, message); exit(1);}
+
+#define parseSTRtoUINT8_T(value) static_cast<uint8_t>(std::stoi(value))
 
 #endif /* ifndef GENERAL_FUNCTIONS_USE */

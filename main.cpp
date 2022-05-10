@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
 
     std::string target_file;
     for (int i = 0; i < argc; ++i) {
-        if      (argv[i] == std::string("byte")){
+        if      (argv[i] == std::string("sim")){
             compile_byte_code = true;
         }
         else if (argv[i] == std::string("com")){

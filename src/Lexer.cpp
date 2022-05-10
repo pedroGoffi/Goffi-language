@@ -75,7 +75,7 @@ namespace Lexer{
         /*   STRING LEXING ITSELF */
 
         tokenName str;
-        for(;src[*idx] != expect_tk;){            
+        for(;src[*idx] != expect_tk;){
             str += src[*idx];
             incPtr(idx);
         }
@@ -103,9 +103,11 @@ namespace Lexer{
             lexer_literal_macro("STR_INIT_SQ", SINGLE_QUOTES);
 
             this_tk = thisTk(src, *idx);
-            next_tk = thisTk(src, *idx + 1);
-
+            if(this_tk == "STR_INIT_DQ" || this_tk == "STR_INIT_SQ")
+                continue;
             tmp += src[*idx];
+            next_tk = thisTk(src, *idx + 1);
+            
             if (this_tk != next_tk){
                 if (this_tk != "__BLANK__")
                     tkVec.push_back(tokensPair(tmp, this_tk));
@@ -113,10 +115,11 @@ namespace Lexer{
                 reset_str(tmp);
             }
 
-            incPtr(idx);
+
             if (next_tk == "__EOF__"){
                 break;
             }
+            incPtr(idx);
         }
         debug_lexer(tmp, next_tk, *idx);        
         return tkVec;

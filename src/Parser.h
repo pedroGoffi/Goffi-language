@@ -13,12 +13,18 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <optional>
 #include <sstream>
+
+
 #define pushStack(op, r8, r16, rstr)   this->code.push_back(Instruction{op, r8, r16, rstr})
 typedef enum : uint8_t{
     INT
 } var_type;
 typedef enum : uint8_t{
+    PROCEDURE_DEFINITION,
+    OP_RET,
+    OP_CALL_FUNC,
     OP_EXIT,               // exit N EXITCODE N
     OP_PANIC,              // PANIC N N N
     OP_ADD_INT,            // ADD N N N
@@ -44,17 +50,18 @@ typedef enum : uint8_t{
 } op_type;
 
 typedef enum{
-    IF
+    IF,
+    NO_OP
 } expr_type;
 class Parser{
     tokenList                   tkvec;
     ptrType                     index;
     std::vector<Instruction>    code;
 public:
-    Parser(tokenList, ptrType&, int);
+    Parser(tokenList,ptrType&,int);
     ~Parser();
-    void eval_expr(expr_type);
-    void eval_op(op_type, tokenName);
+    void eval_expr(expr_type,tokenName);
+    void eval_op(op_type,tokenName);
     void eval(tokenPair);
     argType eval_args(int);
 };

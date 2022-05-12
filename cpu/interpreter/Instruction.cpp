@@ -15,7 +15,10 @@ enum OpCode: uint8_t {
      * NOTE: 
      *     @args N can be any value because this will not use it 
      */
-
+    PROCEDURE_ENTRY_POINT,
+    MAIN_ENTRY_POINT_SECTION,
+    RET,
+    OP_CALL,
     EXIT,               // exit N EXITCODE N
     PANIC,              // PANIC N N N
 
@@ -81,6 +84,8 @@ namespace testVM{
             switch(ip->op_code)
             {
 
+                case MAIN_ENTRY_POINT_SECTION:
+                    break;
                 // DISPLAY N N N
                 // DISPLAY all the stack : usage on debuging
                 case DISPLAY:
@@ -107,7 +112,7 @@ namespace testVM{
                                  *      SWITCH CASE WITH RI8 FOR OPTIONAL
                                  *      EXTIS OR NOTH
                                  */
-                                throw Panic(ip->ri16, stackVM.buffer_value);
+                                throw Panic(ip->ri16, ip->ristr);
                                 exit(ip->ri16);
                                 break;
                             }

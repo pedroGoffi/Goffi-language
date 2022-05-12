@@ -3,6 +3,9 @@
 #include "./Compiler.h"
 #include "./../../includes/stdGoffi.cpp"
 #include <fstream>
+#define PORCENTAGE_SYMBOL char(0x25)
+
+
 /*  NOTE:
  *      COMPILER STAGE
  *      AFTER PARSING THE CODE IT WILL SEND HERE AN VECTOR OF INSTRUCTIONS
@@ -33,16 +36,19 @@ void testVM::compile_asm(std::vector<Instruction> code){
      *      THIS SHALL ASSERT THE FILE INITIALY WILL BE EMPTY
      */
     out.open(file_name, std::ios_base::out);
-    out <<  "section .text\n"
-        <<  "global _start\n"
-        <<  "_start:\n"
+
+    // note PORCENTAGE_SYMBOL is a macro equal
+    // char(0x25) == %
+    // somehow this has a bug when i do `%%` by writing two `%`
+    
+    out << PORCENTAGE_SYMBOL << "include \"stdGoffi/stdGlib.s\"\n"
     ;
 
     out.close();
     out.open(file_name, std::ios_base::app);
 
     gassert(out.is_open(), "Could not create the assembly file");
-    gassert(NUM_INSTRUCTION == 20, "New functions not implemented in the compiler");
+    gassert(NUM_INSTRUCTION == 24, "New functions not implemented in the compiler");
 
     for(auto& op : code){
         switch(op.op_code){
@@ -50,6 +56,21 @@ void testVM::compile_asm(std::vector<Instruction> code){
             /*  PUSH_INT op:
              *      THIS WILL PUSH THE ARGUMENT TO THE STACK
              */
+            case PROCEDURE_ENTRY_POINT:
+                out << op.ristr << ":\n";
+                break;
+            case OP_CALL:
+                // TODO arg parse
+                out <<  "   ;; call "   << op.ristr <<  "\n"
+                        "   call "      << op.ristr <<  "\n"
+                    ;
+                break;
+            case MAIN_ENTRY_POINT_SECTION:
+                out <<  "section .text\n"
+                    <<  "global _start\n"
+                    <<  "_start:\n"
+                    ;
+                break;
             case PUSH_INT:
                 out <<  "   ;; ---- push int, [value: "  << op.ri16  << "]\n"
                         "   mov  rax, "         << op.ri16  << "\n"
@@ -65,9 +86,8 @@ void testVM::compile_asm(std::vector<Instruction> code){
             case ADD_INT:
                 out <<  "   ;; ---- add int\n"
                         "   pop  rax\n"
-                        "   mov  rbx, rax\n"
-                        "   pop  rax\n"
-                        "   add  rbx, rax\n"
+                        "   pop  rbx\n"
+                        "   add  rax, rbx\n"
                         "   push rax\n"
                     ;
                 break;
@@ -78,11 +98,10 @@ void testVM::compile_asm(std::vector<Instruction> code){
              *      POPING THEM
              */
             case SUB_INT:
-                out <<  "   ;; ---- sub int"
+                out <<  "   ;; ---- sub int\n"
                         "   pop rax\n"
-                        "   mov rbx, rax\n"
-                        "   pop rax\n"
-                        "   sub rbx, rax\n"
+                        "   pop rbx\n"
+                        "   sub rax, rbx\n"
                         "   push rax\n"
                     ;
                 break;
@@ -99,7 +118,11 @@ void testVM::compile_asm(std::vector<Instruction> code){
                 gassert(false, "OP PRINT_STR not implementet yet");
                 break;
             case PRINT_INT:
-                gassert(false, "OP PRINT_INT not implementet yet");
+                out <<  "   ;; ---- dump\n"
+                        "   pop rdi\n"
+                        "   call dump\n"
+
+                    ;
                 break;
             case CMP_INT_GT:
                 gassert(false, "COMPARASIONS OP not implementet yet");
@@ -144,8 +167,13 @@ void testVM::compile_asm(std::vector<Instruction> code){
                         "   int 0x80\n"
                     ; 
                 break;
+            case RET:
+                out <<  "   ;; ---- return\n"
+                    <<  "   ret\n"
+                    ;
+                break;
             default:
-                gassert(false, "Operand type not implemented in the compiler");
+                gassert(false, "Unreachable operand type, not implemented in the compiler");
         }
     }
     out.close();

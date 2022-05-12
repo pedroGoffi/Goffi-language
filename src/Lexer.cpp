@@ -9,7 +9,8 @@
 #define SINGLE_QUOTES 0x27
 
 
-
+#define SSTR( x ) static_cast< std::ostringstream & >( \
+        ( std::ostringstream() << std::dec << x ) ).str()
 #include "./../includes/stdGoffi.cpp"
 #include <iostream>
 #include <ctype.h>
@@ -19,9 +20,42 @@
 #include <cstdio>
 #include <memory> 
 
-
+#define debug_cross(x) std::cout << "[CROSSREfERENCE][WORD] :\t" << x.first << "\t[TYPE] :\t" << x.second << "\n"
 
 namespace Lexer{
+    tokenList crossReference(tokenList& vec){
+        int    lastNode{};
+        int    atualNode{};
+        for(auto it = vec.begin(); it != vec.end(); ++it){
+            if(vec[atualNode].first == "if"){
+                lastNode = atualNode;
+            }
+            else if (vec[atualNode].first == "elif"){
+                vec[lastNode] = std::pair<tokenName, tokenType>(vec[lastNode].first, std::to_string(atualNode));
+                atualNode = lastNode;
+
+                std::cout << "[CHANGED] :\t" << vec[lastNode].first << "\t[REF] :\t" << vec[lastNode].second;
+                
+            }
+            else if (vec[atualNode].first == "else"){
+                vec[lastNode] = std::pair<tokenName, tokenType>(vec[lastNode].first, std::to_string(atualNode + 1));
+                atualNode = lastNode;
+
+                std::cout << "[CHANGED] :\t" << vec[lastNode].first << "\t[REF] :\t" << vec[lastNode].second;
+            }
+            debug_cross(vec[atualNode]);
+            ++atualNode;
+        }
+        for(auto& c : vec){
+            std::cout <<    "AFTER-CROSSREFERENCE : "
+                      <<    c.first 
+                      <<    "\t[REF] :\t" 
+                      <<    c.second
+                      <<    "\n";
+
+        }
+        return vec;
+    }
     tokenType token_type(tokenAtom atom){
         if     (space(atom))            return "__BLANK__";
         else if(digit(atom))            return "INT";
@@ -54,6 +88,8 @@ namespace Lexer{
         else if(chrcmp(atom, '_'))      return "STR";  
         else if(chrcmp(atom, '>'))      return "CMP_GT";
         else if(chrcmp(atom, '<'))      return "CMP_LT";
+
+        else if(chrcmp(atom, '.'))      return "DOT";
 
         else if(chrcmp(atom, EOF))      return "__EOF__";
         else if(chrcmp(atom, '\0'))     return "__EOF__";
@@ -122,7 +158,8 @@ namespace Lexer{
             incPtr(idx);
         }
         debug_lexer(tmp, next_tk, *idx);        
-        return tkVec;
+        return crossReference(tkVec);
     }
+
 }
 #endif /* ifndef LEXER_CPP */

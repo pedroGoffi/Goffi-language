@@ -2,9 +2,9 @@
 #define COMPILER_CPP 
 #include "./Compiler.h"
 #include "./../../includes/stdGoffi.cpp"
+#include "./../../main.cpp"
 #include <fstream>
 #define PORCENTAGE_SYMBOL char(0x25)
-
 
 /*  NOTE:
  *      COMPILER STAGE
@@ -41,14 +41,16 @@ void testVM::compile_asm(std::vector<Instruction> code){
     // char(0x25) == %
     // somehow this has a bug when i do `%%` by writing two `%`
     
-    out << PORCENTAGE_SYMBOL << "include \"stdGoffi/stdGlib.s\"\n"
-    ;
-
+    out <<  PORCENTAGE_SYMBOL 
+        <<  "include \"/usr/include/goffiLang/stdGlib.s\"\n"
+        <<  "section .text\n"
+        <<  "global _start\n"
+        ;
     out.close();
     out.open(file_name, std::ios_base::app);
 
     gassert(out.is_open(), "Could not create the assembly file");
-    gassert(NUM_INSTRUCTION == 24, "New functions not implemented in the compiler");
+    gassert(NUM_INSTRUCTION == 26, "New functions not implemented in the compiler");
 
     for(auto& op : code){
         switch(op.op_code){
@@ -56,24 +58,29 @@ void testVM::compile_asm(std::vector<Instruction> code){
             /*  PUSH_INT op:
              *      THIS WILL PUSH THE ARGUMENT TO THE STACK
              */
+            case IF: {
+                out <<  "   ;; ---- if\n"
+                    <<  "   pop rax\n"
+                    <<  "   test rax, rax\n"
+                    <<  "   jz addr_"       << op.ri16 << "\n"
+                    ;                
+                break;
+            }
             case PROCEDURE_ENTRY_POINT:
                 out << op.ristr << ":\n";
                 break;
             case OP_CALL:
                 // TODO arg parse
-                out <<  "   ;; call "   << op.ristr <<  "\n"
-                        "   call "      << op.ristr <<  "\n"
+                out <<  "   ;; ---- call "  << op.ristr <<  "\n"
+                        "   call "          << op.ristr <<  "\n"
                     ;
                 break;
             case MAIN_ENTRY_POINT_SECTION:
-                out <<  "section .text\n"
-                    <<  "global _start\n"
-                    <<  "_start:\n"
-                    ;
+                out <<  "_start:\n";
                 break;
             case PUSH_INT:
                 out <<  "   ;; ---- push int, [value: "  << op.ri16  << "]\n"
-                        "   mov  rax, "         << op.ri16  << "\n"
+                        "   mov  rax, "     << op.ri16  << "\n"
                         "   push rax\n"
                     ;
                 break;
@@ -122,6 +129,17 @@ void testVM::compile_asm(std::vector<Instruction> code){
                         "   pop rdi\n"
                         "   call dump\n"
 
+                    ;
+                break;
+            case EQUALS:
+                out <<  "   ;; ---- equal\n"
+                        "   mov rcx, 0\n"
+                        "   mov rdx, 1\n"
+                        "   pop rax\n"
+                        "   pop rbx\n"
+                        "   cmp rax, rbx\n"
+                        "   cmove rcx, rdx\n"
+                        "   push rcx\n"
                     ;
                 break;
             case CMP_INT_GT:

@@ -17,6 +17,8 @@ enum OpCode: uint8_t {
      */
     PROCEDURE_ENTRY_POINT,
     MAIN_ENTRY_POINT_SECTION,
+    EQUALS,
+    IF,
     RET,
     OP_CALL,
     EXIT,               // exit N EXITCODE N

@@ -51,7 +51,7 @@ argType Parser::eval_args(int MAX_ARGS){
 }
 void Parser::eval_expr(expr_type expr, tokenName context){
     switch(expr){
-        case IF:
+        case IF_EXPR:
             incPtr(this->index);
             while (this->tkvec[*this->index].first != "do"){
                 /*  TODO:
@@ -78,6 +78,13 @@ void Parser::eval_op(op_type op, tokenName value){
      */
 
     switch(op){
+        case OP_IF:
+            pushStack(IF,   0,  parseSTRtoUINT8_T(value), "");
+            pushStack(PROCEDURE_ENTRY_POINT,    0,  0,  "addr_"+value);
+            break;
+        case OP_EQUALS:
+            pushStack(EQUALS,   0,  0,  "");
+            break;
         case PROCEDURE_DEFINITION:{
             std::string funcName = this->tkvec[*this->index + 1].first;
             if (funcName == "main"){
@@ -243,7 +250,7 @@ void Parser::eval(tokenPair op){
     //else if (op.first  == "do" )                    //;
     //else if (op.first  == "elif" )                  this->eval_op(OP_PRINT_INT,      op.first);
 
-    else if (op.first  == "." )                  this->eval_op(OP_PRINT_INT,      op.first);
+    else if (op.first  == "dump" )                  this->eval_op(OP_PRINT_INT,      op.first);
 
     else if (op.first  == "panic" )                 this->eval_op(OP_PANIC,          op.first);
     else if (op.first  == "print" )                 this->eval_op(OP_PRINT_STR,      op.first);
@@ -254,16 +261,21 @@ void Parser::eval(tokenPair op){
 
 
     else if (op.first  == "{")                      (void) op; 
-    else if (op.first  == "}")                      this->eval_op(OP_RET, op.first);
+    else if (op.first  == "}")                      (void) op;
     else if (op.first  == "("){
         if (this->tkvec[*this->index - 2].first == "proc") return;
         this->eval_op(OP_CALL_FUNC, op.first);
     }
     else if (op.first  == ")")                      (void) op;
     else if (op.first  == "main")                   (void) op;
+    else if (op.first  == "return")                 this->eval_op(OP_RET, op.first);
+
+    else if (op.first  == "=")                      this->eval_op(OP_EQUALS, op.first);
+
 
 
     else if (op.first  == "proc")                   this->eval_op(PROCEDURE_DEFINITION, op.first);
+    else if (op.first  == "if")                     this->eval_op(OP_IF, op.second);
 
     
 }

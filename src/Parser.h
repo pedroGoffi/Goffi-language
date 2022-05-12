@@ -23,6 +23,8 @@ typedef enum : uint8_t{
 } var_type;
 typedef enum : uint8_t{
     PROCEDURE_DEFINITION,
+    OP_IF,
+    OP_EQUALS,
     OP_RET,
     OP_CALL_FUNC,
     OP_EXIT,               // exit N EXITCODE N
@@ -50,7 +52,7 @@ typedef enum : uint8_t{
 } op_type;
 
 typedef enum{
-    IF,
+    IF_EXPR,
     NO_OP
 } expr_type;
 class Parser{

@@ -49,6 +49,6 @@
 
 #define gassert(x, message) if (!(x)) {printf("\x1b[38m[File: %s] [Line: %d] [Functions: %s] [Assert: %s] \n\t[Message]:\x1B[31m %s\n\x1B[0m",__FILE__, __LINE__,__func__, #x, message); exit(1);}
 
-#define parseSTRtoUINT8_T(value) static_cast<uint8_t>(std::stoi(value))
+#define parseSTRtoUINT8_T(value) static_cast<uint16_t>(std::stoi(value))
 
 #endif /* ifndef GENERAL_FUNCTIONS_USE */

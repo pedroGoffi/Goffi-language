@@ -1,0 +1,6 @@
+proc main do
+	10 dump
+    1 419 + 420 = if
+      6969 dump
+	end
+end

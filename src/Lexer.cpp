@@ -11,7 +11,9 @@
 
 #define SSTR( x ) static_cast< std::ostringstream & >( \
         ( std::ostringstream() << std::dec << x ) ).str()
+
 #include "./../includes/stdGoffi.cpp"
+#include "./../includes/stdNum.cpp"
 #include <iostream>
 #include <ctype.h>
 #include <string>
@@ -22,39 +24,34 @@
 
 #define debug_cross(x) std::cout << "[CROSSREfERENCE][WORD] :\t" << x.first << "\t[TYPE] :\t" << x.second << "\n"
 
+//vec[lastNode]  = std::pair<tokenName, tokenType>(vec[lastNode].first, std::to_string(atualNode + 1));
 namespace Lexer{
     tokenList crossReference(tokenList& vec){
-        int    lastNode{};
-        int    atualNode{};
+        /*  NOTE:
+         *      The complexity depend on the distance between end and if
+         *      can be O(n) and also can be O(n^2)
+         *      so let x be O(n) <= x <= O(n^2)
+         *      and asume in general this complexity is equal to x
+         */
+        int     atualNode{};
         for(auto it = vec.begin(); it != vec.end(); ++it){
-            if(vec[atualNode].first == "if"){
-                lastNode = atualNode;
-            }
-            else if (vec[atualNode].first == "elif"){
-                vec[lastNode] = std::pair<tokenName, tokenType>(vec[lastNode].first, std::to_string(atualNode));
-                atualNode = lastNode;
+            if(vec[atualNode].first == "end"){
+                for(unsigned int index = atualNode; index > 0; --index){
+                    if(vec[index].first == "if"){
+                        if(!gff::is_number(vec[index].second)){
+                            vec[index] = std::pair<tokenName, tokenType>(vec[index].first, std::to_string(it - vec.begin() - index + 1));
+                            break;
+                        }
+                    }
 
-                std::cout << "[CHANGED] :\t" << vec[lastNode].first << "\t[REF] :\t" << vec[lastNode].second;
-                
-            }
-            else if (vec[atualNode].first == "else"){
-                vec[lastNode] = std::pair<tokenName, tokenType>(vec[lastNode].first, std::to_string(atualNode + 1));
-                atualNode = lastNode;
+                }
 
-                std::cout << "[CHANGED] :\t" << vec[lastNode].first << "\t[REF] :\t" << vec[lastNode].second;
             }
             debug_cross(vec[atualNode]);
             ++atualNode;
-        }
-        for(auto& c : vec){
-            std::cout <<    "AFTER-CROSSREFERENCE : "
-                      <<    c.first 
-                      <<    "\t[REF] :\t" 
-                      <<    c.second
-                      <<    "\n";
-
-        }
+        }    
         return vec;
+        
     }
     tokenType token_type(tokenAtom atom){
         if     (space(atom))            return "__BLANK__";
@@ -145,7 +142,7 @@ namespace Lexer{
             next_tk = thisTk(src, *idx + 1);
             
             if (this_tk != next_tk){
-                if (this_tk != "__BLANK__")
+                if(this_tk != "__BLANK__")
                     tkVec.push_back(tokensPair(tmp, this_tk));
                 debug_lexer(tmp, this_tk, *idx);
                 reset_str(tmp);

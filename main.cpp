@@ -17,8 +17,8 @@ int main(int argc, char* argv[])
 {    
     bool compile_byte_code;
     bool compile_to_nativecode;
-
     std::string target_file;
+
     for (int i = 0; i < argc; ++i) {
         if      (argv[i] == std::string("sim")){
             compile_byte_code = true;
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
         compile_byte_code || compile_to_nativecode,
         "You must specify if you want byte-interpreter or compiled version"
     );
-    eat_file(file, line) src += line;
+    eat_file(file, line) src += line + "\n";
     
     loadPtr(index, 0);
     tokenList token_vector = Lexer::run(src, index);

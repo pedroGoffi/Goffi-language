@@ -1,60 +1,77 @@
-// this shall use stack to run simple program
-//  Instruc(print 1+1)
+#ifndef MAIN
+#define MAIN 
 
-#ifndef MAIN_GOFFI_LANGUAGE
-#define MAIN_GOFFI_LANGUAGE
-
-#include "./src/Parser.cpp"
-#include "./src/Lexer.cpp"
 #include <iostream>
-#include <string>
 #include <fstream>
+#include <cassert>
+#include <vector>
+#define T_IMPLS
+#include "./src/Tools.h"
+#include "./src/goffi.cpp"
+#include "./src/Lexer.cpp"
+#include "./src/Parser.cpp"
 
+#define SHIFT shift(&argc, &argv)
 
-#define eat_file(file, line) while( getline(file, line) )
+int main(int argc, char** argv)
+{
+    std::string const program         = SHIFT;
+    std::string inputFilePath;
+    std::string outputFilePath        = "out.gf";
+    std::string flag;
+    bool        simulate;
+    bool        compile;
+    while(argc > 0){
+        flag = SHIFT;
 
-int main(int argc, char* argv[])
-{    
-    bool compile_byte_code;
-    bool compile_to_nativecode;
-    std::string target_file;
-
-    for (int i = 0; i < argc; ++i) {
-        if      (argv[i] == std::string("sim")){
-            compile_byte_code = true;
+        if(flag == "-o"){
+            if (argc <= 0){
+                usage(stderr, program);
+                fprintf(stderr, "Error: Flag -o has no uwu");
+            }
+            outputFilePath = SHIFT;
         }
-        else if (argv[i] == std::string("com")){
-            compile_to_nativecode = true;
+        else if (flag == "-h"){
+            usage(stdout, program);
+            exit(0);
+        }
+        else if (flag == "com"){
+            compile  = true;
+            simulate = false;
+        }
+        else if (flag == "sim"){
+            simulate = true;
+            compile  = false;
         }
         else{
-            target_file = argv[i];
+            inputFilePath = flag;
         }
     }
-    initTmp(src);
-    initTmp(line);
-    std::ifstream file(target_file, std::ios::in);
-
-    /*  TODO: assertions */
-    gassert(
-        file.is_open(), 
-        "Could not open the file"
-    );
-    gassert(
-        compile_byte_code || compile_to_nativecode,
-        "You must specify if you want byte-interpreter or compiled version"
-    );
-    eat_file(file, line) src += line + "\n";
-    
-    loadPtr(index, 0);
-    tokenList token_vector = Lexer::run(src, index);
-    resetPtr(index);
-    if(compile_byte_code){
-        Parser(token_vector, index, 1);
-
+    if(inputFilePath.length()  == 0){
+        usage(stderr, program);
+        fprintf(stderr, "Error: No input file path was provided\n");
+        exit(1);
     }
-    if(compile_to_nativecode){
-        Parser(token_vector, index, 2);
+    std::fstream INPUT_FILE(inputFilePath, std::ios::in);
+    std::string code;
+    std::string line;
+    while(getline(INPUT_FILE, line)){
+        code += line+" ";
+    }
+    INPUT_FILE.close();
+    std::vector<Token>  tokens = Lexer::lex(code);
+    std::vector<VR>     instructions = Parser::parse(tokens);
+
+    if(simulate)
+        Goffi::simulate_program(instructions);
+    else if (compile)
+        Goffi::compile_program(instructions, outputFilePath);
+    else{
+        usage(stderr, program);
+        fprintf(stderr, "Error: You must specify if you want simulation mode of compilation  mode\n");
+        exit(1);
     }
     return 0;
+
 }
-#endif /* ifndef MAIN_GOFFI_LANGUAGE */
+#endif /* ifndef MAIN */

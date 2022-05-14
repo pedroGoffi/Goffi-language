@@ -1,0 +1,18 @@
+
+
+0 while dup 10 < do	
+	dup dump
+	2 +
+end 
+
+dump
+
+
+if 0 do
+	360 dump
+else 
+	420 dump
+end
+
+
+

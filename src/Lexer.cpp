@@ -1,162 +1,243 @@
-/*  TODO
- *      Document this better
+/*  NOTE:
+ *      A tokenList is a vector of Atoms
+ *      tokenList ==>  vec 
+ *                      |   
+ *                    Atom
+ *                  /   |  \
+ *              name  index type
  */
 
-#ifndef LEXER_CPP
-#define LEXER_CPP 
+#ifndef LEXER
+#define LEXER value
 
-#define DOUBLE_QUOTES 0x22
-#define SINGLE_QUOTES 0x27
-
-
-#define SSTR( x ) static_cast< std::ostringstream & >( \
-        ( std::ostringstream() << std::dec << x ) ).str()
-
-#include "./../includes/stdGoffi.cpp"
-#include "./../includes/stdNum.cpp"
-#include <iostream>
-#include <ctype.h>
-#include <string>
-#include <fstream>
+#include<iostream>
 #include <vector>
-#include <cstdio>
-#include <memory> 
+#include <string>
+#include "./Core/Instructions.cpp"
+#include "./Tools.hpp"
 
-#define debug_cross(x) std::cout << "[CROSSREfERENCE][WORD] :\t" << x.first << "\t[TYPE] :\t" << x.second << "\n"
+/*  NOTE:
+ *      A atom is a identifier for each word
+ *      name is the name itself
+ *      type is str/int types likely
+ *      and index is the positio in the text
+ */
+class Atom{
+public:
+    std::string atomName;
+    std::string atomType;
+    size_t      atomIndex;
+    size_t      atomLinkedIndex;
+};
+typedef enum{
+    NUMBER,
+    BINARY_OPERAND,
+    STRING_LITERAL
+} Token_Type;
+typedef struct Token_ast Token;
+struct Token_ast{
+    Token_Type       type;
+    Atom             head;
+};
+/*  WT stands for word type */
 
-//vec[lastNode]  = std::pair<tokenName, tokenType>(vec[lastNode].first, std::to_string(atualNode + 1));
-namespace Lexer{
-    tokenList crossReference(tokenList& vec){
-        /*  NOTE:
-         *      The complexity depend on the distance between end and if
-         *      can be O(n) and also can be O(n^2)
-         *      so let x be O(n) <= x <= O(n^2)
-         *      and asume in general this complexity is equal to x
-         */
-        int     atualNode{};
-        for(auto it = vec.begin(); it != vec.end(); ++it){
-            if(vec[atualNode].first == "end"){
-                for(unsigned int index = atualNode; index > 0; --index){
-                    if(vec[index].first == "if"){
-                        if(!gff::is_number(vec[index].second)){
-                            vec[index] = std::pair<tokenName, tokenType>(vec[index].first, std::to_string(it - vec.begin() - index + 1));
-                            break;
-                        }
-                    }
+std::string WT(char w){
+    if (std::isalpha(w))        return "STR";
+    else if (std::isdigit(w))   return "NUM";
 
-                }
+    else if (w == '(')          return "LPAREN"; 
+    else if (w == ')')          return "RPAREN";
 
-            }
-            debug_cross(vec[atualNode]);
-            ++atualNode;
-        }    
-        return vec;
-        
-    }
-    tokenType token_type(tokenAtom atom){
-        if     (space(atom))            return "__BLANK__";
-        else if(digit(atom))            return "INT";
-        else if(letter(atom))           return "STR";
-    
-        else if(chrcmp(atom, '+'))      return "OP_PLUS";
-        else if(chrcmp(atom, '-'))      return "OP_SUB";
-        else if(chrcmp(atom, '/'))      return "OP_DIV";
-        else if(chrcmp(atom, '*'))      return "OP_MULT";
-    
-        else if(chrcmp(atom, '='))      return "OP_ASIGN_VAR";
-    
-        else if(chrcmp(atom, '('))      return "OPEN_CIRCULAR_BRACKETS";
-        else if(chrcmp(atom, ')'))      return "CLOSE_CIRCULAR_BRACKETS";
-    
-        else if(chrcmp(atom, '['))      return "CLOSE_SQUARE_BRACKETS";
-        else if(chrcmp(atom, ']'))      return "CLOSE_SQUARE_BRACKETS";
-    
-        else if(chrcmp(atom, '{'))      return "OPEN_CURLY_BRACKETS";
-        else if(chrcmp(atom, '}'))      return "CLOSE_CURLY_BRACKETS";
-    
-        else if(chrcmp(atom, ';'))      return "OP_EOL";
-    
-    
-        else if(chrcmp(atom, '\"'))     return "STR_INIT_DQ";
-        else if(chrcmp(atom, '\''))     return "STR_INIT_SQ";
-    
-    
-        else if(chrcmp(atom, ','))      return "COMMA";
-        else if(chrcmp(atom, '_'))      return "STR";  
-        else if(chrcmp(atom, '>'))      return "CMP_GT";
-        else if(chrcmp(atom, '<'))      return "CMP_LT";
+    else if (w == '+')          return "PLUS";
+    else if (w == '-')          return "MINUS";
 
-        else if(chrcmp(atom, '.'))      return "DOT";
-
-        else if(chrcmp(atom, EOF))      return "__EOF__";
-        else if(chrcmp(atom, '\0'))     return "__EOF__";
-
-        char err_log[128];
-        sprintf(err_log, "Unreachable token at the word: (%c)", atom);
-        gassert(false, err_log);
-    }
-    void lex_string_literal(tokenName src, ptrType& idx, tokenList& tkvec, tokenAtom expect_tk){
-        { /*  ADDING THE INITIAL QUOTES */
-
-            const tokenName tmpSrc = std::string(&expect_tk);
-            tokenType tmpTk  = thisTk(src, *idx);
-            tkvec.push_back(tokensPair(std::string((&tmpSrc)[0]), tmpTk));
-            debug_lexer(tmpSrc[0], tmpTk, *idx);
-
-            incPtr(idx);
-        }
-        /*   STRING LEXING ITSELF */
-
-        tokenName str;
-        for(;src[*idx] != expect_tk;){
-            str += src[*idx];
-            incPtr(idx);
-        }
-        tkvec.push_back(tokensPair(str, "STRING_LITERAL"));
-        debug_lexer(str, "STRING LITERAL", *idx);
-        /*  END OF LEXING STRING */
-        {
-            const tokenName tmpSrc = std::string(&expect_tk);
-            tokenType tmpTk  = thisTk(src, *idx);
-            tkvec.push_back(tokensPair(std::string((&tmpSrc)[0]), tmpTk));
-            debug_lexer(tmpSrc[0], tmpTk, *idx);        
-            incPtr(idx);
-
-        }
-    }
-    tokenList run(tokenName src, ptrType& idx){
-        tokenType this_tk = thisTk(src, *idx);
-        tokenType next_tk = thisTk(src, *idx + 1);    
-        tokenList tkVec;
-        initTmp(tmp);
-        src[src.length() + 1] = EOF;         
-        for (;src[*idx] != EOF;){
-           
-            lexer_literal_macro("STR_INIT_DQ", DOUBLE_QUOTES);
-            lexer_literal_macro("STR_INIT_SQ", SINGLE_QUOTES);
-
-            this_tk = thisTk(src, *idx);
-            if(this_tk == "STR_INIT_DQ" || this_tk == "STR_INIT_SQ")
-                continue;
-            tmp += src[*idx];
-            next_tk = thisTk(src, *idx + 1);
-            
-            if (this_tk != next_tk){
-                if(this_tk != "__BLANK__")
-                    tkVec.push_back(tokensPair(tmp, this_tk));
-                debug_lexer(tmp, this_tk, *idx);
-                reset_str(tmp);
-            }
-
-
-            if (next_tk == "__EOF__"){
-                break;
-            }
-            incPtr(idx);
-        }
-        debug_lexer(tmp, next_tk, *idx);        
-        return crossReference(tkVec);
-    }
-
+    return "__BlANK__";
 }
-#endif /* ifndef LEXER_CPP */
+namespace SV{
+    size_t countChar(std::string src){
+        size_t i = 0;
+        size_t len = src.length();
+        while(i <= len){
+            i += 1;
+        }
+        return i;
+    }
+    typedef struct {
+        size_t      count;
+        std::string src;
+        size_t      minimunValue = 1;
+    }stringView;
+
+    stringView SV(std::string src, size_t count = 0){
+        stringView sv;
+        sv.count = (count == 0) 
+            ? SV::countChar(src)
+            : count;
+        sv.src   = src;
+        return sv;
+    }
+    
+    void trimLeft(SV::stringView &sv){
+
+        size_t len = sv.src.length();
+        size_t index = 0;
+
+        while(index < len && isspace(sv.src[index])){
+            ++index;
+        }
+        sv.count -= index;
+        sv.src = sv.src.substr(index, sv.src.length());
+    }
+    std::string separateByTokens(SV::stringView &sv){
+        SV::trimLeft(sv);
+        size_t len = sv.src.length();
+        size_t i = 0;
+        std::string result;
+
+        std::string thisTkName;
+        std::string nextTkName;
+        // "word 123"
+        while(i < len && !isspace(sv.src[i]) && thisTkName == nextTkName){
+            thisTkName = WT(sv.src[i]);
+            nextTkName = WT(sv.src[i + 1]);
+            result += sv.src[i];            
+
+
+            ++i;
+        }
+        sv.count -= i;
+        sv.src = sv.src.substr(i, len);
+        return result;
+
+    }
+    std::string chopRight(SV::stringView &sv){
+        size_t len = sv.src.length();
+        size_t i = 0;
+        std::string result;
+        // "word 123"
+        while(i < len && !isspace(sv.src[i])){
+            result += sv.src[i];            
+            ++i;
+        }
+        sv.count -= i;
+        sv.src = sv.src.substr(i, len);
+        return result;
+    }
+    std::string chopNext(SV::stringView &sv){
+        SV::trimLeft(sv);
+        return (SV::chopRight(sv));
+    }
+}
+namespace Lexer{
+    std::vector<Token> crossReference(std::vector<Token> &src){
+        std::vector<size_t> cR, eL;
+        size_t currentPosition{};
+        for(std::vector<Token>::iterator x = src.begin(); x !=  src.end(); ++x){
+
+            if (x->head.atomName == "do"){
+                cR.push_back(currentPosition);
+                if(cR.size() > 0){
+                size_t if_ip = cR.back();
+                    cR.pop_back();
+                    src[if_ip].head.atomLinkedIndex = currentPosition - if_ip;
+                    cR.push_back(currentPosition);                                            
+                }
+            }
+            else if (x->head.atomName == "while"){
+                cR.push_back(currentPosition);                
+            }
+            else if (x->head.atomName == "elif"){
+                size_t if_ip = cR.back();
+                eL.push_back(currentPosition);
+                if((src[if_ip].head.atomLinkedIndex) == 0){
+                    src[if_ip].head.atomLinkedIndex = currentPosition - if_ip + 1;
+                    src[currentPosition].head.atomLinkedIndex = currentPosition;
+                    cR.push_back(currentPosition);}
+            }
+            else if (x->head.atomName == "else"){
+                size_t if_ip = cR.back();
+                cR.pop_back();
+                src[if_ip].head.atomLinkedIndex = currentPosition - if_ip + 1;
+                cR.push_back(currentPosition);
+                if(eL.size() > 0){
+                    while(eL.size() > 0){
+                        size_t elif_ip = eL.back();
+                        eL.pop_back();
+                        src[elif_ip].head.atomLinkedIndex = currentPosition - src[elif_ip].head.atomLinkedIndex;
+                    }
+                }
+                
+            } 
+            else if (x->head.atomName == "end"){
+                size_t if_ip = cR.back();
+                cR.pop_back();
+                src[if_ip].head.atomLinkedIndex = currentPosition - if_ip + 1;
+                if(cR.size() > 0){
+                    if_ip = cR.back();
+                    cR.pop_back();
+                    src[currentPosition].head.atomLinkedIndex = currentPosition - if_ip;
+                }
+            }
+            ++currentPosition;
+        }
+        return src;
+    }
+    std::string Tokenize(std::string word, Token_Type &op){
+        if(is_number(word)){
+            op = NUMBER;
+            return ("INT");
+        }
+        else if (word == "+"){
+            op = BINARY_OPERAND;
+            return ("OP_PLUS");
+        }
+        else if (word == "-"){
+            op = BINARY_OPERAND;
+            return ("OP_MINUS");
+        }
+        else if (word == "<"){
+            op = BINARY_OPERAND;
+            return ("OP_CMP_LT");
+        }
+        else if (word == ">"){
+            op = BINARY_OPERAND;
+            return ("OP_CMP_GT");
+        }
+        else{
+            op = STRING_LITERAL;
+            return ("STR");
+        }
+    }
+    std::vector<Token> lex(std::string source){
+        SV::stringView src = SV::SV(source);
+        size_t  start = src.count;
+        size_t  pos{};
+        Token_Type           actualType;
+        std::string          actualWorld;
+        std::string          token;
+        std::vector<Token>   tokenList;
+        while(src.count > src.minimunValue){
+            actualWorld = SV::separateByTokens(src);
+            if(actualWorld.length() ==  0 ) continue;
+
+            pos = start - src.count;
+            token = Lexer::Tokenize(actualWorld, actualType);
+            tokenList.push_back(
+                Token{
+                    .type = actualType,
+                    .head = Atom{
+                        actualWorld, 
+                        token, 
+                        pos,
+                        0
+                    },
+                }
+            );
+        }
+        Lexer::crossReference(tokenList);
+        return tokenList;
+    }
+}
+
+
+#endif /* ifndef LEXER */

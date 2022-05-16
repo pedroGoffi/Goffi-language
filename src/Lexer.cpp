@@ -27,6 +27,7 @@ public:
     std::string atomName;
     std::string atomType;
     size_t      atomIndex;
+    size_t      atomIndexLine;
     size_t      atomLinkedIndex;
 };
 typedef enum{
@@ -208,7 +209,7 @@ namespace Lexer{
             return ("STR");
         }
     }
-    std::vector<Token> lex(std::string source){
+    void lex_line(std::vector<Token> &tokenVector, std::string source, size_t line){
         SV::stringView src = SV::SV(source);
         size_t  start = src.count;
         size_t  pos{};
@@ -228,14 +229,16 @@ namespace Lexer{
                     .head = Atom{
                         actualWorld, 
                         token, 
-                        pos,
+                        pos - actualWorld.length(),
+                        line,
                         0
                     },
                 }
             );
         }
         Lexer::crossReference(tokenList);
-        return tokenList;
+        for(auto& token_after_lex : tokenList)
+            tokenVector.push_back(token_after_lex);
     }
 }
 

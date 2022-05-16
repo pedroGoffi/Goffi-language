@@ -4,6 +4,10 @@
 #include <vector>
 #include <cassert>
 #include <fstream>
+
+#define MEMORY_SIZE 69000
+#define makeLabel out << "addr_" << addrCount << ":\n"; ++addrCount;
+
 typedef uint64_t type;
 /*  
  *  This shall simulate the program
@@ -37,6 +41,19 @@ void Goffi::simulate_program(std::vector<VR> &program){
 
     while(ip != program.end()){
         switch(ip->op){
+            case OP_LOADBYTE:
+                ++ip;
+                assert(false && "Not implemented yet\n");
+                break;
+            case OP_STOREBYTE:
+                ++ip;
+                assert(false && "Not implemented yet\n");
+                break;
+            case OP_MEM:{
+                ++ip;
+                assert(false && "Not implemented yet\n");
+                break;
+            }
             case OP_GTHAN:{
                 type a = stack.back(); 
                 stack.pop_back();
@@ -141,7 +158,7 @@ void Goffi::simulate_program(std::vector<VR> &program){
                 break;
             case NUM_OF_OPERANDS: break;
             default: {
-                ip = program.end();
+                assert(false && "WARNING!! Unreachable operation in simulation mode\n");
                 break;
             }
         }
@@ -151,7 +168,7 @@ void Goffi::simulate_program(std::vector<VR> &program){
  * This will compile the program to assembly x86_64
  */
 void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
-    assert(NUM_OF_OPERANDS == 10 && "Exhaustive time handling operand, please update the compile_program in ");
+    assert(NUM_OF_OPERANDS == 17 && "Exhaustive time handling operand, please update the compile_program in ");
 
     std::fstream out("out.asm", std::ios::out);
 
@@ -168,23 +185,83 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
     size_t addrCount = 1;
     while( ip != program.end()){
         switch(ip->op){
+            case OP_GTHAN:
+                makeLabel;
+                out <<  "   ;; ---- cmpGT\n"
+                    <<  "   mov rcx, 0\n"
+                    <<  "   mov rdx, 1\n"
+                    <<  "   pop rax\n"
+                    <<  "   pop rbx\n"
+                    <<  "   cmp rax, rbx\n"
+                    <<  "   cmove rcx, rdx\n"
+                    <<  "   push rcx\n"
+                    ;
+                ++ip;
+                break;
+            case DUP:
+                makeLabel;
+                out <<  "   ;; ---- dup\n"
+                    <<  "   pop rax\n"
+                    <<  "   push rax\n"
+                    <<  "   push rax\n"
+                    ;
+                ++ip;
+                break;
+            case OP_STOREBYTE:{
 
+                makeLabel;
+                switch(ip->operand){
+                    case (8):
+
+                        out <<  "   ;; ---- store 8\n"
+                            <<  "   pop rbx\n"
+                            <<  "   pop rax\n"
+                            <<  "   mov BYTE [rax], bl\n"
+                            ;
+                        break;
+                }
+                ++ip;
+                break;
+            }
+            case OP_LOADBYTE: {
+                makeLabel;
+                switch(ip->operand){
+                    case (8):
+                        out <<  "   ;; ---- load 8\n"
+                            <<  "   pop rax\n"
+                            <<  "   xor rbx, rbx\n"
+                            <<  "   mov bl, BYTE [rax]\n"
+                            <<  "   push rbx\n"
+                            ;
+                        break;
+                }
+                ++ip;
+                break;
+            }
+            case OP_MEM:
+                makeLabel;
+                out <<  "   ;; ---- mem\n"
+                    <<  "   push buffer\n"
+                    ;
+                ++ip;
+                break;
             case OP_IF: 
+                makeLabel;
                 out <<  "   ;; ---- if\n"
                     ;
                 ++ip;
                 break;
             case OP_ELSE: 
+                makeLabel;
                 out <<  "   jmp addr_" << addrCount + 1 << "\n"
                     <<  "   ;; ---- else\n"
-                    <<  "addr_" << addrCount  << ":\n"
                     ;
                 ++addrCount;
                 ++ip;
                 break;
             case OP_DO: 
-                out <<  "addr_"<<addrCount<<":\n"
-                    <<  "   ;; ---- if\n"
+                makeLabel;
+                out <<  "   ;; ---- if\n"
                     <<  "   pop rax\n"
                     <<  "   test rax, rax\n"
                     <<  "   jz addr_" << addrCount + 1<< "\n"                
@@ -193,6 +270,7 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 ++ip;
                 break;
             case OP_END:
+                makeLabel;
                 out <<  "   ;; ---- end\n"
                     <<  "   addr_" << addrCount << "\n"
                     ;
@@ -200,6 +278,7 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 ++ip;
                 break;
             case OP_EQUALS:
+                makeLabel;
                 out <<  "   ;; ---- equals\n"
                     <<  "   mov rcx, 0\n"
                     <<  "   mov rdx, 1\n"
@@ -212,12 +291,14 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 ++ip;
                 break;
             case PUSH_INT:
+                makeLabel;
                 out <<  "   ;; ---- push int\n"
                     <<  "   push " << ip->operand << "\n"
                     ;
                 ++ip;
                 break;
             case OP_PLUS:{
+                makeLabel;
                 out <<  "   ;; ---- add\n"
                     <<  "   pop rbx\n"
                     <<  "   pop rax\n"
@@ -228,6 +309,7 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 break;
             }
             case OP_MINUS:
+                makeLabel;
                 out <<  "   ;; ---- minus\n"
                     <<  "   pop rbx\n"
                     <<  "   pop rax\n"
@@ -237,6 +319,7 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 ++ip;
                 break;
             case DUMP:{
+                makeLabel;
                 out <<  "   ;; ---- call dump\n"
                     <<  "   pop rdi\n"
                     <<  "   call dump\n"
@@ -245,8 +328,8 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 break;
             }
             case EXIT:
-                out <<  "addr_" << addrCount << ":\n"
-                    <<  "   ;; --- exit\n"
+                makeLabel;
+                out <<  "   ;; --- exit\n"
                     <<  "   mov rax, 60\n"
                     <<  "   mov rdi, " << ip->operand << "\n"
                     <<  "   syscall\n"
@@ -255,17 +338,15 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 break;
             case NUM_OF_OPERANDS: break;
             default: {
-                ip = program.end();
-                out <<  "   ;; exit - default op\n"
-                    <<  "   mov rax, 60\n"
-                    <<  "   mov rdi, 0\n"
-                    <<  "   syscall\n"
-                    ;
+                assert(false && "WARNING! Unreachable operations in compile mode\n");
                 ++ip;
                 break;
             }
         }
     }
+    out <<  "segment .bss\n"
+        <<  "buffer:    resb    " << MEMORY_SIZE << "\n"
+        ;
     out.close();
     char cmd[128];
     sprintf(cmd, "nasm -felf64 -g out.asm");

@@ -1,0 +1,6 @@
+1 2 + dump
+1 2 - dump
+2 2 * dump
+2 2 / dump
+
+exit(0)

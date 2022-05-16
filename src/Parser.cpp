@@ -16,7 +16,10 @@ typedef enum{
     ID_DO,
     ID_ELIF,
     ID_ELSE,
-    ID_END
+    ID_END,
+    ID_MEM,
+    ID_LOAD,
+    ID_STORE
 }Identifiers;
 typedef enum{
     B_PLUS,
@@ -25,35 +28,49 @@ typedef enum{
     B_CMP_LT
 } BinOpId;
 namespace Parser{
-    BinOpId parseBinOp(std::string boi){
-        if      (boi == "+")    return B_PLUS;
-        else if (boi == "-")    return B_MINUS;
-        else if (boi == "<")    return B_CMP_LT;
-        else if (boi == ">")    return B_CMP_GT;
+    BinOpId parseBinOp(std::vector<Token>::iterator boid){
+        if      (boid->head.atomName == "+")    return B_PLUS;
+        else if (boid->head.atomName == "-")    return B_MINUS;
+        else if (boid->head.atomName == "<")    return B_CMP_LT;
+        else if (boid->head.atomName == ">")    return B_CMP_GT;
 
-        fprintf(stderr, "Error: Unreachable binary operand (%s)\n", boi.c_str());
+        fprintf(stderr, "%lu:%lu: Error: Unreachable binary operand (%s)\n", 
+            boid->head.atomIndexLine,
+            boid->head.atomIndex,
+            boid->head.atomName.c_str()
+        );
         exit(1);
     }
-    Identifiers parseIdentifier(std::string id){
-        if      (id == "dump")  return ID_INTRISIC_DUMP;
-        else if (id == "=")     return ID_INTRISIC_EQUALS; 
-        else if (id == "dup")   return ID_INTRISIC_DUP;
+    Identifiers parseIdentifier(std::vector<Token>::iterator id){
+        if      (id->head.atomName == "dump")  return ID_INTRISIC_DUMP;
+        else if (id->head.atomName == "=")     return ID_INTRISIC_EQUALS; 
+        else if (id->head.atomName == "dup")   return ID_INTRISIC_DUP;
 
        
        
 
-        else if (id == "exit")  return ID_EXIT;
 
-        else if (id == "if")    return ID_IF;
-        else if (id == "while") return ID_WHILE;
-        else if (id == "do")    return ID_DO;
-        else if (id == "elif")  return ID_ELIF;
-        else if (id == "else")  return ID_ELSE;
-        else if (id == "end")   return ID_END;
+
+        else if (id->head.atomName == "store") return ID_STORE;
+        else if (id->head.atomName == "load")  return ID_LOAD;
+
+        else if (id->head.atomName == "mem")   return ID_MEM;
+        else if (id->head.atomName == "exit")  return ID_EXIT;
+
+        else if (id->head.atomName == "if")    return ID_IF;
+        else if (id->head.atomName == "while") return ID_WHILE;
+        else if (id->head.atomName == "do")    return ID_DO;
+        else if (id->head.atomName == "elif")  return ID_ELIF;
+        else if (id->head.atomName == "else")  return ID_ELSE;
+        else if (id->head.atomName == "end")   return ID_END;
         
 
 
-        fprintf(stderr, "Error: Unreachable identifier at `%s` in the Parsing stage.\n", id.c_str());
+        fprintf(stderr, "%lu:%lu: Error: Unreachable identifier at `%s` in the Parsing stage.\n", 
+                id->head.atomIndexLine,
+                id->head.atomIndex,
+                id->head.atomName.c_str()
+        );
         exit(1);
     }
     std::vector<VR> parse(std::vector<Token> tokens){
@@ -64,8 +81,79 @@ namespace Parser{
             switch(Node->type){
                 
                 case STRING_LITERAL:{                                        
-                    Identifiers id = Parser::parseIdentifier(Node->head.atomName);
+                    Identifiers id = Parser::parseIdentifier(Node);
                     switch(id){
+                        case ID_STORE:{
+                            ++Node;
+                            uint64_t storeType;
+                            try{
+                                storeType = stoi64(Node->head.atomName);
+                            } catch(std::invalid_argument& err){
+
+                                fprintf(stderr, "%lu:%lu: Error: `store` operand accepts the next value as the store capacity in bytes\n",
+                                    Node->head.atomIndexLine,
+                                    Node->head.atomIndex
+                                );
+                                fprintf(stderr, "   Note: Excpected `size_t` but receive: `%s`\n",
+                                        typeid(Node->head.atomName).name());
+                                exit(1);
+                            }
+                            switch(storeType){
+                                case (8):
+                                    output.push_back(VR{OP_STOREBYTE,   8});
+                                    break;
+                                default:
+                                    fprintf(stderr, "%lu:%lu: Error: `store` op does not support the given type\n",
+                                        Node->head.atomIndexLine,
+                                        Node->head.atomIndex
+                                    );
+                                    fprintf(stderr, "   Note: For now `store` only supports store8\n");
+                                    exit(1);
+                                    break;
+                            }
+
+                            ++Node;
+                            break;
+                        }
+                        case ID_LOAD:{
+                            ++Node;
+                            uint64_t loadType;
+                            try{
+                                loadType = stoi64(Node->head.atomName);
+                            }
+                            catch(std::invalid_argument& err){
+                                fprintf(stderr, "%lu:%lu: Error: `load` operand accepts the next value as the load type\n",
+                                    Node->head.atomIndexLine,
+                                    Node->head.atomIndex
+                                );
+                                fprintf(stderr, "   Note: Excpected: `size_t` but receive: `%s`\n",
+                                        typeid(Node->head.atomName).name());
+                                exit(1);
+                            }
+
+
+                            switch(loadType){
+                                case (8):{
+                                    output.push_back(VR{OP_LOADBYTE,    8});                                    
+                                    break;
+                                }    
+                                default:{
+                                    fprintf(stderr, "%lu:%lu: Error: `load` op does not suport the given type\n",
+                                        Node->head.atomIndexLine,
+                                        Node->head.atomIndex
+                                    );
+                                    fprintf(stderr, "   Note: For now only suport load8\n");
+                                    exit(1);
+                                    break;
+                                }
+                            }
+                            ++Node;
+                            break;
+                        }
+                        case ID_MEM:
+                          output.push_back(VR{OP_MEM,   0});
+                          ++Node;
+                          break;
                         case ID_WHILE:
                             output.push_back(VR{WHILE,  0});
                             ++Node;
@@ -85,7 +173,10 @@ namespace Parser{
                         case ID_ELIF:
                             fprintf(stdout, "[`ELIF` PARSER - LINKED INDEX] : %lu", Node->head.atomLinkedIndex);
                             printf("`elif` Not implemented yet\n");
-                            fprintf(stderr, "Error: Internal keyword `elif` not implemented yet\n");
+                            fprintf(stderr, "%lu:%lu: Error: Internal keyword `elif` not implemented yet\n",
+                                Node->head.atomIndexLine,
+                                Node->head.atomIndex
+                            );
                             exit(1);
                             ++Node;
                             break;
@@ -101,17 +192,23 @@ namespace Parser{
                             ++Node;
                             break;
                         case ID_EXIT:{
-                            Node += 2; 
                             try{
+                                if (Node + 2 == tokens.end() || Node + 1 == tokens.end()){
+                                    throw std::runtime_error("`exit` keyword is a pseudo function call, since must open brackets\n");
+
+                                }
+                                Node += 2; 
                                 output.push_back(VR{EXIT, stoi64(Node->head.atomName)});
                             }catch(...){
                                 fprintf(
                                     stderr, 
-                                    "Error: `exit` expects (uint64_t) but receive (%s)\n"
-                                    "   Column: %zu\n",
-                                    typeid(Node->head.atomName).name(),
-                                    Node->head.atomIndex
+                                    "%lu:%lu: Error: `exit` expects (size_t) but receive (%s)\n",
+                                    Node->head.atomIndexLine,
+                                    Node->head.atomIndex,
+                                    typeid(Node->head.atomName).name()
                                 );
+                                fprintf(stderr, "   Note: `exit` keyword is a pseudo function call, since must open brackets\n");
+                                exit(1);
                             }
                             Node += 2; 
                             break;
@@ -129,7 +226,7 @@ namespace Parser{
                     ++Node;
                     break;
                 case BINARY_OPERAND:
-                    switch(Parser::parseBinOp(Node->head.atomName)){
+                    switch(Parser::parseBinOp(Node)){
                         case B_PLUS:
                             output.push_back(VR{OP_PLUS,    0});
                             break;

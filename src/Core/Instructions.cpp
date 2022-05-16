@@ -8,6 +8,7 @@ typedef enum{
     OP_EQUALS,
     OP_GTHAN,
     OP_LTHAN,    
+    OP_MEM,
     DUMP,
     DUP,
     EXIT,
@@ -17,6 +18,9 @@ typedef enum{
     OP_IF,
     OP_DO,
     OP_ELSE,
+
+    OP_LOADBYTE,
+    OP_STOREBYTE,
     NUM_OF_OPERANDS        
 } Op_type;
 

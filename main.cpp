@@ -55,11 +55,14 @@ int main(int argc, char** argv)
     std::fstream INPUT_FILE(inputFilePath, std::ios::in);
     std::string code;
     std::string line;
+    std::vector<Token>  tokens;
+    size_t lineCount = 1;
     while(getline(INPUT_FILE, line)){
-        code += line+" ";
+        Lexer::lex_line(tokens, line, lineCount);
+        ++lineCount;
     }
     INPUT_FILE.close();
-    std::vector<Token>  tokens = Lexer::lex(code);
+
     std::vector<VR>     instructions = Parser::parse(tokens);
 
     if(simulate)

@@ -171,7 +171,6 @@ namespace Parser{
                             ++Node;
                             break;
                         case ID_ELIF:
-                            fprintf(stdout, "[`ELIF` PARSER - LINKED INDEX] : %lu", Node->head.atomLinkedIndex);
                             printf("`elif` Not implemented yet\n");
                             fprintf(stderr, "%lu:%lu: Error: Internal keyword `elif` not implemented yet\n",
                                 Node->head.atomIndexLine,
@@ -185,6 +184,7 @@ namespace Parser{
                             ++Node;
                             break;
                         case ID_IF:
+                            output.push_back(VR{OP_IF,  0});
                             ++Node;
                             break;
                         case ID_INTRISIC_DUMP:

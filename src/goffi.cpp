@@ -16,7 +16,7 @@ typedef uint64_t type;
  *  for better control if i need in future
  */
 void Goffi::simulate_program(std::vector<VR> &program){
-    assert(NUM_OF_OPERANDS == 14 && "Exhaustive time handling operand, please update the simulate_program");
+    assert(NUM_OF_OPERANDS == 17 && "Exhaustive time handling operand, please update the simulate_program");
     // IF BLOCKS
     // if in sim mode is only sintax 
     // in com mode it create a label to perform jumps
@@ -182,7 +182,7 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
         <<  "_start:\n"
         ;
     std::vector<VR>::iterator ip = program.begin();
-    size_t addrCount = 1;
+    size_t addrCount = 0;
     while( ip != program.end()){
         switch(ip->op){
             case OP_GTHAN:
@@ -245,6 +245,25 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                     ;
                 ++ip;
                 break;
+            case OP_LTHAN:
+                makeLabel;
+                out <<  "   ;; ---- cmp LT\n"
+                    <<  "   mov rcx, 0\n"
+                    <<  "   mov rdx, 1\n"
+                    <<  "   pop rax\n"
+                    <<  "   pop rbx\n"
+                    <<  "   cmp rbx, rax\n"
+                    <<  "   cmovl rcx, rdx\n"
+                    <<  "   push rcx\n"
+                    ;
+                ++ip;
+                break;
+            case WHILE:
+                makeLabel;
+                out <<  "   ;; ---- while\n"
+                    ;
+                ++ip;
+                break;
             case OP_IF: 
                 makeLabel;
                 out <<  "   ;; ---- if\n"
@@ -253,28 +272,32 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 break;
             case OP_ELSE: 
                 makeLabel;
-                out <<  "   jmp addr_" << addrCount + 1 << "\n"
+                out <<  "   jmp addr_" << ip->operand  << "\n"
                     <<  "   ;; ---- else\n"
                     ;
-                ++addrCount;
                 ++ip;
                 break;
             case OP_DO: 
                 makeLabel;
-                out <<  "   ;; ---- if\n"
+                out <<  "   ;; ---- do\n"
                     <<  "   pop rax\n"
                     <<  "   test rax, rax\n"
-                    <<  "   jz addr_" << addrCount + 1<< "\n"                
+                    <<  "   jz addr_" << ip->operand << "\n"                
                     ;
-                ++addrCount;
                 ++ip;
                 break;
             case OP_END:
                 makeLabel;
-                out <<  "   ;; ---- end\n"
-                    <<  "   addr_" << addrCount << "\n"
-                    ;
-                ++addrCount;
+                out <<  "   ;; ---- end\n";
+                if(ip->operand > 0){
+                    out
+                        <<  "   jmp  addr_"     << ip->operand  << "\n"
+                        ;
+                }else{
+                    out <<  "   jmp addr_"      << addrCount    << "\n"
+                        ;
+                }
+
                 ++ip;
                 break;
             case OP_EQUALS:

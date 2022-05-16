@@ -13,8 +13,7 @@
 
 #define SHIFT shift(&argc, &argv)
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv){
     std::string const program         = SHIFT;
     std::string inputFilePath;
     std::string outputFilePath        = "out.gf";
@@ -53,6 +52,7 @@ int main(int argc, char** argv)
         exit(1);
     }
     std::fstream INPUT_FILE(inputFilePath, std::ios::in);
+    assert(INPUT_FILE.is_open() && "Error: Could not open the file\n");
     std::string code;
     std::string line;
     std::vector<Token>  tokens;
@@ -63,12 +63,16 @@ int main(int argc, char** argv)
     }
     INPUT_FILE.close();
 
-    std::vector<VR>     instructions = Parser::parse(tokens);
-
-    if(simulate)
+    if(simulate){
+        Crossreference::simulation_mode(tokens);
+        std::vector<VR>     instructions = Parser::parse(tokens);
         Goffi::simulate_program(instructions);
-    else if (compile)
+    }
+    else if (compile){
+        std::vector<VR>     instructions = Parser::parse(tokens);
+        Crossreference::compilation_mode(instructions);
         Goffi::compile_program(instructions, outputFilePath);
+    }
     else{
         usage(stderr, program);
         fprintf(stderr, "Error: You must specify if you want simulation mode of compilation  mode\n");

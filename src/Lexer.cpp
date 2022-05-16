@@ -129,25 +129,86 @@ namespace SV{
         return (SV::chopRight(sv));
     }
 }
-namespace Lexer{
-    std::vector<Token> crossReference(std::vector<Token> &src){
-        std::vector<size_t> cR, eL;
-        size_t currentPosition{};
-        for(std::vector<Token>::iterator x = src.begin(); x !=  src.end(); ++x){
+namespace Crossreference{
+    void compilation_mode(std::vector<VR>& src){
+        std::vector<uint64_t> cR, eL;
+        uint64_t currentPosition{};
+//        for(std::vector<Token>::iterator x = src.begin(); x !=  src.end(); ++x){
 
-            if (x->head.atomName == "do"){
+        for(auto& x : src){
+            if (x.op == OP_DO){
                 cR.push_back(currentPosition);
                 if(cR.size() > 0){
-                size_t if_ip = cR.back();
+                    uint64_t if_ip = cR.back();
+                    cR.pop_back();
+                    src[if_ip].operand = currentPosition - if_ip;
+                    cR.push_back(currentPosition);                                            
+                }
+            }
+            else if (x.op == WHILE){
+                cR.push_back(currentPosition);                
+            }
+            //else if (x.head.atomName == "elif"){
+            //    size_t if_ip = cR.back();
+            //    eL.push_back(currentPosition);
+            //    if((src[if_ip].head.atomLinkedIndex) == 0){
+            //        src[if_ip].head.atomLinkedIndex = currentPosition - if_ip + 1;
+            //        src[currentPosition].head.atomLinkedIndex = currentPosition;
+            //        cR.push_back(currentPosition);}
+            //}
+            else if (x.op == OP_ELSE){
+                uint64_t if_ip = cR.back();
+                cR.pop_back();
+                src[if_ip].operand = currentPosition + 1;
+                cR.push_back(currentPosition);
+                if(eL.size() > 0){
+                    uint64_t elif_ip = eL.back();
+                    while(eL.size() > 0){
+                        elif_ip = eL.back();
+
+                        eL.pop_back();
+                        src[elif_ip].operand = currentPosition - src[elif_ip].operand;
+                    }
+                }
+                
+            } 
+            else if (x.op == OP_END){
+                uint64_t if_ip = cR.back();
+                cR.pop_back();
+                src[if_ip].operand = currentPosition + 1;
+                if(cR.size() > 0){
+                    if_ip = cR.back();
+                    cR.pop_back();
+
+                    src[currentPosition].operand = if_ip;
+                }
+            }
+            ++currentPosition;
+        }
+    }
+    
+    void simulation_mode(std::vector<Token> &src){
+        std::vector<size_t> cR, eL;
+        size_t currentPosition{};
+//        for(std::vector<Token>::iterator x = src.begin(); x !=  src.end(); ++x){
+
+        for(auto& x : src){
+            if (x.head.atomName == "if"){
+                cR.push_back(currentPosition);
+            }
+            else if (x.head.atomName == "do"){
+                cR.push_back(currentPosition);
+                if(cR.size() > 0){
+                    size_t if_ip = cR.back();
                     cR.pop_back();
                     src[if_ip].head.atomLinkedIndex = currentPosition - if_ip;
                     cR.push_back(currentPosition);                                            
                 }
             }
-            else if (x->head.atomName == "while"){
+            else if (x.head.atomName == "while"){
                 cR.push_back(currentPosition);                
             }
-            else if (x->head.atomName == "elif"){
+            else if (x.head.atomName == "elif"){
                 size_t if_ip = cR.back();
                 eL.push_back(currentPosition);
                 if((src[if_ip].head.atomLinkedIndex) == 0){
@@ -155,7 +216,7 @@ namespace Lexer{
                     src[currentPosition].head.atomLinkedIndex = currentPosition;
                     cR.push_back(currentPosition);}
             }
-            else if (x->head.atomName == "else"){
+            else if (x.head.atomName == "else"){
                 size_t if_ip = cR.back();
                 cR.pop_back();
                 src[if_ip].head.atomLinkedIndex = currentPosition - if_ip + 1;
@@ -169,7 +230,7 @@ namespace Lexer{
                 }
                 
             } 
-            else if (x->head.atomName == "end"){
+            else if (x.head.atomName == "end"){
                 size_t if_ip = cR.back();
                 cR.pop_back();
                 src[if_ip].head.atomLinkedIndex = currentPosition - if_ip + 1;
@@ -181,8 +242,9 @@ namespace Lexer{
             }
             ++currentPosition;
         }
-        return src;
     }
+}
+namespace Lexer{
     std::string Tokenize(std::string word, Token_Type &op){
         if(is_number(word)){
             op = NUMBER;
@@ -236,7 +298,6 @@ namespace Lexer{
                 }
             );
         }
-        Lexer::crossReference(tokenList);
         for(auto& token_after_lex : tokenList)
             tokenVector.push_back(token_after_lex);
     }

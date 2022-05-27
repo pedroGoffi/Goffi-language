@@ -12,7 +12,22 @@
 #include "./src/Parser.cpp"
 
 #define SHIFT shift(&argc, &argv)
+void std_in(){
+        std::string         INPUT;
+        std::vector<Token>  tokenStdin;
+        std::vector<VR>     Instructions;
+        while(1){
+            fprintf(stdout, "Gff-Stdin>  ");
+            std::getline(std::cin >> std::ws, INPUT);
+            Lexer::lex_line(tokenStdin, INPUT, 0);
+            Crossreference::simulation_mode(tokenStdin);
+            Instructions = Parser::parse(tokenStdin);
+            Goffi::simulate_program(Instructions);    
+            fprintf(stdout, "\n");
+        }
+        exit(0);
 
+}
 int main(int argc, char** argv){
     std::string const program         = SHIFT;
     std::string inputFilePath;
@@ -46,38 +61,39 @@ int main(int argc, char** argv){
             inputFilePath = flag;
         }
     }
-    if(inputFilePath.length()  == 0){
-        usage(stderr, program);
-        fprintf(stderr, "Error: No input file path was provided\n");
-        exit(1);
-    }
-    std::fstream INPUT_FILE(inputFilePath, std::ios::in);
-    assert(INPUT_FILE.is_open() && "Error: Could not open the file\n");
-    std::string code;
-    std::string line;
-    std::vector<Token>  tokens;
-    size_t lineCount = 1;
-    while(getline(INPUT_FILE, line)){
-        Lexer::lex_line(tokens, line, lineCount);
-        ++lineCount;
-    }
-    INPUT_FILE.close();
+    if(simulate || compile){
+        if(inputFilePath.length()  == 0){
+            usage(stderr, program);
+            fprintf(stderr, "Error: No input file path was provided\n");
+            exit(1);
+        }
 
-    if(simulate){
-        Crossreference::simulation_mode(tokens);
-        std::vector<VR>     instructions = Parser::parse(tokens);
-        Goffi::simulate_program(instructions);
+        std::fstream INPUT_FILE(inputFilePath, std::ios::in);
+        assert(INPUT_FILE.is_open() && "Error: Could not open the file\n");
+        std::string code;
+        std::string line;
+        std::vector<Token>  tokens;
+        size_t lineCount = 1;
+        while(getline(INPUT_FILE, line)){
+            Lexer::lex_line(tokens, line, lineCount);
+            ++lineCount;
+        }
+        INPUT_FILE.close();
+    
+
+        if(simulate){
+            Crossreference::simulation_mode(tokens);
+            std::vector<VR>     instructions = Parser::parse(tokens);
+            Goffi::simulate_program(instructions);
+        }
+        else if (compile){
+            std::vector<VR>     instructions = Parser::parse(tokens);
+            Crossreference::compilation_mode(instructions);
+            Goffi::compile_program(instructions, outputFilePath);
+        }
     }
-    else if (compile){
-        std::vector<VR>     instructions = Parser::parse(tokens);
-        Crossreference::compilation_mode(instructions);
-        Goffi::compile_program(instructions, outputFilePath);
-    }
-    else{
-        usage(stderr, program);
-        fprintf(stderr, "Error: You must specify if you want simulation mode of compilation  mode\n");
-        exit(1);
-    }
+    else
+        std_in();
     return 0;
 
 }

@@ -10,7 +10,6 @@ typedef enum{
     ID_INTRISIC_DUMP,
     ID_INTRISIC_DUP,
     ID_INTRISIC_EQUALS,
-    ID_EXIT,
     ID_WHILE,
     ID_IF,
     ID_DO,
@@ -45,18 +44,9 @@ namespace Parser{
         if      (id->head.atomName == "dump")  return ID_INTRISIC_DUMP;
         else if (id->head.atomName == "=")     return ID_INTRISIC_EQUALS; 
         else if (id->head.atomName == "dup")   return ID_INTRISIC_DUP;
-
-       
-       
-
-
-
         else if (id->head.atomName == "store") return ID_STORE;
         else if (id->head.atomName == "load")  return ID_LOAD;
-
         else if (id->head.atomName == "mem")   return ID_MEM;
-        else if (id->head.atomName == "exit")  return ID_EXIT;
-
         else if (id->head.atomName == "if")    return ID_IF;
         else if (id->head.atomName == "while") return ID_WHILE;
         else if (id->head.atomName == "do")    return ID_DO;
@@ -77,10 +67,8 @@ namespace Parser{
         std::vector<Token>::iterator Node = tokens.begin();
         std::vector<VR> output;
         while( Node != tokens.end()){
-
-            switch(Node->type){
-                
-                case STRING_LITERAL:{                                        
+            switch(Node->type){ 
+                case STRING:{                                        
                     Identifiers id = Parser::parseIdentifier(Node);
                     switch(id){
                         case ID_STORE:{
@@ -89,7 +77,6 @@ namespace Parser{
                             try{
                                 storeType = stoi64(Node->head.atomName);
                             } catch(std::invalid_argument& err){
-
                                 fprintf(stderr, "%lu:%lu: Error: `store` operand accepts the next value as the store capacity in bytes\n",
                                     Node->head.atomIndexLine,
                                     Node->head.atomIndex
@@ -111,7 +98,6 @@ namespace Parser{
                                     exit(1);
                                     break;
                             }
-
                             ++Node;
                             break;
                         }
@@ -130,8 +116,6 @@ namespace Parser{
                                         typeid(Node->head.atomName).name());
                                 exit(1);
                             }
-
-
                             switch(loadType){
                                 case (8):{
                                     output.push_back(VR{OP_LOADBYTE,    8});                                    
@@ -146,10 +130,8 @@ namespace Parser{
                                     exit(1);
                                     break;
                                 }
+                                break;
                             }
-                            ++Node;
-                            break;
-                        }
                         case ID_MEM:
                           output.push_back(VR{OP_MEM,   0});
                           ++Node;
@@ -191,36 +173,15 @@ namespace Parser{
                             output.push_back(VR{DUMP, 0});
                             ++Node;
                             break;
-                        case ID_EXIT:{
-                            try{
-                                if (Node + 2 == tokens.end() || Node + 1 == tokens.end()){
-                                    throw std::runtime_error("`exit` keyword is a pseudo function call, since must open brackets\n");
-
-                                }
-                                Node += 2; 
-                                output.push_back(VR{EXIT, stoi64(Node->head.atomName)});
-                            }catch(...){
-                                fprintf(
-                                    stderr, 
-                                    "%lu:%lu: Error: `exit` expects (size_t) but receive (%s)\n",
-                                    Node->head.atomIndexLine,
-                                    Node->head.atomIndex,
-                                    typeid(Node->head.atomName).name()
-                                );
-                                fprintf(stderr, "   Note: `exit` keyword is a pseudo function call, since must open brackets\n");
-                                exit(1);
-                            }
-                            Node += 2; 
-                            break;
                         }
                         case ID_INTRISIC_EQUALS: 
                             output.push_back(VR{OP_EQUALS,  0});
                             ++Node;
                             break;
-                        
                     }
                     break;
                 }
+
                 case NUMBER:
                     output.push_back(VR{PUSH_INT, stoi64(Node->head.atomName)});
                     ++Node;
@@ -242,6 +203,7 @@ namespace Parser{
                     }
                     ++Node;
                     break;
+                
             }
         }
         return output;

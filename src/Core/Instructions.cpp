@@ -11,7 +11,6 @@ typedef enum{
     OP_MEM,
     DUMP,
     DUP,
-    EXIT,
     WHILE,
     OP_END,
 

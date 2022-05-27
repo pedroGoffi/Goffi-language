@@ -26,14 +26,14 @@ class Atom{
 public:
     std::string atomName;
     std::string atomType;
-    size_t      atomIndex;
-    size_t      atomIndexLine;
-    size_t      atomLinkedIndex;
+    uint64_t      atomIndex;
+    uint64_t      atomIndexLine;
+    uint64_t      atomLinkedIndex;
 };
 typedef enum{
     NUMBER,
     BINARY_OPERAND,
-    STRING_LITERAL
+    STRING
 } Token_Type;
 typedef struct Token_ast Token;
 struct Token_ast{
@@ -55,21 +55,21 @@ std::string WT(char w){
     return "__BlANK__";
 }
 namespace SV{
-    size_t countChar(std::string src){
-        size_t i = 0;
-        size_t len = src.length();
+    uint64_t countChar(std::string src){
+        uint64_t i = 0;
+        uint64_t len = src.length();
         while(i <= len){
             i += 1;
         }
         return i;
     }
     typedef struct {
-        size_t      count;
+        uint64_t      count;
         std::string src;
-        size_t      minimunValue = 1;
+        uint64_t      minimunValue = 1;
     }stringView;
 
-    stringView SV(std::string src, size_t count = 0){
+    stringView SV(std::string src, uint64_t count = 0){
         stringView sv;
         sv.count = (count == 0) 
             ? SV::countChar(src)
@@ -80,8 +80,8 @@ namespace SV{
     
     void trimLeft(SV::stringView &sv){
 
-        size_t len = sv.src.length();
-        size_t index = 0;
+        uint64_t len = sv.src.length();
+        uint64_t index = 0;
 
         while(index < len && isspace(sv.src[index])){
             ++index;
@@ -91,8 +91,8 @@ namespace SV{
     }
     std::string separateByTokens(SV::stringView &sv){
         SV::trimLeft(sv);
-        size_t len = sv.src.length();
-        size_t i = 0;
+        uint64_t len = sv.src.length();
+        uint64_t i = 0;
         std::string result;
 
         std::string thisTkName;
@@ -112,8 +112,8 @@ namespace SV{
 
     }
     std::string chopRight(SV::stringView &sv){
-        size_t len = sv.src.length();
-        size_t i = 0;
+        uint64_t len = sv.src.length();
+        uint64_t i = 0;
         std::string result;
         // "word 123"
         while(i < len && !isspace(sv.src[i])){
@@ -149,7 +149,7 @@ namespace Crossreference{
                 cR.push_back(currentPosition);                
             }
             //else if (x.head.atomName == "elif"){
-            //    size_t if_ip = cR.back();
+            //    uint64_t if_ip = cR.back();
             //    eL.push_back(currentPosition);
             //    if((src[if_ip].head.atomLinkedIndex) == 0){
             //        src[if_ip].head.atomLinkedIndex = currentPosition - if_ip + 1;
@@ -165,12 +165,10 @@ namespace Crossreference{
                     uint64_t elif_ip = eL.back();
                     while(eL.size() > 0){
                         elif_ip = eL.back();
-
                         eL.pop_back();
                         src[elif_ip].operand = currentPosition - src[elif_ip].operand;
                     }
                 }
-                
             } 
             else if (x.op == OP_END){
                 uint64_t if_ip = cR.back();
@@ -188,60 +186,40 @@ namespace Crossreference{
     }
     
     void simulation_mode(std::vector<Token> &src){
-        std::vector<size_t> cR, eL;
-        size_t currentPosition{};
+        std::vector<uint64_t> cr;
+        uint64_t currentPosition{};
 //        for(std::vector<Token>::iterator x = src.begin(); x !=  src.end(); ++x){
-
-        for(auto& x : src){
-            if (x.head.atomName == "if"){
-                cR.push_back(currentPosition);
+        for(auto& x : src){            
+            if(    x.head.atomName == "if"
+                || x.head.atomName == "else"
+              /*|| x.head.atomName == "elif"
+                || x.head.atomName == "while"*/
+                || x.head.atomName == "do"){
+                cr.push_back(currentPosition);
             }
-            else if (x.head.atomName == "do"){
-                cR.push_back(currentPosition);
-                if(cR.size() > 0){
-                    size_t if_ip = cR.back();
-                    cR.pop_back();
-                    src[if_ip].head.atomLinkedIndex = currentPosition - if_ip;
-                    cR.push_back(currentPosition);                                            
-                }
-            }
-            else if (x.head.atomName == "while"){
-                cR.push_back(currentPosition);                
-            }
-            else if (x.head.atomName == "elif"){
-                size_t if_ip = cR.back();
-                eL.push_back(currentPosition);
-                if((src[if_ip].head.atomLinkedIndex) == 0){
-                    src[if_ip].head.atomLinkedIndex = currentPosition - if_ip + 1;
-                    src[currentPosition].head.atomLinkedIndex = currentPosition;
-                    cR.push_back(currentPosition);}
-            }
-            else if (x.head.atomName == "else"){
-                size_t if_ip = cR.back();
-                cR.pop_back();
-                src[if_ip].head.atomLinkedIndex = currentPosition - if_ip + 1;
-                cR.push_back(currentPosition);
-                if(eL.size() > 0){
-                    while(eL.size() > 0){
-                        size_t elif_ip = eL.back();
-                        eL.pop_back();
-                        src[elif_ip].head.atomLinkedIndex = currentPosition - src[elif_ip].head.atomLinkedIndex;
-                    }
-                }
-                
-            } 
-            else if (x.head.atomName == "end"){
-                size_t if_ip = cR.back();
-                cR.pop_back();
-                src[if_ip].head.atomLinkedIndex = currentPosition - if_ip + 1;
-                if(cR.size() > 0){
-                    if_ip = cR.back();
-                    cR.pop_back();
-                    src[currentPosition].head.atomLinkedIndex = currentPosition - if_ip;
+            else if (x.head.atomName == "end"){                                
+                uint64_t do_ip_block = cr.back();
+                cr.pop_back();
+                uint64_t do_aux_ip = cr.back();
+                cr.pop_back();
+                if (src[do_aux_ip].head.atomName == "if"){
+                    src[do_ip_block].head.atomLinkedIndex = currentPosition + 1;
                 }
             }
             ++currentPosition;
         }
+        size_t idx = 0;
+        printf("    --- start ----\n");
+        for(auto& x : src){
+            std::cout 
+                <<  "id: "      << x.head.atomName
+                <<  "\tidx: "   << idx
+                <<  "\tLidx: "  << x.head.atomLinkedIndex
+                <<  std::endl;
+            ++idx;
+        }
+        printf("    --- end ---\n");
+        //exit(1);
     }
 }
 namespace Lexer{
@@ -267,14 +245,14 @@ namespace Lexer{
             return ("OP_CMP_GT");
         }
         else{
-            op = STRING_LITERAL;
+            op = STRING;
             return ("STR");
         }
     }
-    void lex_line(std::vector<Token> &tokenVector, std::string source, size_t line){
+    void lex_line(std::vector<Token> &tokenVector, std::string source, uint64_t line){
         SV::stringView src = SV::SV(source);
-        size_t  start = src.count;
-        size_t  pos{};
+        uint64_t  start = src.count;
+        uint64_t  pos{};
         Token_Type           actualType;
         std::string          actualWorld;
         std::string          token;

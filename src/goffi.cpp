@@ -16,7 +16,7 @@ typedef uint64_t type;
  *  for better control if i need in future
  */
 void Goffi::simulate_program(std::vector<VR> &program){
-    assert(NUM_OF_OPERANDS == 17 && "Exhaustive time handling operand, please update the simulate_program");
+    assert(NUM_OF_OPERANDS == 16 && "Exhaustive time handling operand, please update the simulate_program");
     // IF BLOCKS
     // if in sim mode is only sintax 
     // in com mode it create a label to perform jumps
@@ -51,7 +51,7 @@ void Goffi::simulate_program(std::vector<VR> &program){
                 break;
             case OP_MEM:{
                 ++ip;
-                assert(false && "Not implemented yet\n");
+                assert(false && "MEM Not implemented yet\n");
                 break;
             }
             case OP_GTHAN:{
@@ -95,7 +95,7 @@ void Goffi::simulate_program(std::vector<VR> &program){
                 type a = stack.back();
                 stack.pop_back();
                 if(a == 0){
-                    ip += ip->operand;
+                    ip += ip->operand + 1;
                 }
                 else{
                     ++ip;
@@ -103,15 +103,16 @@ void Goffi::simulate_program(std::vector<VR> &program){
                 break;
             }
             case OP_ELSE:{
-                    ip += ip->operand;
+                    ip += (ip->operand);
                     break;
             }
             case OP_END:                         
                 if(ip->operand > 0){
+                    printf("IF");
                     ip -= ip->operand;
                 }
-                else
-                    ++ip;                
+                else 
+                    ++ip;
                 break;
 
             case OP_EQUALS:{
@@ -152,13 +153,9 @@ void Goffi::simulate_program(std::vector<VR> &program){
                 ++ip;
                 break;
             }
-            case EXIT:
-                exit(static_cast<int>(ip->operand));
-                ip = program.end();
-                break;
             case NUM_OF_OPERANDS: break;
             default: {
-                assert(false && "WARNING!! Unreachable operation in simulation mode\n");
+                ++ip;
                 break;
             }
         }
@@ -168,7 +165,7 @@ void Goffi::simulate_program(std::vector<VR> &program){
  * This will compile the program to assembly x86_64
  */
 void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
-    assert(NUM_OF_OPERANDS == 17 && "Exhaustive time handling operand, please update the compile_program in ");
+    assert(NUM_OF_OPERANDS == 16 && "Exhaustive time handling operand, please update the compile_program in ");
 
     std::fstream out("out.asm", std::ios::out);
 
@@ -350,15 +347,6 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 ++ip;
                 break;
             }
-            case EXIT:
-                makeLabel;
-                out <<  "   ;; --- exit\n"
-                    <<  "   mov rax, 60\n"
-                    <<  "   mov rdi, " << ip->operand << "\n"
-                    <<  "   syscall\n"
-                    ;
-                ++ip;
-                break;
             case NUM_OF_OPERANDS: break;
             default: {
                 assert(false && "WARNING! Unreachable operations in compile mode\n");

@@ -1,6 +1,8 @@
 #ifndef SRC_SRC_CODE
 #define SRC_SRC_CODE 
 #include "./goffi.h"
+#include "Core/Instructions.cpp"
+#include <iostream>
 #include <vector>
 #include <cassert>
 #include <fstream>
@@ -16,7 +18,7 @@ typedef uint64_t type;
  *  for better control if i need in future
  */
 void Goffi::simulate_program(std::vector<VR> &program){
-    assert(NUM_OF_OPERANDS == 16 && "Exhaustive time handling operand, please update the simulate_program");
+    assert(NUM_OF_OPERANDS == 17 && "Exhaustive time handling operand, please update the simulate_program");
     // IF BLOCKS
     // if in sim mode is only sintax 
     // in com mode it create a label to perform jumps
@@ -146,6 +148,15 @@ void Goffi::simulate_program(std::vector<VR> &program){
                 ++ip;
                 break;
             }
+	    case OP_MULT: {
+		type a = stack.back();
+		stack.pop_back();
+		type b = stack.back();
+		stack.pop_back();
+		stack.push_back(b * a);
+		++ip;
+		break;
+	    }
             case DUMP:{
                 type a = stack.back();
                 stack.pop_back();

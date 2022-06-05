@@ -6,6 +6,7 @@ typedef enum{
     OP_PLUS,
     OP_MINUS,
     OP_EQUALS,
+    OP_MULT,
     OP_GTHAN,
     OP_LTHAN,    
     OP_MEM,

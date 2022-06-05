@@ -1,62 +1,50 @@
 # GLang
-Its like Porth but in C++ with my bad data Structure knowledge
-and some diferences in the syntax
+Currently this lang is passing by changes in the way it works
+## Summary
+* [Simple math](#Aritmetric-Operators)
+* [Built-in Procedures](#Build-in-Procedures)
+* [Flow Control](#Flow-Control)
+
+## <div id="Aritmetric-Operators">Aritmetric-Operators</div>	
+    result of any operation will be pushed automatically ot the top of the stack
+	In comparasions `<` or `>` will push 1 if true and 0 if false.
+`=` EQUALS operand, Usage: `1 1 =` is equivalent to (1 == 1)
+
+`+`	PLUS operand. Usage:  `2 1 +` is equivalent to (2+1) 
+
+`-`	MINUS operand, Usage: `2 1 -` is equivalent to (2-1) 
+
+`<`	LESS THAN operand, Usage:  `2 1 <` is equivalent to (2<1) 
+
+`>`	GREATER THAN operand, Usage:  `2 1 >` is equivalent to (2>1) 
+
+`*`	MULTIPLY operand, example: `2 1 *` is equivalent to (2*1)
 
 
-### Aritmetric operators
-
-Usage == Mathematicall equivalent == result
-- `=` - 1 2 = == (1 == 2)   == 3
-- `+` - 1 2 + == 1 + 2      == 3
-- `-` - 2 1 - == 2 - 1      == 1
-- `*` - 2 2 * == 2 * 2      == 4
-- `/` - 8 2 / == 8 / 2      == 3
-- `<` - 8 2 < == 8 < 2      == FALSE: 0
-- `>` - 8 2 > == 8 > 2      == TRUE: 1
-
-### Memory usage
-
-- `mem` - push the address of the begining of the memory where you can READ and
-  WRITE onto the stack.
 
 
--`store` - Will store in the buffer the next value of bytes, ex: store8
+# <div id="Build-in-Procedures">Build-in Procedures </div>
+	NOTE 	This will be launched to std.goffi 
+    		when i implement procedures
+`dump` print the last digit in the stack
+
+`dup` duplicate the last element in the stack
+
+# <div id="Flow-Control">Flow Control</div>
 
 
--`load` -  Will load the last value of bytes, ex: load8
 
-### Flow Control
-Dump will print in the screen the last digit in the stack and consume it
--`dump`
+`if` IS NOT IMPLEMENTED YET
 
+`else` IS NOT IMPLEMENTED YET
 
-Dup will duplicate the last digit in the stack
--`dup` -    
+`do` Always close end blocks
 
+`while` IS NOT IMPLEMENTED YET
 
-exit(exit code) will exit the program with exit code in the arg
--`exit` -   
+`mem` IS NOT IMPLEMENTED YET
 
+`load` IS NOT IMPLEMENTED YET
 
- Sugar syntax to crossreference in the Lexing stage
--`if` -    
+`store` IS NOT IMPLEMENTED YET
 
-
-Will perm a loop wile expression is true
--`while` -  
-
-
-Points to the next element to jump
--`do` -
-
-
-use between if and else
--`elif` -
-
-
-use after elif or if
--`else` -
-
-
-use after blocks
--`end`- 

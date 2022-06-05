@@ -6,6 +6,7 @@
 #include <typeinfo>
 
 #define stoi64(x) static_cast<uint64_t>(std::stoi(x))
+
 typedef enum{
     ID_INTRISIC_DUMP,
     ID_INTRISIC_DUP,
@@ -24,14 +25,16 @@ typedef enum{
     B_PLUS,
     B_MINUS,
     B_CMP_GT,
-    B_CMP_LT
+    B_CMP_LT,
+    B_MULT
 } BinOpId;
 namespace Parser{
     BinOpId parseBinOp(std::vector<Token>::iterator boid){
-        if      (boid->head.atomName == "+")    return B_PLUS;
+        if	(boid->head.atomName == "+")    return B_PLUS;
         else if (boid->head.atomName == "-")    return B_MINUS;
         else if (boid->head.atomName == "<")    return B_CMP_LT;
         else if (boid->head.atomName == ">")    return B_CMP_GT;
+	else if (boid->head.atomName == "*")	return B_MULT;
 
         fprintf(stderr, "%lu:%lu: Error: Unreachable binary operand (%s)\n", 
             boid->head.atomIndexLine,
@@ -81,7 +84,7 @@ namespace Parser{
                                     Node->head.atomIndexLine,
                                     Node->head.atomIndex
                                 );
-                                fprintf(stderr, "   Note: Excpected `size_t` but receive: `%s`\n",
+                                fprintf(stderr, "   Note: Excpected `NUMERICAL_TYPE: INT` but receive: `%s`\n",
                                         typeid(Node->head.atomName).name());
                                 exit(1);
                             }
@@ -112,7 +115,7 @@ namespace Parser{
                                     Node->head.atomIndexLine,
                                     Node->head.atomIndex
                                 );
-                                fprintf(stderr, "   Note: Excpected: `size_t` but receive: `%s`\n",
+                                fprintf(stderr, "   Note: Excpected: `NUMERICAL_TYPE: INT` but receive: `%s`\n",
                                         typeid(Node->head.atomName).name());
                                 exit(1);
                             }
@@ -188,6 +191,9 @@ namespace Parser{
                     break;
                 case BINARY_OPERAND:
                     switch(Parser::parseBinOp(Node)){
+			case B_MULT:
+			    output.push_back(VR{OP_MULT,    0});
+			    break;
                         case B_PLUS:
                             output.push_back(VR{OP_PLUS,    0});
                             break;

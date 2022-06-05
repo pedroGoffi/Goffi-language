@@ -1,6 +1,11 @@
-1 2 + dump
-1 2 - dump
-2 2 * dump
-2 2 / dump
+do
+    do 
+	1 2 + dump 
+	do 
+	    420 dump
+	end
+    end
+    do 1 2 - dump end
+    do 2 2 * dump end
+end
 
-exit(0)

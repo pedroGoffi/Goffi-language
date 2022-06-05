@@ -51,6 +51,7 @@ std::string WT(char w){
 
     else if (w == '+')          return "PLUS";
     else if (w == '-')          return "MINUS";
+    else if (w == '*')		return "MULT"
 
     return "__BlANK__";
 }
@@ -186,48 +187,41 @@ namespace Crossreference{
     }
     
     void simulation_mode(std::vector<Token> &src){
-        std::vector<uint64_t> cr;
+        std::vector<uint64_t> do_blocks;
         uint64_t currentPosition{};
 //        for(std::vector<Token>::iterator x = src.begin(); x !=  src.end(); ++x){
-        for(auto& x : src){            
-            if(    x.head.atomName == "if"
-                || x.head.atomName == "else"
-              /*|| x.head.atomName == "elif"
-                || x.head.atomName == "while"*/
-                || x.head.atomName == "do"){
-                cr.push_back(currentPosition);
-            }
-            else if (x.head.atomName == "end"){                                
-                uint64_t do_ip_block = cr.back();
-                cr.pop_back();
-                uint64_t do_aux_ip = cr.back();
-                cr.pop_back();
-                if (src[do_aux_ip].head.atomName == "if"){
-                    src[do_ip_block].head.atomLinkedIndex = currentPosition + 1;
-                }
-            }
+        for(auto& x : src){
+	    // simulation mode UwU
+	    if (x.head.atomName == "do"){
+		do_blocks.push_back(currentPosition);
+	    }
+	    else if (x.head.atomName == "end"){
+		uint64_t do_ip = do_blocks.back();
+		do_blocks.pop_back();
+		src[do_ip].head.atomLinkedIndex = currentPosition;
+	    }
             ++currentPosition;
         }
         size_t idx = 0;
         printf("    --- start ----\n");
         for(auto& x : src){
             std::cout 
-                <<  "id: "      << x.head.atomName
+                <<  "name:\t"      << x.head.atomName
                 <<  "\tidx: "   << idx
                 <<  "\tLidx: "  << x.head.atomLinkedIndex
                 <<  std::endl;
             ++idx;
         }
         printf("    --- end ---\n");
-        //exit(1);
+        exit(1);
     }
 }
 namespace Lexer{
     std::string Tokenize(std::string word, Token_Type &op){
         if(is_number(word)){
             op = NUMBER;
-            return ("INT");
-        }
+            return ("NUMERICAL_TYPE");
+        }	
         else if (word == "+"){
             op = BINARY_OPERAND;
             return ("OP_PLUS");
@@ -236,6 +230,11 @@ namespace Lexer{
             op = BINARY_OPERAND;
             return ("OP_MINUS");
         }
+	else if (word == "*"){
+	    op = BINARY_OPERAND;
+	    return ("OP_MULT");
+	}
+        
         else if (word == "<"){
             op = BINARY_OPERAND;
             return ("OP_CMP_LT");
@@ -246,7 +245,7 @@ namespace Lexer{
         }
         else{
             op = STRING;
-            return ("STR");
+            return ("STRING_TYPE");
         }
     }
     void lex_line(std::vector<Token> &tokenVector, std::string source, uint64_t line){

@@ -7,6 +7,7 @@
  *              name  index type
  */
 
+#include <cstdint>
 #ifndef LEXER
 #define LEXER value
 
@@ -51,7 +52,7 @@ std::string WT(char w){
 
     else if (w == '+')          return "PLUS";
     else if (w == '-')          return "MINUS";
-    else if (w == '*')		return "MULT"
+    else if (w == '*')		return "MULT";
 
     return "__BlANK__";
 }
@@ -132,88 +133,76 @@ namespace SV{
 }
 namespace Crossreference{
     void compilation_mode(std::vector<VR>& src){
-        std::vector<uint64_t> cR, eL;
+        std::vector<uint64_t> blocks;
         uint64_t currentPosition{};
-//        for(std::vector<Token>::iterator x = src.begin(); x !=  src.end(); ++x){
-
         for(auto& x : src){
-            if (x.op == OP_DO){
-                cR.push_back(currentPosition);
-                if(cR.size() > 0){
-                    uint64_t if_ip = cR.back();
-                    cR.pop_back();
-                    src[if_ip].operand = currentPosition - if_ip;
-                    cR.push_back(currentPosition);                                            
-                }
-            }
-            else if (x.op == WHILE){
-                cR.push_back(currentPosition);                
-            }
-            //else if (x.head.atomName == "elif"){
-            //    uint64_t if_ip = cR.back();
-            //    eL.push_back(currentPosition);
-            //    if((src[if_ip].head.atomLinkedIndex) == 0){
-            //        src[if_ip].head.atomLinkedIndex = currentPosition - if_ip + 1;
-            //        src[currentPosition].head.atomLinkedIndex = currentPosition;
-            //        cR.push_back(currentPosition);}
-            //}
-            else if (x.op == OP_ELSE){
-                uint64_t if_ip = cR.back();
-                cR.pop_back();
-                src[if_ip].operand = currentPosition + 1;
-                cR.push_back(currentPosition);
-                if(eL.size() > 0){
-                    uint64_t elif_ip = eL.back();
-                    while(eL.size() > 0){
-                        elif_ip = eL.back();
-                        eL.pop_back();
-                        src[elif_ip].operand = currentPosition - src[elif_ip].operand;
-                    }
-                }
-            } 
-            else if (x.op == OP_END){
-                uint64_t if_ip = cR.back();
-                cR.pop_back();
-                src[if_ip].operand = currentPosition + 1;
-                if(cR.size() > 0){
-                    if_ip = cR.back();
-                    cR.pop_back();
-
-                    src[currentPosition].operand = if_ip;
-                }
-            }
-            ++currentPosition;
+	    if (    x.op == OP_IF
+	        ||  x.op == OP_WHILE
+	        ||  x.op == OP_DO){
+	        blocks.push_back(currentPosition);
+	    } else if (x.op == OP_END) {
+	        if (blocks.size() < 1) continue;
+	        auto last_block = blocks.back();
+	        blocks.pop_back();
+	                                                                            
+	        if (src[last_block].op == OP_DO){
+	            auto before_do = blocks.back();
+	            blocks.pop_back();
+	            if (src[before_do].op == OP_IF){
+	        	src[last_block].operand = currentPosition;
+	            }
+	            else if (src[before_do].op == OP_WHILE){
+	        	src[currentPosition].operand = before_do;
+	        	src[last_block].operand = currentPosition;
+	            }
+	        }
+	    }
+	    ++currentPosition;
         }
+	if (blocks.size() > 0){
+	    fprintf(stderr, "ERROR: Unclosed do-end blocks. Use simulation mode for better error location\n");
+	    exit(1);
+	}
+
     }
     
     void simulation_mode(std::vector<Token> &src){
-        std::vector<uint64_t> do_blocks;
+        std::vector<uint64_t> blocks;
         uint64_t currentPosition{};
 //        for(std::vector<Token>::iterator x = src.begin(); x !=  src.end(); ++x){
         for(auto& x : src){
-	    // simulation mode UwU
-	    if (x.head.atomName == "do"){
-		do_blocks.push_back(currentPosition);
+	    std::string ipname = x.head.atomName;
+	    if (ipname == "if"
+		|| ipname == "while"
+		|| ipname == "do"){
+		blocks.push_back(currentPosition);
+	    } else if (ipname == "end") {
+		if (blocks.size() < 1) continue;
+		auto last_block = blocks.back();
+		blocks.pop_back();
+
+		if (src[last_block].head.atomName == "do"){
+		    auto before_do = blocks.back();
+		    blocks.pop_back();
+		    if (src[before_do].head.atomName == "if"){
+			src[last_block].head.atomLinkedIndex = currentPosition;
+		    }
+		    else if (src[before_do].head.atomName == "while"){
+			src[currentPosition].head.atomLinkedIndex  = before_do + 1;
+			src[last_block].head.atomLinkedIndex = currentPosition + 1;
+		    }
+		}
 	    }
-	    else if (x.head.atomName == "end"){
-		uint64_t do_ip = do_blocks.back();
-		do_blocks.pop_back();
-		src[do_ip].head.atomLinkedIndex = currentPosition;
-	    }
-            ++currentPosition;
+	    ++currentPosition;
         }
-        size_t idx = 0;
-        printf("    --- start ----\n");
-        for(auto& x : src){
-            std::cout 
-                <<  "name:\t"      << x.head.atomName
-                <<  "\tidx: "   << idx
-                <<  "\tLidx: "  << x.head.atomLinkedIndex
-                <<  std::endl;
-            ++idx;
-        }
-        printf("    --- end ---\n");
-        exit(1);
+	if (blocks.size() > 0){
+	    uint64_t unclosedBlock = blocks.back();
+	    fprintf(stderr, "%lu:%lu: ERROR: Unclosed do-end blocks.\n",
+		    src[unclosedBlock].head.atomIndexLine,
+		    src[unclosedBlock].head.atomIndex
+		    );
+	    exit(1);
+	}
     }
 }
 namespace Lexer{
@@ -221,29 +210,22 @@ namespace Lexer{
         if(is_number(word)){
             op = NUMBER;
             return ("NUMERICAL_TYPE");
-        }	
-        else if (word == "+"){
+        } else if (word == "+"){
             op = BINARY_OPERAND;
             return ("OP_PLUS");
-        }
-        else if (word == "-"){
+        } else if (word == "-"){
             op = BINARY_OPERAND;
             return ("OP_MINUS");
-        }
-	else if (word == "*"){
+        } else if (word == "*"){
 	    op = BINARY_OPERAND;
 	    return ("OP_MULT");
-	}
-        
-        else if (word == "<"){
+	} else if (word == "<"){
             op = BINARY_OPERAND;
             return ("OP_CMP_LT");
-        }
-        else if (word == ">"){
+        } else if (word == ">"){
             op = BINARY_OPERAND;
             return ("OP_CMP_GT");
-        }
-        else{
+        } else{
             op = STRING;
             return ("STRING_TYPE");
         }
@@ -258,8 +240,7 @@ namespace Lexer{
         std::vector<Token>   tokenList;
         while(src.count > src.minimunValue){
             actualWorld = SV::separateByTokens(src);
-            if(actualWorld.length() ==  0 ) continue;
-
+	    if (actualWorld.length() ==  0 ) continue;
             pos = start - src.count;
             token = Lexer::Tokenize(actualWorld, actualType);
             tokenList.push_back(

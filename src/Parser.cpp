@@ -11,6 +11,10 @@ typedef enum{
     ID_INTRISIC_DUMP,
     ID_INTRISIC_DUP,
     ID_INTRISIC_EQUALS,
+    ID_INTRISIC_SWAP,
+    ID_INTRISIC_OVER,
+    ID_INTRISIC_ROT,
+    ID_INTRISIC_DROP,
     ID_WHILE,
     ID_IF,
     ID_DO,
@@ -46,7 +50,11 @@ namespace Parser{
     Identifiers parseIdentifier(std::vector<Token>::iterator id){
         if      (id->head.atomName == "dump")  return ID_INTRISIC_DUMP;
         else if (id->head.atomName == "=")     return ID_INTRISIC_EQUALS; 
-        else if (id->head.atomName == "dup")   return ID_INTRISIC_DUP;
+	else if (id->head.atomName == "dup")   return ID_INTRISIC_DUP;
+	else if (id->head.atomName == "swap")  return ID_INTRISIC_SWAP;
+	else if (id->head.atomName == "over")  return ID_INTRISIC_OVER;
+	else if (id->head.atomName == "rot")   return ID_INTRISIC_ROT;
+	else if (id->head.atomName == "drop")  return ID_INTRISIC_DROP;
         else if (id->head.atomName == "store") return ID_STORE;
         else if (id->head.atomName == "load")  return ID_LOAD;
         else if (id->head.atomName == "mem")   return ID_MEM;
@@ -56,6 +64,7 @@ namespace Parser{
         else if (id->head.atomName == "elif")  return ID_ELIF;
         else if (id->head.atomName == "else")  return ID_ELSE;
         else if (id->head.atomName == "end")   return ID_END;
+
         
 
 
@@ -140,13 +149,29 @@ namespace Parser{
                           ++Node;
                           break;
                         case ID_WHILE:
-                            output.push_back(VR{WHILE,  0});
+			    output.push_back(VR{OP_WHILE, 0});
                             ++Node;
                             break;
                         case ID_INTRISIC_DUP:
                             output.push_back(VR{DUP, 0});
                             ++Node;
                             break;
+			case ID_INTRISIC_SWAP:
+			    output.push_back(VR{SWAP,	0});
+			    ++Node;
+			    break;
+			case ID_INTRISIC_OVER:
+			    output.push_back(VR{OVER,	0});
+			    ++Node;
+			    break;
+			case ID_INTRISIC_ROT:
+			    output.push_back(VR{ROT,	0});
+			    ++Node;
+			    break;
+			case ID_INTRISIC_DROP:
+			    output.push_back(VR{DROP,	0});
+			    ++Node;
+			    break;
                         case ID_END:
                             output.push_back(VR{OP_END, static_cast<uint64_t>(Node->head.atomLinkedIndex)});
                             ++Node;
@@ -155,8 +180,9 @@ namespace Parser{
                             output.push_back(VR{OP_DO,  static_cast<uint64_t>(Node->head.atomLinkedIndex)});
                             ++Node;
                             break;
+			case ID_ELSE:
                         case ID_ELIF:
-                            printf("`elif` Not implemented yet\n");
+                            printf("keywords `else` or `elif` Not implemented yet\n");
                             fprintf(stderr, "%lu:%lu: Error: Internal keyword `elif` not implemented yet\n",
                                 Node->head.atomIndexLine,
                                 Node->head.atomIndex
@@ -164,14 +190,12 @@ namespace Parser{
                             exit(1);
                             ++Node;
                             break;
-                        case ID_ELSE:
-                            output.push_back(VR{OP_ELSE,    static_cast<uint64_t>(Node->head.atomLinkedIndex)});
-                            ++Node;
-                            break;
-                        case ID_IF:
-                            output.push_back(VR{OP_IF,  0});
-                            ++Node;
-                            break;
+                        case ID_IF:{
+			    output.push_back(VR{OP_IF, 0});
+			    ++Node;
+			    break;
+			}
+
                         case ID_INTRISIC_DUMP:
                             output.push_back(VR{DUMP, 0});
                             ++Node;

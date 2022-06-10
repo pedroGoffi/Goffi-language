@@ -12,12 +12,18 @@ typedef enum{
     OP_MEM,
     DUMP,
     DUP,
-    WHILE,
-    OP_END,
+    DROP, 
+    OVER, // a b -> a b a 
+    SWAP, // a b -> b a
+    ROT,// a b c -> c b a
+
 
     OP_IF,
+    OP_WHILE,
     OP_DO,
-    OP_ELSE,
+    OP_END,
+
+
 
     OP_LOADBYTE,
     OP_STOREBYTE,

@@ -18,12 +18,15 @@ void std_in(){
         std::vector<VR>     Instructions;
         while(1){
             fprintf(stdout, "Gff-Stdin>  ");
+	    
             std::getline(std::cin >> std::ws, INPUT);
             Lexer::lex_line(tokenStdin, INPUT, 0);
             Crossreference::simulation_mode(tokenStdin);
             Instructions = Parser::parse(tokenStdin);
             Goffi::simulate_program(Instructions);    
+	    
             fprintf(stdout, "\n");
+	    tokenStdin = {};
         }
         exit(0);
 
@@ -92,8 +95,12 @@ int main(int argc, char** argv){
             Goffi::compile_program(instructions, outputFilePath);
         }
     }
-    else
+    else if (inputFilePath.length() == 0){
         std_in();
+    } else {
+	usage(stderr, program);
+        fprintf(stderr, "Error: if filePath is provided you have use a flag to specify the mode, like: sim or com");
+    }
     return 0;
 
 }

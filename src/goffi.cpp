@@ -8,7 +8,7 @@
 #include <fstream>
 
 #define MEMORY_SIZE 69000
-#define makeLabel out << "addr_" << addrCount << ":\n"; ++addrCount;
+#define makeLabel out << "__addres_number__" << addrCount << ":\n"; ++addrCount;
 
 typedef uint64_t type;
 /*  
@@ -18,29 +18,10 @@ typedef uint64_t type;
  *  for better control if i need in future
  */
 void Goffi::simulate_program(std::vector<VR> &program){
-    assert(NUM_OF_OPERANDS == 17 && "Exhaustive time handling operand, please update the simulate_program");
-    // IF BLOCKS
-    // if in sim mode is only sintax 
-    // in com mode it create a label to perform jumps
-    // do points to (elif or else)+1 if expr false
-    // elif | else points to elif or end
-    //
-    // if expr do       
-    //      <block>
-    //      <block>
-    //      <block>
-    // elif expr do
-    //      <block>
-    //      <block>
-    //      <block>
-    // else 
-    //      <block>
-    //      <block>
-    //      <block>
-    // end
+    assert(NUM_OF_OPERANDS == 20 && "Exhaustive time handling operand, please update the simulate_program");
+
     std::vector<VR>::iterator ip = program.begin();
     std::vector<uint64_t> stack(258);
-
     while(ip != program.end()){
         switch(ip->op){
             case OP_LOADBYTE:
@@ -77,9 +58,6 @@ void Goffi::simulate_program(std::vector<VR> &program){
                 ++ip;
                 break;
             }
-            case WHILE:
-                ++ip;
-                break;
             case DUP:{
                 type a = stack.back();
                 stack.pop_back();
@@ -90,28 +68,22 @@ void Goffi::simulate_program(std::vector<VR> &program){
                 break;
 
             }
-            case OP_IF:
-                ++ip;
-                break;
             case OP_DO:{
                 type a = stack.back();
                 stack.pop_back();
-                if(a == 0){
-                    ip += ip->operand + 1;
+
+                if(a){
+                    ++ip;
                 }
                 else{
-                    ++ip;
+                    ip = program.begin() + (int)ip->operand;
+
                 }
                 break;
             }
-            case OP_ELSE:{
-                    ip += (ip->operand);
-                    break;
-            }
-            case OP_END:                         
+            case OP_END:
                 if(ip->operand > 0){
-                    printf("IF");
-                    ip -= ip->operand;
+                    ip = program.begin() + int(ip->operand);
                 }
                 else 
                     ++ip;
@@ -164,8 +136,43 @@ void Goffi::simulate_program(std::vector<VR> &program){
                 ++ip;
                 break;
             }
-            case NUM_OF_OPERANDS: break;
+	    case DROP:
+		stack.pop_back();
+		++ip;
+		break;
+	    case SWAP:{
+		type a = stack.back(); stack.pop_back();
+		type b = stack.back(); stack.pop_back();
+		stack.push_back(a);
+		stack.push_back(b);
+
+		++ip;
+	    } break;
+	    case OVER:{
+		type a = stack.back(); stack.pop_back();
+		type b = stack.back(); stack.pop_back();
+		stack.push_back(b);
+		stack.push_back(a);
+		stack.push_back(b);
+		++ip;
+	    } break;
+	    case ROT:{
+		type a = stack.back(); stack.pop_back();
+		type b = stack.back(); stack.pop_back();
+		type c = stack.back(); stack.pop_back();
+
+		stack.push_back(b);
+		stack.push_back(a);
+		stack.push_back(c);
+		++ip;
+	    } break;
+	    case OP_IF:
+	    case OP_WHILE:
+            case NUM_OF_OPERANDS: 
+		      ++ip;
+		      break;
             default: {
+		std::cout << "default\n";
                 ++ip;
                 break;
             }
@@ -176,7 +183,7 @@ void Goffi::simulate_program(std::vector<VR> &program){
  * This will compile the program to assembly x86_64
  */
 void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
-    assert(NUM_OF_OPERANDS == 16 && "Exhaustive time handling operand, please update the compile_program in ");
+    assert(NUM_OF_OPERANDS == 20 && "Exhaustive time handling operand, please update the compile_program in ");
 
     std::fstream out("out.asm", std::ios::out);
 
@@ -266,31 +273,12 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                     ;
                 ++ip;
                 break;
-            case WHILE:
-                makeLabel;
-                out <<  "   ;; ---- while\n"
-                    ;
-                ++ip;
-                break;
-            case OP_IF: 
-                makeLabel;
-                out <<  "   ;; ---- if\n"
-                    ;
-                ++ip;
-                break;
-            case OP_ELSE: 
-                makeLabel;
-                out <<  "   jmp addr_" << ip->operand  << "\n"
-                    <<  "   ;; ---- else\n"
-                    ;
-                ++ip;
-                break;
             case OP_DO: 
                 makeLabel;
                 out <<  "   ;; ---- do\n"
                     <<  "   pop rax\n"
                     <<  "   test rax, rax\n"
-                    <<  "   jz addr_" << ip->operand << "\n"                
+                    <<  "   jz __addres_number__" << ip->operand << "\n"                
                     ;
                 ++ip;
                 break;
@@ -299,10 +287,10 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 out <<  "   ;; ---- end\n";
                 if(ip->operand > 0){
                     out
-                        <<  "   jmp  addr_"     << ip->operand  << "\n"
+                        <<  "   jmp  __addres_number__"     << ip->operand  << "\n"
                         ;
                 }else{
-                    out <<  "   jmp addr_"      << addrCount    << "\n"
+                    out <<  "   jmp __addres_number__"      << addrCount    << "\n"
                         ;
                 }
 
@@ -339,6 +327,15 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 ++ip;
                 break;
             }
+	    case OP_MULT:
+		out <<	"   ;; ---- mult\n"
+		    <<	"   pop rax\n"             
+		    <<  "   pop rbx\n"             
+                    <<  "   mul rbx\n"             
+                    <<  "   push rax\n" 
+		    ;
+		++ip;
+		break;
             case OP_MINUS:
                 makeLabel;
                 out <<  "   ;; ---- minus\n"
@@ -358,6 +355,110 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 ++ip;
                 break;
             }
+	    case DROP:
+		makeLabel;
+		out <<	"   ;; ---- drop\n"
+		    <<	"   pop rax\n"
+		    ;
+		++ip;
+		break;
+	    case SWAP:
+		makeLabel;
+		out <<	"   ;; ---- swap\n"
+		    <<	"   pop rax\n"
+		    <<	"   pop rbx\n"
+		    <<	"   push rax\n"
+		    <<	"   push rbx\n"
+		    ;
+		++ip;
+		break;
+	    case OVER:
+		makeLabel;
+		out <<	"   ;; ---- over\n"
+		    <<	"   pop rax\n"
+		    <<	"   pop rbx\n"
+		    <<	"   push rbx\n"
+		    <<	"   push rax\n"
+		    <<	"   push rbx\n"
+		    ;
+		++ip;
+		break;
+	    case ROT:
+
+		makeLabel;
+		out <<	"   ;; ---- rot\n"
+		    <<	"   pop rax\n"
+		    <<	"   pop rbx\n"
+		    <<	"   pop rcx\n"
+
+		    <<	"   push rbx\n"
+		    <<	"   push rax\n"
+		    <<	"   push rcx\n"
+		    ;
+		++ip;
+		break;
+	    case OP_IF:
+		makeLabel;
+		out <<	"   ;; ---- if\n"; 
+                ++ip;
+		break;
+	    case OP_WHILE:
+		makeLabel;
+		out <<	"   ;; ---- while\n"; 
+                ++ip;
+		break;
+	    /*
+		TODO:
+		SYSCALL0 
+                "    pop rax\n"             
+                "    syscall\n"             
+                "    push rax\n"            
+		SYSCALL1
+                "    pop rax\n"             
+                "    pop rdi\n"             
+                "    syscall\n"             
+                "    push rax\n"            
+		SYSCALL2 
+                "    pop rax\n"             
+                "    pop rdi\n"             
+                "    pop rsi\n"             
+                "    syscall\n"             
+                "    push rax\n"            
+		SYSCALL3
+		"    pop rax\n"             
+                "    pop rdi\n"             
+                "    pop rsi\n"             
+                "    pop rdx\n"             
+                "    syscall\n"             
+                "    push rax\n"            
+		SYSCALL4 
+                "    pop rax\n"             
+                "    pop rdi\n"             
+                "    pop rsi\n"             
+                "    pop rdx\n"             
+                "    pop r10\n"             
+                "    syscall\n"             
+                "    push rax\n"            
+                SYSCALL5
+                "    pop rax\n"             
+                "    pop rdi\n"             
+                "    pop rsi\n"             
+                "    pop rdx\n"             
+                "    pop r10\n"             
+                "    pop r8\n"              
+                "    syscall\n"             
+                "    push rax\n"            
+		SYSCALL6:
+                "    pop rax\n"             
+                "    pop rdi\n"             
+                "    pop rsi\n"             
+                "    pop rdx\n"             
+                "    pop r10\n"             
+                "    pop r8\n"              
+                "    pop r9\n"              
+                "    syscall\n"             
+                "    push rax\n"            
+	    */
             case NUM_OF_OPERANDS: break;
             default: {
                 assert(false && "WARNING! Unreachable operations in compile mode\n");

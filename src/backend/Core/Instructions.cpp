@@ -1,6 +1,8 @@
 #ifndef CORE_INSTRUCTIONS
 #define CORE_INSTRUCTIONS 
 #include <stdint.h>
+#include <string>
+
 typedef enum{
     PUSH_INT,
     OP_PLUS,
@@ -30,8 +32,9 @@ typedef enum{
     NUM_OF_OPERANDS        
 } Op_type;
 
-typedef struct{
+typedef struct VR{
     Op_type  op;
-    uint64_t operand;
+    uint64_t    operand;
+    std::string op_string="";
 }VR;
 #endif /* ifndef CORE_INSTRUCTIONS */

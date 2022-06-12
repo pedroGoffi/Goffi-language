@@ -5,11 +5,11 @@
 #include <fstream>
 #include <cassert>
 #include <vector>
-#define T_IMPLS
-#include "./src/Tools.h"
-#include "./src/goffi.cpp"
-#include "./src/Lexer.cpp"
-#include "./src/Parser.cpp"
+#include "./frontend/Tools.h"
+#include "./backend/goffi.cpp"
+#include "./backend/Lexer.cpp"
+#include "./backend/Parser.cpp"
+#include "backend/goffi.h"
 
 #define SHIFT shift(&argc, &argv)
 void std_in(){
@@ -21,7 +21,7 @@ void std_in(){
 	    
             std::getline(std::cin >> std::ws, INPUT);
             Lexer::lex_line(tokenStdin, INPUT, 0);
-            Crossreference::simulation_mode(tokenStdin);
+            Crossreference::analyze(tokenStdin);
             Instructions = Parser::parse(tokenStdin);
             Goffi::simulate_program(Instructions);    
 	    
@@ -73,27 +73,17 @@ int main(int argc, char** argv){
 
         std::fstream INPUT_FILE(inputFilePath, std::ios::in);
         assert(INPUT_FILE.is_open() && "Error: Could not open the file\n");
-        std::string code;
-        std::string line;
-        std::vector<Token>  tokens;
-        size_t lineCount = 1;
-        while(getline(INPUT_FILE, line)){
-            Lexer::lex_line(tokens, line, lineCount);
-            ++lineCount;
-        }
-        INPUT_FILE.close();
-    
 
-        if(simulate){
-            Crossreference::simulation_mode(tokens);
-            std::vector<VR>     instructions = Parser::parse(tokens);
-            Goffi::simulate_program(instructions);
-        }
-        else if (compile){
-            std::vector<VR>     instructions = Parser::parse(tokens);
-            Crossreference::compilation_mode(instructions);
-            Goffi::compile_program(instructions, outputFilePath);
-        }
+
+
+        std::vector<Token>  tokens = Lexer::lex(INPUT_FILE);
+        Crossreference::analyze(tokens);
+        std::vector<VR>     instructions = Parser::parse(tokens);
+
+	(compile == true)
+	? Goffi::compile_program(instructions, outputFilePath)
+	: Goffi::simulate_program(instructions);
+
     }
     else if (inputFilePath.length() == 0){
         std_in();

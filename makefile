@@ -1,13 +1,14 @@
 cflags = -Wall -Wextra \
+                 -lstdc++ \
 		 -Wswitch-enum \
 		 -Wconversion -Wno-missing-braces \
 		 -pedantic -fno-strict-aliasing \
-		 -ggdb -std=c++20 -g
-cc = g++
+		 -ggdb -std=c++2b -g
+cc = gcc-11
 output = debug-app
-input = main.cpp 
-third = Lexer.cpp
-third_h = Lexer.h
+input = ./src/main.cpp 
+
+
 compile:
 	${cc} ${input} ${cflags} -o ${output} 
 

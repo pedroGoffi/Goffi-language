@@ -1,13 +1,17 @@
+#include "goffi.h"
 #ifndef PARSER
 #define PARSER value
 #include <iostream>
 #include <vector>
 #include "./Lexer.cpp"
+#include "./goffi.cpp"
 #include <typeinfo>
 
 #define stoi64(x) static_cast<uint64_t>(std::stoi(x))
 
 typedef enum{
+    // ID_MACRO_DEFINITION,
+    ID_MACRO,
     ID_INTRISIC_DUMP,
     ID_INTRISIC_DUP,
     ID_INTRISIC_EQUALS,
@@ -33,7 +37,8 @@ typedef enum{
     B_MULT
 } BinOpId;
 namespace Parser{
-    BinOpId parseBinOp(std::vector<Token>::iterator boid){
+    std::vector<VR> parse(std::vector<Token> &tokens);
+    BinOpId parseBinOp(std::vector<Token>::iterator& boid){
         if	(boid->head.atomName == "+")    return B_PLUS;
         else if (boid->head.atomName == "-")    return B_MINUS;
         else if (boid->head.atomName == "<")    return B_CMP_LT;
@@ -47,7 +52,7 @@ namespace Parser{
         );
         exit(1);
     }
-    Identifiers parseIdentifier(std::vector<Token>::iterator id){
+    Identifiers parseIdentifier(std::vector<Token>::iterator& id){
         if      (id->head.atomName == "dump")  return ID_INTRISIC_DUMP;
         else if (id->head.atomName == "=")     return ID_INTRISIC_EQUALS; 
 	else if (id->head.atomName == "dup")   return ID_INTRISIC_DUP;
@@ -64,25 +69,40 @@ namespace Parser{
         else if (id->head.atomName == "elif")  return ID_ELIF;
         else if (id->head.atomName == "else")  return ID_ELSE;
         else if (id->head.atomName == "end")   return ID_END;
-
-        
-
-
-        fprintf(stderr, "%lu:%lu: Error: Unreachable identifier at `%s` in the Parsing stage.\n", 
-                id->head.atomIndexLine,
-                id->head.atomIndex,
-                id->head.atomName.c_str()
-        );
-        exit(1);
+	else{
+	    //if (Macros.find(id->head.atomName) != Macros.end()){		
+	    //    return ID_MACRO;
+	    //}
+            fprintf(stderr, "%lu:%lu: Error: Unreachable identifier at `%s` in the Parsing stage.\n", 
+                    id->head.atomIndexLine,
+	            id->head.atomIndex,
+                    id->head.atomName.c_str()
+	    );
+    	    exit(1);
+	}
     }
-    std::vector<VR> parse(std::vector<Token> tokens){
+
+    std::vector<VR> parse(std::vector<Token> &tokens){
         std::vector<Token>::iterator Node = tokens.begin();
         std::vector<VR> output;
         while( Node != tokens.end()){
             switch(Node->type){ 
-                case STRING:{                                        
+		case STRING:
+		    assert(false && "String not implemented yet");
+		    ++Node;
+		    break;
+                case NAME:{                                        
                     Identifiers id = Parser::parseIdentifier(Node);
                     switch(id){
+			case ID_MACRO:{
+			    std::vector<VR> macro_script_result = Macros[Node->head.atomName];
+			    for(VR vr: macro_script_result){
+				output.push_back(vr);
+			    }
+
+			    ++Node;
+			    
+			} break;
                         case ID_STORE:{
                             ++Node;
                             uint64_t storeType;
@@ -99,7 +119,7 @@ namespace Parser{
                             }
                             switch(storeType){
                                 case (8):
-                                    output.push_back(VR{OP_STOREBYTE,   8});
+                                    output.push_back(VR{OP_STOREBYTE, 8});
                                     break;
                                 default:
                                     fprintf(stderr, "%lu:%lu: Error: `store` op does not support the given type\n",
@@ -216,19 +236,19 @@ namespace Parser{
                 case BINARY_OPERAND:
                     switch(Parser::parseBinOp(Node)){
 			case B_MULT:
-			    output.push_back(VR{OP_MULT,    0});
+			    output.push_back(VR{OP_MULT,    0, ""});
 			    break;
                         case B_PLUS:
-                            output.push_back(VR{OP_PLUS,    0});
+                            output.push_back(VR{OP_PLUS,    0, ""});
                             break;
                         case B_MINUS:
-                            output.push_back(VR{OP_MINUS,   0});
+                            output.push_back(VR{OP_MINUS,   0, ""});
                             break;
                         case B_CMP_LT:
-                            output.push_back(VR{OP_LTHAN,   0});
+                            output.push_back(VR{OP_LTHAN,   0, ""});
                             break;
                         case B_CMP_GT:
-                            output.push_back(VR{OP_GTHAN,   0});
+                            output.push_back(VR{OP_GTHAN,   0, ""});
                             break;
                     }
                     ++Node;

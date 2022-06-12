@@ -2,15 +2,19 @@
 #define SRC_SRC_CODE 
 #include "./goffi.h"
 #include "Core/Instructions.cpp"
+#include <map>
 #include <iostream>
 #include <vector>
 #include <cassert>
 #include <fstream>
 
 #define MEMORY_SIZE 69000
-#define makeLabel out << "__addres_number__" << addrCount << ":\n"; ++addrCount;
+#define makeLabel out << "__label_num__" << addrCount << ":"; ++addrCount;
 
 typedef uint64_t type;
+static std::map<std::string, std::vector<VR>> Macros;
+static size_t addrCount = 0;
+
 /*  
  *  This shall simulate the program
  *  using a likely virtual cpu
@@ -169,10 +173,7 @@ void Goffi::simulate_program(std::vector<VR> &program){
 	    case OP_IF:
 	    case OP_WHILE:
             case NUM_OF_OPERANDS: 
-		      ++ip;
-		      break;
             default: {
-		std::cout << "default\n";
                 ++ip;
                 break;
             }
@@ -197,7 +198,7 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
         <<  "_start:\n"
         ;
     std::vector<VR>::iterator ip = program.begin();
-    size_t addrCount = 0;
+
     while( ip != program.end()){
         switch(ip->op){
             case OP_GTHAN:
@@ -278,21 +279,19 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 out <<  "   ;; ---- do\n"
                     <<  "   pop rax\n"
                     <<  "   test rax, rax\n"
-                    <<  "   jz __addres_number__" << ip->operand << "\n"                
+                    <<  "   jz __label_num__" << ip->operand  << "\n"                
                     ;
                 ++ip;
                 break;
             case OP_END:
                 makeLabel;
-                out <<  "   ;; ---- end\n";
-                if(ip->operand > 0){
-                    out
-                        <<  "   jmp  __addres_number__"     << ip->operand  << "\n"
-                        ;
-                }else{
-                    out <<  "   jmp __addres_number__"      << addrCount    << "\n"
-                        ;
-                }
+                out <<  "   ;; ---- end\n"
+		    <<	"   jmp __label_num__"
+		    ;
+		(ip->operand > 0)
+		? out << ip->operand
+		: out << addrCount;
+		out   << "\n";
 
                 ++ip;
                 break;
@@ -328,6 +327,7 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 break;
             }
 	    case OP_MULT:
+                makeLabel;
 		out <<	"   ;; ---- mult\n"
 		    <<	"   pop rax\n"             
 		    <<  "   pop rbx\n"             
@@ -461,6 +461,7 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
 	    */
             case NUM_OF_OPERANDS: break;
             default: {
+		makeLabel;
                 assert(false && "WARNING! Unreachable operations in compile mode\n");
                 ++ip;
                 break;

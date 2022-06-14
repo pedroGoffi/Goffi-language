@@ -25,6 +25,7 @@ typedef enum{
     OP_DO,
     OP_END,
 
+    OP_SYSCALL,
 
 
     OP_LOADBYTE,

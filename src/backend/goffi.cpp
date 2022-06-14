@@ -22,7 +22,7 @@ static size_t addrCount = 0;
  *  for better control if i need in future
  */
 void Goffi::simulate_program(std::vector<VR> &program){
-    assert(NUM_OF_OPERANDS == 20 && "Exhaustive time handling operand, please update the simulate_program");
+    assert(NUM_OF_OPERANDS == 21 && "Exhaustive time handling operand, please update the simulate_program");
 
     std::vector<VR>::iterator ip = program.begin();
     std::vector<uint64_t> stack(258);
@@ -170,6 +170,11 @@ void Goffi::simulate_program(std::vector<VR> &program){
 		stack.push_back(c);
 		++ip;
 	    } break;
+	    case OP_SYSCALL:
+	      fprintf(stderr, "SYSCALLS are not implemented in simulation mode yet\n");
+	      exit(1);
+	      ++ip;
+	      break;
 	    case OP_IF:
 	    case OP_WHILE:
             case NUM_OF_OPERANDS: 
@@ -184,7 +189,7 @@ void Goffi::simulate_program(std::vector<VR> &program){
  * This will compile the program to assembly x86_64
  */
 void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
-    assert(NUM_OF_OPERANDS == 20 && "Exhaustive time handling operand, please update the compile_program in ");
+    assert(NUM_OF_OPERANDS == 21 && "Exhaustive time handling operand, please update the compile_program in ");
 
     std::fstream out("out.asm", std::ios::out);
 
@@ -407,58 +412,86 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
 		out <<	"   ;; ---- while\n"; 
                 ++ip;
 		break;
-	    /*
-		TODO:
-		SYSCALL0 
-                "    pop rax\n"             
-                "    syscall\n"             
-                "    push rax\n"            
-		SYSCALL1
-                "    pop rax\n"             
-                "    pop rdi\n"             
-                "    syscall\n"             
-                "    push rax\n"            
-		SYSCALL2 
-                "    pop rax\n"             
-                "    pop rdi\n"             
-                "    pop rsi\n"             
-                "    syscall\n"             
-                "    push rax\n"            
-		SYSCALL3
-		"    pop rax\n"             
-                "    pop rdi\n"             
-                "    pop rsi\n"             
-                "    pop rdx\n"             
-                "    syscall\n"             
-                "    push rax\n"            
-		SYSCALL4 
-                "    pop rax\n"             
-                "    pop rdi\n"             
-                "    pop rsi\n"             
-                "    pop rdx\n"             
-                "    pop r10\n"             
-                "    syscall\n"             
-                "    push rax\n"            
-                SYSCALL5
-                "    pop rax\n"             
-                "    pop rdi\n"             
-                "    pop rsi\n"             
-                "    pop rdx\n"             
-                "    pop r10\n"             
-                "    pop r8\n"              
-                "    syscall\n"             
-                "    push rax\n"            
-		SYSCALL6:
-                "    pop rax\n"             
-                "    pop rdi\n"             
-                "    pop rsi\n"             
-                "    pop rdx\n"             
-                "    pop r10\n"             
-                "    pop r8\n"              
-                "    pop r9\n"              
-                "    syscall\n"             
-                "    push rax\n"            
-	    */
+
+	    case OP_SYSCALL:
+		makeLabel;
+		out <<	"   ;; ---- syscall__";
+		switch( ip->operand ){
+		  case 0:
+                    out << "0\n" 
+			<< "    pop rax\n"             
+			<< "    syscall\n"             
+                    	<< "    push rax\n"            
+		    	;
+		    break;
+
+		  case 1:
+                    out <<  "1\n"
+			<<  "    pop rax\n"             
+			<<  "    pop rdi\n"             
+                    	<<  "    syscall\n"             
+                    	<<  "    push rax\n"            
+		    	;
+		    break;
+		  case 2:
+                    out <<  "2\n"
+			<<  "    pop rax\n"             
+			<<  "    pop rdi\n"             
+                    	<<  "    pop rsi\n"             
+                    	<<  "    syscall\n"             
+                    	<<  "    push rax\n"            
+		    	;
+		    break;
+		  case 3:
+		    out <<  "3\n"
+			<<  "    pop rax\n"             
+			<<  "    pop rdi\n"             
+                    	<<  "    pop rsi\n"             
+                    	<<  "    pop rdx\n"             
+                    	<<  "    syscall\n"             
+                    	<<  "    push rax\n"            
+		    	;
+		    break;
+		  case 4:
+                    out <<  "4\n"
+			<<  "    pop rax\n"             
+			<<  "    pop rdi\n"             
+                    	<<  "    pop rsi\n"             
+                    	<<  "    pop rdx\n"             
+                    	<<  "    pop r10\n"             
+                    	<<  "    syscall\n"             
+                    	<<  "    push rax\n"            
+		    	;
+		    break;
+		  case 5:
+                    out <<  "5\n"
+			<<  "    pop rax\n"             
+			<<  "    pop rdi\n"             
+                    	<<  "    pop rsi\n"             
+                    	<<  "    pop rdx\n"             
+                    	<<  "    pop r10\n"             
+                    	<<  "    pop r8\n"              
+                    	<<  "    syscall\n"             
+                    	<<  "    push rax\n"            
+		    	;
+		    break;
+		  case 6:		    
+                    out	<<  "6\n"
+			<<  "    pop rax\n"             
+			<<  "    pop rdi\n"             
+                    	<<  "    pop rsi\n"             
+                    	<<  "    pop rdx\n"             
+                    	<<  "    pop r10\n"             
+                    	<<  "    pop r8\n"              
+                    	<<  "    pop r9\n"              
+                    	<<  "    syscall\n"             
+                    	<<  "    push rax\n"            
+			;
+		    break;
+		}
+		++ip;
+		break;
+		
             case NUM_OF_OPERANDS: break;
             default: {
 		makeLabel;

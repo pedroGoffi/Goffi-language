@@ -42,8 +42,8 @@ typedef enum Token_Type{
     NAME
 } Token_Type;
 typedef struct Token{
-    Token_Type       type;
-    Atom             head;
+    Token_Type	      type;
+    Atom	      head;
 } Token;
 
 static std::map<std::string, std::vector<Token>> Macros;
@@ -92,6 +92,15 @@ namespace Lexer{
             op = NAME;
             return ("NAME_TYPE");
         }
+    }
+    void extend_macro(std::vector<Token>& result, Token &it){
+      if (Macros.find(it.head.atomName) != Macros.end()){
+	for(Token& tk: Macros[it.head.atomName]){
+	  result.push_back(tk);
+	}
+      }
+      else
+	result.push_back(it);
     }
     void lex_line(std::vector<Token> &tokenVector, std::string source, uint64_t line){
         SV::stringView src = SV::SV(source);
@@ -162,6 +171,7 @@ namespace Lexer{
 	      } else if ( i->head.atomName == "end" ){
 	        --do_counts;
 	      }
+
 	      m__body.push_back(
 	            Token{
 	              .type=i->type,
@@ -172,7 +182,14 @@ namespace Lexer{
 	    }
 	    Macros[m_name] = m__body;
 	  }
-	  else if (i->head.atomName != "define")
+
+
+	  else if ( Macros.find(i->head.atomName) != Macros.end()){
+	    for(Token& tk: Macros[i->head.atomName]){
+	      extend_macro(result, tk);
+	    }
+	  }
+	  else
 	  {
 	    result.push_back(
 		Token{ 

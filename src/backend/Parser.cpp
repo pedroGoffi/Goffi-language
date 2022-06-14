@@ -10,8 +10,6 @@
 #define stoi64(x) static_cast<uint64_t>(std::stoi(x))
 
 typedef enum{
-    // ID_MACRO_DEFINITION,
-    ID_MACRO,
     ID_INTRISIC_DUMP,
     ID_INTRISIC_DUP,
     ID_INTRISIC_EQUALS,
@@ -26,6 +24,7 @@ typedef enum{
     ID_ELSE,
     ID_END,
     ID_MEM,
+    ID_SYSCALL,
     ID_LOAD,
     ID_STORE
 }Identifiers;
@@ -69,10 +68,8 @@ namespace Parser{
         else if (id->head.atomName == "elif")  return ID_ELIF;
         else if (id->head.atomName == "else")  return ID_ELSE;
         else if (id->head.atomName == "end")   return ID_END;
+	else if (id->head.atomName == "syscall") return ID_SYSCALL;
 	else{
-	    if (Macros.find(id->head.atomName) != Macros.end()){		
-	      return ID_MACRO;
-	    }
             fprintf(stderr, "%lu:%lu: Error: Unreachable identifier at `%s` in the Parsing stage.\n", 
                     id->head.atomIndexLine,
 	            id->head.atomIndex,
@@ -94,15 +91,6 @@ namespace Parser{
                 case NAME:{                                        
                     Identifiers id = Parser::parseIdentifier(Node);
                     switch(id){
-			case ID_MACRO:
-			  {
-			    std::vector<VR> macro_body = Parser::parse(Macros[ Node->head.atomName ]);
-			    for(VR vr: macro_body){
-			      output.push_back(vr);
-			    }
-			    ++Node;
-			    break;
-			} break;
                         case ID_STORE:{
                             ++Node;
                             uint64_t storeType;
@@ -196,6 +184,20 @@ namespace Parser{
                             output.push_back(VR{OP_END, static_cast<uint64_t>(Node->head.atomLinkedIndex)});
                             ++Node;
                             break;
+			case ID_SYSCALL:
+			{
+			    ++Node;
+			    int syscall_type = std::stoi(Node->head.atomName);
+			    if(syscall_type > 6 || syscall_type < 0){
+			      fprintf(stderr, "%lu:%lu: Error: Syscall keywords only acepts numbers between 0 and 6\n",
+				  Node->head.atomLinkedIndex,
+				  Node->head.atomIndex
+				  );
+			      exit(1);
+			    }
+			    output.push_back(VR{OP_SYSCALL, std::stoul(Node->head.atomName)});
+			    ++Node;
+			} break;
                         case ID_DO:
                             output.push_back(VR{OP_DO,  static_cast<uint64_t>(Node->head.atomLinkedIndex)});
                             ++Node;

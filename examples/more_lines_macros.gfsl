@@ -1,0 +1,19 @@
+define fact
+as
+  1 swap while dup 1 >
+  do
+      dup
+      rot *
+      swap
+      1 -
+  end 
+  drop
+end
+
+
+if 5 fact 5 fact + 120 120 = do
+  420 dump
+end
+drop
+
+

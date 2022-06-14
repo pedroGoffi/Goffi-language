@@ -6,6 +6,7 @@ that can be compiled or simulated.
 * [Simple math](#Aritmetric-Operators)
 * [Built-in Procedures](#Build-in-Procedures)
 * [Flow Control](#Flow-Control)
+* [Macros](#Macro-definition)
 
 ## <div id="Aritmetric-Operators">Aritmetric-Operators</div>	
     result of any operation will be pushed automatically ot the top of the stack
@@ -50,4 +51,37 @@ that can be compiled or simulated.
 	dup dump
 	1 +
     end
+
+
+# <div id="Macro-definition">Macros</div>
+
+`define`  is used to created a macro, that will be expanded when used 
+
+Usage:
+First define the macro:
+    `define` (macro-name) `as` (macro-body) `end`
+Then call the macro:
+    (macro-name)
+
+Example in examples, kinda obvious.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -1,0 +1,4 @@
+define stdout as 60 end 
+define exit as stdout syscall1 end
+
+

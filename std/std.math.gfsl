@@ -1,0 +1,29 @@
+// isso é um comentario
+include "./std/std.gfsl"
+
+define factorial as
+  // usage:
+  // N factorial will return N factorial
+  1 swap while dup 1 > do
+    dup 
+    swap rot *
+    swap 1 -
+  end drop
+end
+
+define sum_range as 
+  // usage:
+  // MAX sum_range will return the sommatory of 0 to MAX
+  1 swap while dup 1 > do
+    dup
+    rot
+    +
+    swap
+    1 -
+  end drop
+end
+
+
+
+100 sum_range dump // isso deve retornar a somatoria de 0 a 100 que é igual a 5050 :3
+0 exit

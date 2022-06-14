@@ -67,10 +67,7 @@ namespace Lexer{
 	}
     }
     std::string Tokenize(std::string word, Token_Type &op){
-	if (word == "\""){
-	    std::cout << "OK\n";
-	    exit(1);
-	} else if( is_number(word)){
+	if( is_number(word)){
             op = NUMBER;
             return ("NUMERICAL_TYPE");
         } else if (word == "+"){
@@ -110,9 +107,11 @@ namespace Lexer{
         std::string          actualWord;
         std::string          token;
         std::vector<Token>   tokenList;
-        while(src.count > src.minimunValue){
+        while(src.count > 1){
             actualWord = SV::separateByTokens(src);
-	    if (actualWord.length() ==  0 ) continue;
+	    if (actualWord.length() ==  0 ) {
+	      break;
+	    }
             pos = start - src.count;
             token = Lexer::Tokenize(actualWord, actualType);
 	    {
@@ -189,6 +188,14 @@ namespace Lexer{
 	      extend_macro(result, tk);
 	    }
 	  }
+	  else if ( i->head.atomName == "include" ){
+	    ++i;
+	    std::fstream include_file(i->head.atomName, std::ios::in);
+	    std::vector<Token> __include__content = Lexer::lex(include_file);
+	    for(auto& content: __include__content){
+	      result.push_back(content);
+	    }
+	  }
 	  else
 	  {
 	    result.push_back(
@@ -198,16 +205,6 @@ namespace Lexer{
 		}
 	    );
 	  }
-	}
-
-
-	for(auto& x: result){
-	  std::cout
-	    << x.head.atomName 
-	    << "\t"
-	    << x.head.atomIndexLine << "  <- line\t"
-	    << x.head.atomIndex	    << "  <- col\t"
-	    << " after macro-parsing\n";
 	}
 	return result;
     }

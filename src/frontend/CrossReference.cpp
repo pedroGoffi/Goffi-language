@@ -18,7 +18,6 @@ namespace Crossreference{
 		|| ipname == "do"
 		)
 	    {
-		printf("PUSHING AT `%s`\n", src[currentPosition].head.atomName.c_str());
 		blocks.push_back(currentPosition);
 	    } 
 	    else if (ipname == "end") {
@@ -26,12 +25,10 @@ namespace Crossreference{
 		auto last_block = blocks.back();
 		blocks.pop_back();
 
-		printf("LAST BEFORE END == `%s`, LINE=%lu | INDEX=%lu\n", src[last_block].head.atomName.c_str(),src[last_block].head.atomIndexLine,src[last_block].head.atomIndex);
 
 
 		if (src[last_block].head.atomName == "do"){
 		    auto before_do = blocks.back();
-		    printf("Current pos :: `%lu`\n", currentPosition);
 
 		    blocks.pop_back();
 		    if (src[before_do].head.atomName == "if"){
@@ -40,7 +37,6 @@ namespace Crossreference{
 		    }
 		    else if (src[before_do].head.atomName == "while"){
 
-			printf("WHILE LAST BEFORE END == `%s`, LINE=%lu | INDEX=%lu\n", src[last_block].head.atomName.c_str(),src[last_block].head.atomIndexLine,src[last_block].head.atomIndex);
 			src[currentPosition].head.atomLinkedIndex  = before_do + 1; // end
 			src[last_block].head.atomLinkedIndex = currentPosition + 1; // do
 		    }
@@ -49,7 +45,7 @@ namespace Crossreference{
 	    }
 	    ++currentPosition;
         }
-	if(1){
+	if(0){
 	    size_t i = 0;
 	    for(auto vr = src.begin(); vr != src.end(); ++vr){
 		printf("NAME:\t`%s`\tLINE:`%lu`\tINDEX:`%lu`\tLINKED_TO:`%lu`\tINST:`%lu`\n", 

@@ -6,6 +6,7 @@
 std::string WT(char w){
     if (std::isalpha(w))        return "STR";
     else if (std::isdigit(w))   return "NUM";
+    else if (w == '_')		return "STR";
 
     else if (w == '(')          return "LPAREN"; 
     else if (w == ')')          return "RPAREN";
@@ -60,16 +61,33 @@ namespace SV{
         std::string thisTkName;
         std::string nextTkName;
         // "word 123"
-        while(i < len && !isspace(sv.src[i]) && thisTkName == nextTkName){
+	if (sv.src[i] == '/'){
+	  ++i;
+	  if (sv.src[i] == '/'){
+	    sv.count = 0;
+	    sv.src = "";
+	    return "";
+	  }
+	}
+	else if (sv.src[i] == '"'){
+	  ++i;
+	  while(i < len && sv.src[i] != '"'){
+	    result += sv.src[i];
+	    ++i;
+	  }
+	  sv.count -= i;
+	  sv.src = sv.src.substr(i, len);
+	}
+	else {
+	  while(i < len && !isspace(sv.src[i]) && thisTkName == nextTkName){
             thisTkName = WT(sv.src[i]);
             nextTkName = WT(sv.src[i + 1]);
             result += sv.src[i];            
-
-
             ++i;
-        }
-        sv.count -= i;
-        sv.src = sv.src.substr(i, len);
+          }
+          sv.count -= i;
+          sv.src = sv.src.substr(i, len);
+	}
         return result;
 
     }

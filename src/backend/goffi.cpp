@@ -211,10 +211,10 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 out <<  "   ;; ---- cmpGT\n"
                     <<  "   mov rcx, 0\n"
                     <<  "   mov rdx, 1\n"
-                    <<  "   pop rax\n"
                     <<  "   pop rbx\n"
+                    <<  "   pop rax\n"
                     <<  "   cmp rax, rbx\n"
-                    <<  "   cmove rcx, rdx\n"
+                    <<  "   cmovg rcx, rdx\n"
                     <<  "   push rcx\n"
                     ;
                 ++ip;
@@ -271,9 +271,9 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 out <<  "   ;; ---- cmp LT\n"
                     <<  "   mov rcx, 0\n"
                     <<  "   mov rdx, 1\n"
-                    <<  "   pop rax\n"
                     <<  "   pop rbx\n"
-                    <<  "   cmp rbx, rax\n"
+                    <<  "   pop rax\n"
+                    <<  "   cmp rax, rbx\n"
                     <<  "   cmovl rcx, rdx\n"
                     <<  "   push rcx\n"
                     ;
@@ -344,10 +344,10 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
             case OP_MINUS:
                 makeLabel;
                 out <<  "   ;; ---- minus\n"
-                    <<  "   pop rbx\n"
                     <<  "   pop rax\n"
-                    <<  "   sub rax,rbx\n"
-                    <<  "   push rax\n"
+                    <<  "   pop rbx\n"
+                    <<  "   sub rbx,rax\n"
+                    <<  "   push rbx\n"
                     ;
                 ++ip;
                 break;

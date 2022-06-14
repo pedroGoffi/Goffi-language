@@ -1,6 +1,7 @@
 #ifndef SRC_SRC_CODE
 #define SRC_SRC_CODE 
 #include "./goffi.h"
+#include "./Lexer.cpp"
 #include "Core/Instructions.cpp"
 #include <map>
 #include <iostream>
@@ -12,7 +13,6 @@
 #define makeLabel out << "__label_num__" << addrCount << ":"; ++addrCount;
 
 typedef uint64_t type;
-static std::map<std::string, std::vector<VR>> Macros;
 static size_t addrCount = 0;
 
 /*  

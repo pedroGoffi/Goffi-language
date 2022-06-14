@@ -37,7 +37,7 @@ typedef enum{
     B_MULT
 } BinOpId;
 namespace Parser{
-    std::vector<VR> parse(std::vector<Token> &tokens);
+    void parse(std::vector<VR> output, std::vector<Token> &tokens);
     BinOpId parseBinOp(std::vector<Token>::iterator& boid){
         if	(boid->head.atomName == "+")    return B_PLUS;
         else if (boid->head.atomName == "-")    return B_MINUS;
@@ -70,9 +70,9 @@ namespace Parser{
         else if (id->head.atomName == "else")  return ID_ELSE;
         else if (id->head.atomName == "end")   return ID_END;
 	else{
-	    //if (Macros.find(id->head.atomName) != Macros.end()){		
-	    //    return ID_MACRO;
-	    //}
+	    if (Macros.find(id->head.atomName) != Macros.end()){		
+	      return ID_MACRO;
+	    }
             fprintf(stderr, "%lu:%lu: Error: Unreachable identifier at `%s` in the Parsing stage.\n", 
                     id->head.atomIndexLine,
 	            id->head.atomIndex,
@@ -84,7 +84,7 @@ namespace Parser{
 
     std::vector<VR> parse(std::vector<Token> &tokens){
         std::vector<Token>::iterator Node = tokens.begin();
-        std::vector<VR> output;
+	std::vector<VR> output;
         while( Node != tokens.end()){
             switch(Node->type){ 
 		case STRING:
@@ -94,14 +94,14 @@ namespace Parser{
                 case NAME:{                                        
                     Identifiers id = Parser::parseIdentifier(Node);
                     switch(id){
-			case ID_MACRO:{
-			    std::vector<VR> macro_script_result = Macros[Node->head.atomName];
-			    for(VR vr: macro_script_result){
-				output.push_back(vr);
+			case ID_MACRO:
+			  {
+			    std::vector<VR> macro_body = Parser::parse(Macros[ Node->head.atomName ]);
+			    for(VR vr: macro_body){
+			      output.push_back(vr);
 			    }
-
 			    ++Node;
-			    
+			    break;
 			} break;
                         case ID_STORE:{
                             ++Node;
@@ -256,7 +256,7 @@ namespace Parser{
                 
             }
         }
-        return output;
+	return output;
     }
 }
 #endif /* ifndef PARSER */

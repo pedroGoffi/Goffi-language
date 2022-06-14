@@ -1,12 +1,6 @@
-define print as 
-    dup dump
-end
+define oneLineMacro as 69 end
+define print	    as dump end
 
-1 1 while dup 6 < 
-do
-    dup
-    rot *
-    swap
-    1 + 
-end 
-drop dump
+
+oneLineMacro print
+69 dump

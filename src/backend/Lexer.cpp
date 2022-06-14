@@ -16,8 +16,8 @@
 #include <vector>
 #include <string>
 #include <assert.h>
+#include <map>
 #include "./Core/Instructions.cpp"
-#include "../frontend/Tools.cpp"
 #include "../frontend/StringView.cpp"
 
 /*  NOTE:
@@ -26,6 +26,7 @@
  *      type is str/int types likely
  *      and index is the positio in the text
  */
+
 class Atom{
 public:
     std::string atomName;
@@ -45,6 +46,7 @@ typedef struct Token{
     Atom             head;
 } Token;
 
+static std::map<std::string, std::vector<Token>> Macros;
 namespace Lexer{
     std::string Token_Type_To_String(Token_Type tk){
 	switch(tk){
@@ -124,15 +126,73 @@ namespace Lexer{
     }
     auto lex(std::fstream& file) -> std::vector<Token>
     {
-	std::vector<Token> tokens_result;
+	std::vector<Token> pre_result;
 	std::string line_string;
 	uint64_t    line_count = 0;
 	while( getline(file, line_string)){
-	    Lexer::lex_line(tokens_result, line_string, line_count);
+	    Lexer::lex_line(pre_result, line_string, line_count);
 	    ++line_count;
 	}
 	file.close();
-	return tokens_result;
+	std::vector<Token> result;
+	for(auto i = pre_result.begin(); i != pre_result.end(); ++i){
+	  if( i->head.atomName == "define" ){
+	    ++i;
+	    std::string m_name = i->head.atomName;
+	    if( Macros.find(m_name) != Macros.end()){
+	      printf("%lu:%lu: ERROR: Redefinition of macro\n", 
+	          i->head.atomIndexLine, 
+	          i->head.atomIndex);
+	      printf("	NOTE: previous declared here %lu:%lu\n", 
+	          Macros[m_name].begin()->head.atomIndexLine, 
+	          Macros[m_name].begin()->head.atomIndex);
+	      exit(1);
+	    }
+	    ++i;
+	    if( i->head.atomName != "as" ){
+	      printf("%lu:%lu: ERROR: Macro definition must follow the keyword `as`\nExample: define <macro-name> as <macro-body> end\n", i->head.atomIndexLine, i->head.atomIndex);
+	      exit(1);
+	    }
+	    ++i;
+	    std::vector<Token> m__body;
+	    uint64_t do_counts{0};
+	    while(i->head.atomName != "end" || do_counts > 0){ 
+	      if (i->head.atomName == "do"){
+	        ++do_counts;
+	      } else if ( i->head.atomName == "end" ){
+	        --do_counts;
+	      }
+	      m__body.push_back(
+	            Token{
+	              .type=i->type,
+	              .head=i->head
+	            }
+	          );
+	      ++i; 
+	    }
+	    Macros[m_name] = m__body;
+	  }
+	  else if (i->head.atomName != "define")
+	  {
+	    result.push_back(
+		Token{ 
+		  .type=i->type,
+		  .head=i->head
+		}
+	    );
+	  }
+	}
+
+
+	for(auto& x: result){
+	  std::cout
+	    << x.head.atomName 
+	    << "\t"
+	    << x.head.atomIndexLine << "  <- line\t"
+	    << x.head.atomIndex	    << "  <- col\t"
+	    << " after macro-parsing\n";
+	}
+	return result;
     }
 }
 

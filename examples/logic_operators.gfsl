@@ -1,0 +1,6 @@
+include "std/std.gfsl"
+1 1 or dump
+1 0 or dump
+1 1 and dump
+1 0 and dump
+0 exit

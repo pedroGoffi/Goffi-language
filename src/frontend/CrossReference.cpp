@@ -13,7 +13,14 @@ namespace Crossreference{
 //        for(std::vector<Token>::iterator x = src.begin(); x !=  src.end(); ++x){
         for(auto x = src.begin(); x != src.end(); ++x){
 	    std::string ipname = x->head.atomName;
+	    if (ipname == "syscall"){
+	      std::cout << x->head.atomName << "  ---\n";
+	      ++currentPosition;
+	      continue;
+	    }
 	    if (ipname == "if"
+		|| ipname == "elif"
+		|| ipname == "else"
 		|| ipname == "while"
 		|| ipname == "do"
 		)
@@ -22,8 +29,7 @@ namespace Crossreference{
 	    } 
 	    else if (ipname == "end") {
 		//if (blocks.size() < 1) continue;
-		auto last_block = blocks.back();
-		blocks.pop_back();
+		auto last_block = blocks.back();blocks.pop_back();
 
 
 
@@ -32,14 +38,43 @@ namespace Crossreference{
 		    blocks.pop_back();
 		    if (src[before_do].head.atomName == "if"){
 			src[last_block].head.atomLinkedIndex = currentPosition;
-		    }
+		    } 
 		    else if (src[before_do].head.atomName == "while"){
 			src[currentPosition].head.atomLinkedIndex  = before_do + 1; // end
 			src[last_block].head.atomLinkedIndex = currentPosition + 1; // do
 		    }
+		    else{
+		      assert(false);
+		    }
+		} 
+		else if (src[last_block].head.atomName == "else"){
 
+		  auto before_do = blocks.back();blocks.pop_back();
+		  src[before_do].head.atomLinkedIndex  = last_block + 1; // else
+		  src[last_block].head.atomLinkedIndex = currentPosition + 1; // do
+									      //
+		  while(src[before_do].head.atomName != "if"){
+		    // TODO:
+		    //	  if <> do
+		    //	    <..>
+		    //	    <..>
+		    //	    <..>
+		    //	  elif <> do
+		    //	    <..>
+		    //	    <..>
+		    //	  else
+		    //	    <..>
+		    //	    <..>
+		    //	  end
+		    //	  
+		    break;
+		  }
+		  //src[last_block].head.atomLinkedIndex = before_do + 1; // if
 		}
+
+
 	    }
+
 	    ++currentPosition;
         }
 	if(0){

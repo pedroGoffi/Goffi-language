@@ -1,0 +1,57 @@
+include "std/std.gfsl"
+
+define OP_PUSH_INT  as 0 end
+define OP_PUSH_STR  as 1 end
+define OP_INTRISIC_PLUS	    as 2 end
+define OP_INTRISIC_DUMP	    as 15 end
+ 
+define op-count	    as mem end
+define ops	    as op-count 8 + end
+define sizeof(op)   as 16 end
+
+define todo as
+  eputs
+  1 exit
+end
+
+define push-op as
+  // optype ptr 
+  // save --> (ptr+8 op)
+  op-count -> sizeof(op) * ops +
+  dup 8 + rot  <-
+	  swap <-
+  op-count inc64
+end
+define dump-ops as
+  0 while dup op-count	    -> < do
+    dup sizeof(op) * ops +
+
+    "Type: "	puts dup      -> dump
+    "Operand: " puts 8 +  -> dump
+    "------------\n" puts
+    1 +
+  end drop
+end
+define compile-ops as
+  0 while dup op-count -> < do
+    // ptr type
+    dup sizeof(op) * ops +
+    // if dup -> OP_PUSH_INT = do
+    //   "INT\n" todo
+    // else if dup -> OP_INTRISIC_PLUS = do
+    //   "PLUS\n" todo
+    // else 
+    //   "Unreachable OP_TYPE\n" eputs 1 exit
+    // end end end
+    1 +
+  end drop
+end
+OP_PUSH_INT	    34 push-op  
+OP_PUSH_INT	    35 push-op  
+OP_INTRISIC_PLUS    0  push-op  
+OP_INTRISIC_DUMP    0  push-op  
+dump-ops
+// TODO:
+//    Better if-flow-control
+compile-ops
+0 exit

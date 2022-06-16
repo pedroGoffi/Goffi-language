@@ -11,19 +11,30 @@ typedef enum{
     OP_DIVMOD,
     OP_IDIVMOD,
     OP_EQUALS,
+    OP_NOT_EQUALS,
     OP_MULT,
     OP_GTHAN,
     OP_LTHAN,    
     OP_MEM,
+    ARGC,
+    ARGV,
     DUMP,
     DUP,
     DROP, 
     OVER, // a b -> a b a 
     SWAP, // a b -> b a
     ROT,// a b c -> c b a
+    //  -----
+    SHIFT_LEFT,
+    SHIFT_RIGHT,
+    OR,
+    AND,
+    NOT,
+    // -----
 
 
     OP_IF,
+    OP_ELSE,
     OP_WHILE,
     OP_DO,
     OP_END,
@@ -33,6 +44,7 @@ typedef enum{
 
     OP_LOADBYTE,
     OP_STOREBYTE,
+
     NUM_OF_OPERANDS        
 } Op_type;
 
@@ -40,5 +52,6 @@ typedef struct VR{
     Op_type  op;
     uint64_t    operand;
     std::string op_string="";
+    uint64_t	scape_count=0;
 }VR;
 #endif /* ifndef CORE_INSTRUCTIONS */

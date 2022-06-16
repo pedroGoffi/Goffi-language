@@ -1,0 +1,39 @@
+include "std/std.gfsl"
+
+define ROW_LENGHT as 100  end
+define ROW_HEIGHT as ROW_LENGHT 2 + end
+define TRUE_CHAR  as "*"end
+define FALSE_CHAR as " " end
+
+define dump_rule110 as
+  mem ROW_LENGHT + 1 store8
+  0 while dup ROW_LENGHT < do
+    0 while dup ROW_HEIGHT < do
+      if dup mem + load8 do
+        TRUE_CHAR
+      else
+        FALSE_CHAR
+      end
+      puts
+      1 +
+    end drop
+    "\n" puts
+    1 mem 30 + puts
+  
+    mem load8 1 <<
+    mem 1 + load8
+    or
+    1 while dup ROW_LENGHT < do
+      swap 1 << 7 and
+      over mem + 1 + load8 or
+      2dup 110 swap >> 1 and
+      swap mem + swap store8
+      swap
+      1 +
+    end drop drop
+    1 +
+  end drop
+end
+
+dump_rule110
+0 exit 

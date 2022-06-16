@@ -1,13 +1,7 @@
+include "std/std.gfsl"
 
-define exit as 
-  60 syscall1 
+0 while dup 10 < do
+  "hello\n" puts
+  1 + 
 end
-
-define write_to_stdout as
-  1 1 syscall3
-end
-
-"hello, world!\n" 
-write_to_stdout
 0 exit
-

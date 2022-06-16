@@ -20,5 +20,18 @@ define exit   as SYS_exit syscall1 end
 
 define div as divmod drop end
 define mod as divmod swap drop end
+define 2drop as drop drop end
+define 2dup as over over end
 
+define str_len as 
+  0 swap while dup load8 0 != do
+    1 + swap 1 + swap
+  end drop
+end
 
+define inc64 as 
+  dup load64 1 + store64
+end
+
+define -> as load64 end
+define <- as store64 end

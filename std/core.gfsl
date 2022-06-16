@@ -317,3 +317,11 @@ define SYS_finit_module as 313 end
 
 
 define write as SYS_write syscall3 end
+
+
+
+
+
+
+
+

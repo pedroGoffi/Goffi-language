@@ -1,12 +1,20 @@
 include "std/std.gfsl"
  
-define fizz as "fizz" end
-define buzz as "buzz\n" end
 
-// FIXME:
-//  went push string the cross-reference outset 1 
+// fizzbuzz if n%2 == 0 and n%3 == 0
+// fiz if onli n%2 == 0
+// buzz if onli n%3 == 0
+// else print the number
+define fizzbuzz as 
+  if dup 2 mod 1 = over 3 mod 1 = and do print  end
+  if dup 2 mod 0 = do "Fizz" puts end
+  if dup 3 mod 0 = do "Buzz" puts end
+  "\n" puts
+end
 
-fizz puts 
-buzz puts
 
+1 while dup 10 < do
+  dup fizzbuzz
+  1 + 
+end
 0 exit

@@ -2,7 +2,9 @@
 #define SRC_SRC_CODE 
 #include "./goffi.h"
 #include "./Lexer.cpp"
+#include "../frontend/Tools.cpp"
 #include "Core/Instructions.cpp"
+#include <ios>
 #include <map>
 #include <iostream>
 #include <vector>
@@ -26,7 +28,7 @@ static size_t addrCount = 0;
  * This will compile the program to assembly x86_64
  */
 void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
-    assert(NUM_OF_OPERANDS == 24 && "Exhaustive time handling operand, please update the compile_program in ");
+    assert(NUM_OF_OPERANDS == 33 && "Exhaustive time handling operand, please update the compile_program in ");
 
     std::fstream out("out.asm", std::ios::out);
 
@@ -34,10 +36,58 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
     /*  TODO:
      *      Include by ip
      */
-    out <<  "%include \"/usr/include/goffiLang/stdGlib.s\"\n"
+    out << "dump:\n"
+	<< "  push  rbp\n"
+	<< "  mov   rbp, rsp\n"
+	<< "  sub   rsp, 64\n"
+	<< "  mov   QWORD  [rbp-56], rdi\n"
+	<< "  mov   QWORD  [rbp-8], 1\n"
+	<< "  mov   eax, 32\n"
+	<< "  sub   rax, QWORD  [rbp-8]\n"
+	<< "  mov   BYTE  [rbp-48+rax], 10\n"
+	<< ".L2:\n"
+	<< "  mov   rcx, QWORD  [rbp-56]\n"
+	<< "  mov   rdx, -3689348814741910323\n"
+	<< "  mov   rax, rcx\n"
+	<< "  mul   rdx\n"
+	<< "  shr   rdx, 3\n"
+	<< "  mov   rax, rdx\n"
+	<< "  sal   rax, 2\n"
+	<< "  add   rax, rdx\n"
+	<< "  add   rax, rax\n"
+	<< "  sub   rcx, rax\n"
+	<< "  mov   rdx, rcx\n"
+	<< "  mov   eax, edx\n"
+	<< "  lea   edx, [rax+48]\n"
+	<< "  mov   eax, 31\n"
+	<< "  sub   rax, QWORD  [rbp-8]\n"
+	<< "  mov   BYTE  [rbp-48+rax], dl\n"
+	<< "  add   QWORD  [rbp-8], 1\n"
+	<< "  mov   rax, QWORD  [rbp-56]\n"
+	<< "  mov   rdx, -3689348814741910323\n"
+	<< "  mul   rdx\n"
+	<< "  mov   rax, rdx\n"
+	<< "  shr   rax, 3\n"
+	<< "  mov   QWORD  [rbp-56], rax\n"
+	<< "  cmp   QWORD  [rbp-56], 0\n"
+	<< "  jne   .L2\n"
+	<< "  mov   eax, 32\n"
+	<< "  sub   rax, QWORD  [rbp-8]\n"
+	<< "  lea   rdx, [rbp-48]\n"
+	<< "  lea   rcx, [rdx+rax]\n"
+	<< "  mov   rax, QWORD  [rbp-8]\n"
+	<< "  mov   rdx, rax\n"
+	<< "  mov   rsi, rcx\n"
+	<< "  mov   edi, 1\n"
+	<< "  mov   rax, 1\n"
+	<< "  syscall\n"
+	<< "  nop\n"
+	<< "  leave\n"
+	<< "  ret\n"
         <<  "global _start\n"
         <<  "segment .text\n"
         <<  "_start:\n"
+	<<  "   mov [args_ptr], rsp\n"
         ;
     std::vector<VR>::iterator ip = program.begin();
 
@@ -70,13 +120,19 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 makeLabel;
                 switch(ip->operand){
                     case (8):
-
                         out <<  "   ;; ---- store 8\n"
                             <<  "   pop rbx\n"
                             <<  "   pop rax\n"
                             <<  "   mov BYTE [rax], bl\n"
                             ;
                         break;
+		    case (64):
+			out <<	"   ;; ---- store 64\n"
+			    <<	"   pop rbx\n"
+			    <<	"   pop rax\n"
+			    <<	"   mov [rax], rbx\n"
+			  ;
+			break;
                 }
                 ++ip;
                 break;
@@ -92,6 +148,14 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                             <<  "   push rbx\n"
                             ;
                         break;
+		    case (64):
+			out <<	"   ;; ---- load64\n"
+			    <<	"   pop rax\n"
+			    <<	"   xor rbx, rbx\n"
+			    <<	"   mov rbx, [rax]\n"
+			    <<	"   push rbx\n"
+			    ;
+			break;
                 }
                 ++ip;
                 break;
@@ -103,6 +167,23 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                     ;
                 ++ip;
                 break;
+	    case ARGC:
+		makeLabel;
+		out <<	"   ;; ---- argc\n"
+		    <<	"   mov rax, [args_ptr]\n"
+		    <<	"   push rax\n"
+		    ;
+		++ip;
+		break;
+	    case ARGV:
+		makeLabel;
+		out <<	"   ;; ---- argv\n"
+		    <<	"   mov rax, [args_ptr]\n"
+		    <<	"   add rax, 8\n"
+		    <<	"   push rax\n"
+		    ;
+		++ip;
+		break;
             case OP_LTHAN:
                 makeLabel;
                 out <<  "   ;; ---- cmp LT\n"
@@ -150,17 +231,32 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                     ;
                 ++ip;
                 break;
+	    case OP_NOT_EQUALS:
+		makeLabel;
+		out <<	"   ;; --- NOT equals\n"
+		    <<	"   mov rcx, 0\n"       
+		    <<  "   mov rdx, 1\n"       
+                    <<  "   pop rbx\n"          
+                    <<  "   pop rax\n"          
+                    <<  "   cmp rax, rbx\n"     
+                    <<  "   cmovne rcx, rdx\n"  
+                    <<  "   push rcx\n"   
+		    ;
+		++ip;
+		break;
+
             case PUSH_INT:
+	    {
                 makeLabel;
                 out <<  "   ;; ---- push int\n"
-                    <<  "   push " << ip->operand << "\n"
+                    <<  "   push 0x" << std::hex << (int)ip->operand << std::dec <<"\n"
                     ;
                 ++ip;
-                break;
+	    } break;
 	    case PUSH_STR:
 		makeLabel;
 		out <<	"   ;; ---- push str\n"
-		    <<	"   mov rax, " << ip->op_string.length() << "\n"
+		    <<	"   mov rax, "		<< ip->op_string.length() - ip->scape_count << "\n"
 		    <<	"   push rax\n"
 		    <<	"   push word_string__" << ip->operand << "\n"
 		    ;
@@ -174,10 +270,11 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
 		    <<	"   pop rax\n"
 		    <<	"   div rbx\n"
 		    <<	"   push rax\n"
-		    <<	"   push rbx\n"
+		    <<	"   push rdx\n"
 		    ;
 		++ip;
 		break;
+
 	    case OP_IDIVMOD: 
 		makeLabel;
 		out <<	"   ;; ---- idivmod\n"
@@ -277,6 +374,13 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
 		out <<	"   ;; ---- if\n"; 
                 ++ip;
 		break;
+	    case OP_ELSE:
+		makeLabel;
+		out <<	"   ;; ----- else\n"
+		    <<	"   jmp __label_num__" << ip->operand  << "\n"                
+		    ;
+		++ip;
+		break;
 	    case OP_WHILE:
 		makeLabel;
 		out <<	"   ;; ---- while\n"; 
@@ -361,9 +465,59 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
 		}
 		++ip;
 		break;
+
+	    case SHIFT_LEFT:
+		makeLabel;
+		out <<	"   ;; ---- shift-left\n"
+		    <<	"   pop rcx\n"             
+                    <<	"   pop rbx\n"             
+                    <<	"   shl rbx, cl\n"         
+                    <<	"   push rbx\n"  
+		    ;
+		++ip;
+		break;
+
+	    case SHIFT_RIGHT:
+		makeLabel;
+		out <<	"   ;; ---- shift-right\n"
+		    <<	"   pop rcx\n"     
+                    <<	"   pop rbx\n"     
+                    <<	"   shr rbx, cl\n" 
+                    <<	"   push rbx\n"        
+		    ;
+		++ip;
+		break;
+	    case OR:
+		makeLabel;
+		out <<	"   ;; --- or\n"
+		    <<  "   pop rax\n"            
+		    <<  "   pop rbx\n"            
+                    <<  "   or rbx, rax\n"        
+                    <<  "   push rbx\n"           
+		    ;
+		++ip;
+		break;
+	    case AND:
+		makeLabel;
+                out <<	"   ;; ---- and\n"
+		    <<  "   pop rax\n"            
+		    <<  "   pop rbx\n"            
+                    <<  "   and rbx, rax\n"       
+                    <<  "   push rbx\n"           
+		    ;
+		++ip;
+		break;
+	    case NOT:
+		makeLabel;
+                out <<	"   ;; ---- not\n"
+		    <<  "   pop rax\n"            
+                    <<  "   not rax\n"            
+                    <<  "   push rax\n"    
+		    ;
+		++ip; 
+		break;
             case NUM_OF_OPERANDS: break;
             default: {
-		makeLabel;
                 assert(false && "WARNING! Unreachable operations in compile mode\n");
                 ++ip;
                 break;
@@ -381,6 +535,8 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
     out <<  "segment .bss\n"
         <<  "buffer:    resb    " << MEMORY_SIZE << "\n"
         ;
+    out <<  "args_ptr:	resq	1\n"
+	;
     out.close();
     char cmd[128];
     sprintf(cmd, "nasm -felf64 -g out.asm");

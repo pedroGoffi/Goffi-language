@@ -82,9 +82,7 @@ namespace SV{
 	  sv.src = sv.src.substr(i, len);
 	}
 	else {
-	  while(i < len && !isspace(sv.src[i]) && thisTkName == nextTkName){
-            thisTkName = WT(sv.src[i]);
-            nextTkName = WT(sv.src[i + 1]);
+	  while(i < len && !isspace(sv.src[i])){
             result += sv.src[i];            
             ++i;
           }

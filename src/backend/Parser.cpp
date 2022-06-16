@@ -1,4 +1,5 @@
 #include "goffi.h"
+#include <string>
 #ifndef PARSER
 #define PARSER value
 #include <iostream>
@@ -7,20 +8,30 @@
 #include "./goffi.cpp"
 #include "../frontend/Tools.cpp"
 #include <typeinfo>
-
-#define stoi64(x) static_cast<uint64_t>(std::stoi(x))
+#define stoi64(x) (static_cast<uint64>(std::stoull(x)))
 
 typedef enum{
     ID_NOOP,
     ID_INTRISIC_DUMP,
     ID_INTRISIC_DUP,
     ID_INTRISIC_EQUALS,
+    ID_INTRISIC_NOT_EQ,
     ID_INTRISIC_SWAP,
     ID_INTRISIC_OVER,
     ID_INTRISIC_ROT,
     ID_INTRISIC_DROP,
     ID_INTRISIC_DIVMOD,
     ID_INTRISIC_IDIVMOD,
+    ID_INTRISIC_SHIFT_LEFT,
+    ID_INTRISIC_SHIFT_RIGHT,
+    ID_INTRISIC_OR,
+
+    ID_INTRISIC_AND,
+    ID_INTRISIC_NOT,
+    ID_INTRISIC_ARGV,
+    ID_INTRISIC_ARGC,
+
+
     ID_WHILE,
     ID_IF,
     ID_DO,
@@ -28,9 +39,19 @@ typedef enum{
     ID_ELSE,
     ID_END,
     ID_MEM,
-    ID_SYSCALL,
-    ID_LOAD,
-    ID_STORE,
+    ID_HERE,
+    ID_SYSCALL_0,
+    ID_SYSCALL_1,
+    ID_SYSCALL_2,
+    ID_SYSCALL_3,
+    ID_SYSCALL_4,
+    ID_SYSCALL_5,
+    ID_SYSCALL_6,
+
+    ID_LOAD8,
+    ID_LOAD64,
+    ID_STORE8,
+    ID_STORE64,
     ID_STRING
 }Identifiers;
 typedef enum{
@@ -65,17 +86,49 @@ namespace Parser{
 	else if (id->head.atomName == "rot")   	  return ID_INTRISIC_ROT;
 	else if (id->head.atomName == "drop")  	  return ID_INTRISIC_DROP;
 	else if (id->head.atomName == "divmod")   return ID_INTRISIC_DIVMOD;
-	else if (id->head.atomName == "idivmod")   return ID_INTRISIC_IDIVMOD;
-        else if (id->head.atomName == "store") 	  return ID_STORE;
-        else if (id->head.atomName == "load")  	  return ID_LOAD;
+
+	else if (id->head.atomName == "idivmod")  return ID_INTRISIC_IDIVMOD;
+
+	else if (id->head.atomName == ">>")	  return ID_INTRISIC_SHIFT_RIGHT;
+	else if (id->head.atomName == "<<")	  return ID_INTRISIC_SHIFT_LEFT;
+
+	else if (id->head.atomName == "and")	  return ID_INTRISIC_AND;
+	else if (id->head.atomName == "or")	  return ID_INTRISIC_OR;
+	else if (id->head.atomName == "not")	  return ID_INTRISIC_NOT;
+
+	else if (id->head.atomName == "__argv")	  return ID_INTRISIC_ARGV;
+	else if (id->head.atomName == "__argc")	  return ID_INTRISIC_ARGC;
+
+	else if (id->head.atomName == "<="){
+	  printf("kdqwpokdpoqwkdpoqwokqdp\n");
+	  exit(1);
+	}
+
+
+        else if (id->head.atomName == "store8")   return ID_STORE8;
+        else if (id->head.atomName == "store64")  return ID_STORE64;
+
+        else if (id->head.atomName == "load8")    return ID_LOAD8;
+        else if (id->head.atomName == "load64")   return ID_LOAD64;
         else if (id->head.atomName == "mem")   	  return ID_MEM;
         else if (id->head.atomName == "if")    	  return ID_IF;
         else if (id->head.atomName == "while") 	  return ID_WHILE;
         else if (id->head.atomName == "do")    	  return ID_DO;
         else if (id->head.atomName == "elif")  	  return ID_ELIF;
         else if (id->head.atomName == "else")  	  return ID_ELSE;
-        else if (id->head.atomName == "end")	  return ID_END;
-	else if (id->head.atomName == "syscall")  return ID_SYSCALL;
+
+	else if (id->head.atomName == "end")	  return ID_END;
+	else if (id->head.atomName == "!=")	  return ID_INTRISIC_NOT_EQ;
+	else if (id->head.atomName == "here")	  return ID_HERE;
+	
+
+	else if (id->head.atomName == "syscall0")  return ID_SYSCALL_0;
+	else if (id->head.atomName == "syscall1")  return ID_SYSCALL_1;
+	else if (id->head.atomName == "syscall2")  return ID_SYSCALL_2;
+	else if (id->head.atomName == "syscall3")  return ID_SYSCALL_3;
+	else if (id->head.atomName == "syscall4")  return ID_SYSCALL_4;
+	else if (id->head.atomName == "syscall5")  return ID_SYSCALL_5;
+	else if (id->head.atomName == "syscall6")  return ID_SYSCALL_6;
 
 	else{
 
@@ -106,77 +159,36 @@ namespace Parser{
                     Identifiers id = Parser::parseIdentifier(Node);
                     switch(id){
 			case ID_NOOP: ++Node; break;
+			case ID_HERE:
+			{
+			    std::string pos =std::to_string(Node->head.atomIndexLine)+":"+std::to_string(Node->head.atomIndex);
+			    Words[std::string("word_string__") + std::to_string(words_count)] =  string_to_hex(pos);
+
+			    output.push_back(VR{ PUSH_STR, (uint64_t)words_count, pos });
+			    ++words_count;
+			    ++Node;
+			} break;
 			case ID_STRING:
 			{
 			  if( Node->head.atomName.length() > 0 ){
-			    std::string __word__byte_array__ = string_to_hex(Node->head.atomName);
-			    Words[std::string("word_string__") + std::to_string(words_count)] =  __word__byte_array__;
-			    output.push_back(VR{ PUSH_STR, (uint64_t)words_count, Node->head.atomName });
+			    uint64_t scape_count{0};
+			    for(const char x: Node->head.atomName){
+			      if (x == '\\') ++scape_count;
+			    }
+			    Words[std::string("word_string__") + std::to_string(words_count)] =  string_to_hex(Node->head.atomName);
+			    output.push_back(VR{ PUSH_STR, (uint64_t)words_count, Node->head.atomName, scape_count});
 			    ++words_count;
 			  }
 			  ++Node;
 			} break;
-                        case ID_STORE:{
-                            ++Node;
-                            uint64_t storeType;
-                            try{
-                                storeType = stoi64(Node->head.atomName);
-                            } catch(std::invalid_argument& err){
-                                fprintf(stderr, "%lu:%lu: Error: `store` operand accepts the next value as the store capacity in bytes\n",
-                                    Node->head.atomIndexLine,
-                                    Node->head.atomIndex
-                                );
-                                fprintf(stderr, "   Note: Excpected `NUMERICAL_TYPE: INT` but receive: `%s`\n",
-                                        typeid(Node->head.atomName).name());
-                                exit(1);
-                            }
-                            switch(storeType){
-                                case (8):
-                                    output.push_back(VR{OP_STOREBYTE, 8});
-                                    break;
-                                default:
-                                    fprintf(stderr, "%lu:%lu: Error: `store` op does not support the given type\n",
-                                        Node->head.atomIndexLine,
-                                        Node->head.atomIndex
-                                    );
-                                    fprintf(stderr, "   Note: For now `store` only supports store8\n");
-                                    exit(1);
-                                    break;
-                            }
-                            ++Node;
-                            break;
-                        }
-                        case ID_LOAD:{
-                            ++Node;
-                            uint64_t loadType;
-                            try{
-                                loadType = stoi64(Node->head.atomName);
-                            }
-                            catch(std::invalid_argument& err){
-                                fprintf(stderr, "%lu:%lu: Error: `load` operand accepts the next value as the load type\n",
-                                    Node->head.atomIndexLine,
-                                    Node->head.atomIndex
-                                );
-                                fprintf(stderr, "   Note: Excpected: `NUMERICAL_TYPE: INT` but receive: `%s`\n",
-                                        typeid(Node->head.atomName).name());
-                                exit(1);
-                            }
-                            switch(loadType){
-                                case (8):{
-                                    output.push_back(VR{OP_LOADBYTE,    8});                                    
-                                    break;
-                                }    
-                                default:{
-                                    fprintf(stderr, "%lu:%lu: Error: `load` op does not suport the given type\n",
-                                        Node->head.atomIndexLine,
-                                        Node->head.atomIndex
-                                    );
-                                    fprintf(stderr, "   Note: For now only suport load8\n");
-                                    exit(1);
-                                    break;
-                                }
-                                break;
-                            }
+
+                        case ID_STORE8:output.push_back(VR{OP_STOREBYTE, 8}); ++Node;break;
+                        case ID_STORE64:output.push_back(VR{OP_STOREBYTE, 64}); ++Node;break;
+                        
+
+                        case ID_LOAD8:output.push_back(VR{OP_LOADBYTE,    8}); ++Node; break;
+                        case ID_LOAD64:output.push_back(VR{OP_LOADBYTE,    64}); ++Node; break;
+                            
                         case ID_MEM:
                           output.push_back(VR{OP_MEM,   0});
                           ++Node;
@@ -213,30 +225,42 @@ namespace Parser{
 			    output.push_back(VR{OP_IDIVMOD, 0});
 			    ++Node;
 			    break;
+			case ID_INTRISIC_SHIFT_LEFT: 
+			    output.push_back(VR{SHIFT_LEFT, 0});
+			    ++Node; break;
+			case ID_INTRISIC_SHIFT_RIGHT: output.push_back(VR{SHIFT_RIGHT, 0});++Node; break;
 
+			case ID_INTRISIC_AND: output.push_back(VR{AND, 0});++Node; break;
+			case ID_INTRISIC_OR: output.push_back(VR{OR, 0});++Node; break;
+
+			case ID_INTRISIC_NOT: output.push_back(VR{NOT, 0}); ++Node; break;
+			case ID_INTRISIC_ARGV: output.push_back(VR{ARGV, 0}); ++Node; break;
+			case ID_INTRISIC_ARGC: output.push_back(VR{ARGC, 0}); ++Node; break;
                         case ID_END:
                             output.push_back(VR{OP_END, static_cast<uint64_t>(Node->head.atomLinkedIndex)});
                             ++Node;
                             break;
-			case ID_SYSCALL:
-			{
+			case ID_INTRISIC_NOT_EQ:
+			    output.push_back(VR{OP_NOT_EQUALS,	0});
 			    ++Node;
-			    int syscall_type = std::stoi(Node->head.atomName);
-			    if(syscall_type > 6 || syscall_type < 0){
-			      fprintf(stderr, "%lu:%lu: Error: Syscall keywords only acepts numbers between 0 and 6\n",
-				  Node->head.atomLinkedIndex,
-				  Node->head.atomIndex
-				  );
-			      exit(1);
-			    }
-			    output.push_back(VR{OP_SYSCALL, std::stoul(Node->head.atomName)});
-			    ++Node;
-			} break;
+			    break;
+
+			case ID_SYSCALL_0: output.push_back(VR{OP_SYSCALL, 0}); ++Node; break;
+			case ID_SYSCALL_1: output.push_back(VR{OP_SYSCALL, 1}); ++Node; break;
+			case ID_SYSCALL_2: output.push_back(VR{OP_SYSCALL, 2}); ++Node; break;
+			case ID_SYSCALL_3: output.push_back(VR{OP_SYSCALL, 3}); ++Node; break;
+			case ID_SYSCALL_4: output.push_back(VR{OP_SYSCALL, 4}); ++Node; break;
+			case ID_SYSCALL_5: output.push_back(VR{OP_SYSCALL, 5}); ++Node;  break;
+			case ID_SYSCALL_6: output.push_back(VR{OP_SYSCALL, 6}); ++Node; break;
+
                         case ID_DO:
                             output.push_back(VR{OP_DO,  static_cast<uint64_t>(Node->head.atomLinkedIndex)});
                             ++Node;
                             break;
 			case ID_ELSE:
+                            output.push_back(VR{OP_ELSE,  static_cast<uint64_t>(Node->head.atomLinkedIndex)});
+			    ++Node;
+			    break;
                         case ID_ELIF:
                             printf("keywords `else` or `elif` Not implemented yet\n");
                             fprintf(stderr, "%lu:%lu: Error: Internal keyword `elif` not implemented yet\n",
@@ -256,7 +280,7 @@ namespace Parser{
                             output.push_back(VR{DUMP, 0});
                             ++Node;
                             break;
-                        }
+                        
                         case ID_INTRISIC_EQUALS: 
                             output.push_back(VR{OP_EQUALS,  0});
                             ++Node;
@@ -266,9 +290,11 @@ namespace Parser{
                 }
 
                 case NUMBER:
-                    output.push_back(VR{PUSH_INT, stoi64(Node->head.atomName)});
+		{ 
+		    output.push_back(VR{PUSH_INT, string_to_uint64(Node->head.atomName)});
                     ++Node;
                     break;
+		}
                 case BINARY_OPERAND:
                     switch(Parser::parseBinOp(Node)){
 			case B_MULT:

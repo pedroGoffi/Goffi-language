@@ -1,6 +1,7 @@
 #ifndef LEXING_STAGE_SRC_CODE
 #define LEXING_STAGE_SRC_CODE value
 #include "./Tools.h"
+#include <sstream>
 
 void usage(FILE *stream, std::string program){
     /*  Since prinf has a beatiful sintax i'll use it instead of std::cout  */
@@ -48,7 +49,6 @@ std::string string_to_hex(const std::string& input)
     output.reserve(input.length() * 2);
     for (auto c = input.begin(); c != input.end(); ++c)
     {
-
       if (*c == '\\'){
 	++c;
 	switch(*c){
@@ -71,8 +71,15 @@ std::string string_to_hex(const std::string& input)
       }
       output.push_back(',');
     }
-    output = output.substr(0, output.length() - 1);
+    if (output[output.length() - 1] == ',')
+      output = output.substr(0, output.length() - 1);
     return output;
 }
+std::uint64_t string_to_uint64(std::string val){
+    uint64_t value;
+    std::istringstream iss(val);
+    iss >> value >> std::hex;
 
+    return value;
+}
 #endif /* ifndef LEXING_STAGE_SRC_CODE */

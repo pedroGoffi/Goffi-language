@@ -1,0 +1,10 @@
+include "std/std.gfsl"
+
+1 dump
+if 1 do
+  "true case" puts
+else
+  "else case" puts
+end
+
+0 exit

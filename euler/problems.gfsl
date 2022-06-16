@@ -1,0 +1,63 @@
+include "std/std.gfsl"
+// ----------------------------
+define problem_0 as
+  0 3 while dup 1000 < do
+    if
+      dup  3 mod 0 =
+      over 5 mod 0 = 
+      or
+    do
+      swap over + swap
+    end
+    1 +
+  end drop dump
+end  
+// ----------------------------
+define problem_1 as
+  1 2 while over 4000000 < do
+    if over 2 mod 0 = do
+      over mem load64 + mem swap store64
+    end
+    swap over +
+  end
+  mem load64 dump
+end
+
+
+// ----------------------------
+define problem_2 as
+  " ERROR: Can not solve problem_2 because assembly cant store big values, no idea how to solve\n"
+  stderr fputs
+  1 exit
+end
+
+// ----------------------------
+define problem_3 
+as 
+  100 while dup 1000 < do
+    100 while dup 1000 < do
+      2dup *
+      dup 0 while over 0 > do
+        10 *
+        over 10 mod 
+        + 
+        swap 10 div swap
+      end swap drop
+  
+      // a b 
+      if 2dup = do
+        if dup mem load64 > do
+  	mem over store64
+        end
+      end 2drop
+  
+      1 + 
+    end drop
+    1 +
+  end drop  
+  mem load64 dump
+end
+
+
+
+0 exit

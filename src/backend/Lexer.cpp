@@ -38,7 +38,6 @@ public:
 typedef enum Token_Type{
     NUMBER,
     BINARY_OPERAND,
-    STRING,
     NAME
 } Token_Type;
 typedef struct Token{
@@ -47,14 +46,13 @@ typedef struct Token{
 } Token;
 
 static std::map<std::string, std::vector<Token>> Macros;
+static std::map<std::string, std::string> Words;
+static int words_count{0};
 namespace Lexer{
     std::string Token_Type_To_String(Token_Type tk){
 	switch(tk){
 	    case NAME:
 		return "Identifier";
-		break;
-	    case STRING: 
-		return "String";
 		break;
 	    case BINARY_OPERAND: 
 		return "BINARY_OPERAND";
@@ -66,7 +64,7 @@ namespace Lexer{
 		assert(false && "Unreachable");
 	}
     }
-    std::string Tokenize(std::string word, Token_Type &op){
+    std::string Tokenize(std::string& word, Token_Type &op){
 	if( is_number(word)){
             op = NUMBER;
             return ("NUMERICAL_TYPE");
@@ -85,7 +83,7 @@ namespace Lexer{
         } else if (word == ">"){
             op = BINARY_OPERAND;
             return ("OP_CMP_GT");
-        } else{
+	} else{
             op = NAME;
             return ("NAME_TYPE");
         }
@@ -93,7 +91,11 @@ namespace Lexer{
     void extend_macro(std::vector<Token>& result, Token &it){
       if (Macros.find(it.head.atomName) != Macros.end()){
 	for(Token& tk: Macros[it.head.atomName]){
-	  result.push_back(tk);
+	  if( Macros.find(tk.head.atomName) != Macros.end()){
+	    extend_macro(result, tk);
+	  }
+	  else
+	    result.push_back(tk);
 	}
       }
       else
@@ -109,12 +111,9 @@ namespace Lexer{
         std::vector<Token>   tokenList;
         while(src.count > 1){
             actualWord = SV::separateByTokens(src);
-	    if (actualWord.length() ==  0 ) {
-	      break;
-	    }
             pos = start - src.count;
             token = Lexer::Tokenize(actualWord, actualType);
-	    {
+	    if(actualWord.length() > 0){
 		tokenList.push_back(
             	    Token{
             	        .type = actualType,
@@ -190,6 +189,8 @@ namespace Lexer{
 	  }
 	  else if ( i->head.atomName == "include" ){
 	    ++i;
+
+	    i->head.atomName = i->head.atomName.substr(1, i->head.atomName.length() - 2);
 	    std::fstream include_file(i->head.atomName, std::ios::in);
 	    std::vector<Token> __include__content = Lexer::lex(include_file);
 	    for(auto& content: __include__content){

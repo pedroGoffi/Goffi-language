@@ -20,176 +20,13 @@ static size_t addrCount = 0;
  *  using a likely virtual cpu
  *  stack beeing a vector and not std::stack
  *  for better control if i need in future
+ *  simulation mode was been removed due to incompatiblity with compile_mode
  */
-void Goffi::simulate_program(std::vector<VR> &program){
-    assert(NUM_OF_OPERANDS == 21 && "Exhaustive time handling operand, please update the simulate_program");
-
-    std::vector<VR>::iterator ip = program.begin();
-    std::vector<uint64_t> stack(258);
-    while(ip != program.end()){
-        switch(ip->op){
-            case OP_LOADBYTE:
-                ++ip;
-                assert(false && "Not implemented yet\n");
-                break;
-            case OP_STOREBYTE:
-                ++ip;
-                assert(false && "Not implemented yet\n");
-                break;
-            case OP_MEM:{
-                ++ip;
-                assert(false && "MEM Not implemented yet\n");
-                break;
-            }
-            case OP_GTHAN:{
-                type a = stack.back(); 
-                stack.pop_back();
-                type b = stack.back(); 
-                stack.pop_back();
-
-                stack.push_back( a < b );
-                ++ip;
-                break;
-            }
-
-            case OP_LTHAN:{
-                type a = stack.back(); 
-                stack.pop_back();
-                type b = stack.back(); 
-                stack.pop_back();
-
-                stack.push_back( a > b );                
-                ++ip;
-                break;
-            }
-            case DUP:{
-                type a = stack.back();
-                stack.pop_back();
-
-                stack.push_back(a);
-                stack.push_back(a);
-                ++ip;
-                break;
-
-            }
-            case OP_DO:{
-                type a = stack.back();
-                stack.pop_back();
-
-                if(a){
-                    ++ip;
-                }
-                else{
-                    ip = program.begin() + (int)ip->operand;
-
-                }
-                break;
-            }
-            case OP_END:
-                if(ip->operand > 0){
-                    ip = program.begin() + int(ip->operand);
-                }
-                else 
-                    ++ip;
-                break;
-
-            case OP_EQUALS:{
-                type a = stack.back();
-                stack.pop_back();
-                type b = stack.back();
-                stack.pop_back();
-                stack.push_back( b == a );
-                ++ip;
-                break;
-            }
-            case PUSH_INT:
-                stack.push_back(ip->operand);
-                ++ip;
-                break;
-            case OP_PLUS:{
-                type a = stack.back();
-                stack.pop_back();
-                type b = stack.back();
-                stack.pop_back();
-                stack.push_back(b + a);
-                ++ip;
-                break;
-            }
-            case OP_MINUS:{
-                type a = stack.back();
-                stack.pop_back();
-                type b = stack.back();
-                stack.pop_back();
-                stack.push_back(b - a);
-                ++ip;
-                break;
-            }
-	    case OP_MULT: {
-		type a = stack.back();
-		stack.pop_back();
-		type b = stack.back();
-		stack.pop_back();
-		stack.push_back(b * a);
-		++ip;
-		break;
-	    }
-            case DUMP:{
-                type a = stack.back();
-                stack.pop_back();
-                printf("%ld\n", a);
-                ++ip;
-                break;
-            }
-	    case DROP:
-		stack.pop_back();
-		++ip;
-		break;
-	    case SWAP:{
-		type a = stack.back(); stack.pop_back();
-		type b = stack.back(); stack.pop_back();
-		stack.push_back(a);
-		stack.push_back(b);
-
-		++ip;
-	    } break;
-	    case OVER:{
-		type a = stack.back(); stack.pop_back();
-		type b = stack.back(); stack.pop_back();
-		stack.push_back(b);
-		stack.push_back(a);
-		stack.push_back(b);
-		++ip;
-	    } break;
-	    case ROT:{
-		type a = stack.back(); stack.pop_back();
-		type b = stack.back(); stack.pop_back();
-		type c = stack.back(); stack.pop_back();
-
-		stack.push_back(b);
-		stack.push_back(a);
-		stack.push_back(c);
-		++ip;
-	    } break;
-	    case OP_SYSCALL:
-	      fprintf(stderr, "SYSCALLS are not implemented in simulation mode yet\n");
-	      exit(1);
-	      ++ip;
-	      break;
-	    case OP_IF:
-	    case OP_WHILE:
-            case NUM_OF_OPERANDS: 
-            default: {
-                ++ip;
-                break;
-            }
-        }
-    }
-}
 /*
  * This will compile the program to assembly x86_64
  */
 void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
-    assert(NUM_OF_OPERANDS == 21 && "Exhaustive time handling operand, please update the compile_program in ");
+    assert(NUM_OF_OPERANDS == 24 && "Exhaustive time handling operand, please update the compile_program in ");
 
     std::fstream out("out.asm", std::ios::out);
 
@@ -320,6 +157,39 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                     ;
                 ++ip;
                 break;
+	    case PUSH_STR:
+		makeLabel;
+		out <<	"   ;; ---- push str\n"
+		    <<	"   mov rax, " << ip->op_string.length() << "\n"
+		    <<	"   push rax\n"
+		    <<	"   push word_string__" << ip->operand << "\n"
+		    ;
+		++ip;
+		break;
+	    case OP_DIVMOD: 
+		makeLabel;
+		out <<	"   ;; ---- divmod\n"
+		    <<	"   xor rdx, rdx\n"
+		    <<	"   pop rbx\n"
+		    <<	"   pop rax\n"
+		    <<	"   div rbx\n"
+		    <<	"   push rax\n"
+		    <<	"   push rbx\n"
+		    ;
+		++ip;
+		break;
+	    case OP_IDIVMOD: 
+		makeLabel;
+		out <<	"   ;; ---- idivmod\n"
+		    <<	"   pop rbx\n"
+		    <<	"   pop rax\n"
+		    <<	"   cqo rbx\n"
+		    <<	"   idiv rbx\n"
+		    <<	"   push rax\n"
+		    <<	"   push rdx\n"
+		    ;
+		++ip;
+		break;
             case OP_PLUS:{
                 makeLabel;
                 out <<  "   ;; ---- add\n"
@@ -491,7 +361,6 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
 		}
 		++ip;
 		break;
-		
             case NUM_OF_OPERANDS: break;
             default: {
 		makeLabel;
@@ -500,6 +369,14 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                 break;
             }
         }
+    }
+    if( Words.empty() == 0 ){
+      out <<  "segment .data\n";
+      uint64_t words_count{0};
+      for(auto x = Words.begin(); x != Words.end(); ++x){
+	out << "  word_string__" << words_count << ":db " << x->second.data() << "\n";
+	++words_count;
+      }
     }
     out <<  "segment .bss\n"
         <<  "buffer:    resb    " << MEMORY_SIZE << "\n"

@@ -1,4 +1,24 @@
-define stdout as 60 end 
-define exit as stdout syscall1 end
+include "./std/core.gfsl"
+
+define stdin  as 0 end
+define stdout as 1 end
+define stderr as 2 end
+// --- SOME BUILT-IN CONSTANTS
+define true as 1 end
+define True as 1 end
+define TRUE as 1 end
+
+define false as 0 end
+define False as 0 end
+define FALSE as 0 end
+
+define fputs  as write drop end
+define eputs  as stderr fputs end
+define puts   as stdout fputs end
+define print as dup dump end
+define exit   as SYS_exit syscall1 end
+
+define div as divmod drop end
+define mod as divmod swap drop end
 
 

@@ -22,5 +22,57 @@ bool is_number(const std::string& str){
     }
     return true;
 }
+template <typename I> std::string n2hexstr(I w, size_t hex_len = sizeof(I)<<1) {
+    static const char* digits = "0123456789ABCDEF";
+    std::string rc(hex_len,'0');
+    for (size_t i=0, j=(hex_len-1)*4 ; i<hex_len; ++i,j-=4)
+        rc[i] = digits[(w>>j) & 0x0f];
+    return rc;
+}
+std::vector<std::byte> to_bytes(std::string const& s)
+{
+    std::vector<std::byte> bytes;
+    bytes.reserve(std::size(s));
+      
+    std::transform(std::begin(s), std::end(s), std::back_inserter(bytes), [](char c){
+        return std::byte(c);
+    });
+
+    return bytes;
+}
+std::string string_to_hex(const std::string& input)
+{
+    static const char hex_digits[] = "0123456789ABCDEF";
+
+    std::string output;
+    output.reserve(input.length() * 2);
+    for (auto c = input.begin(); c != input.end(); ++c)
+    {
+
+      if (*c == '\\'){
+	++c;
+	switch(*c){
+	  case 'n': 
+	    output.push_back('0');
+	    output.push_back('1');
+	    output.push_back('0');
+	    break;
+	  case 't': 
+	    fprintf(stderr, "escape caracter `\\t` are not implemented yet\n");
+	    exit(1);
+	    break;
+	}
+      }
+      else{
+	output.push_back('0');
+	output.push_back('x');
+        output.push_back(hex_digits[*c >> 4]);
+        output.push_back(hex_digits[*c & 15]);
+      }
+      output.push_back(',');
+    }
+    output = output.substr(0, output.length() - 1);
+    return output;
+}
 
 #endif /* ifndef LEXING_STAGE_SRC_CODE */

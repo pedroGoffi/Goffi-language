@@ -5,8 +5,11 @@
 
 typedef enum{
     PUSH_INT,
+    PUSH_STR,
     OP_PLUS,
     OP_MINUS,
+    OP_DIVMOD,
+    OP_IDIVMOD,
     OP_EQUALS,
     OP_MULT,
     OP_GTHAN,

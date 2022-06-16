@@ -5,7 +5,6 @@
 #include <vector>
 
 namespace Goffi{
-    void simulate_program(std::vector<VR> &program);
     void compile_program(std::vector<VR> program, std::string outputFilePath); 
 }
 #endif /* ifndef GOFFI_SRC */

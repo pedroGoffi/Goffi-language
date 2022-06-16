@@ -70,11 +70,14 @@ namespace SV{
 	  }
 	}
 	else if (sv.src[i] == '"'){
+	  result += sv.src[i];
 	  ++i;
 	  while(i < len && sv.src[i] != '"'){
 	    result += sv.src[i];
 	    ++i;
 	  }
+	  result += sv.src[i];
+	  ++i;
 	  sv.count -= i;
 	  sv.src = sv.src.substr(i, len);
 	}

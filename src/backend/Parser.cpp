@@ -5,11 +5,13 @@
 #include <vector>
 #include "./Lexer.cpp"
 #include "./goffi.cpp"
+#include "../frontend/Tools.cpp"
 #include <typeinfo>
 
 #define stoi64(x) static_cast<uint64_t>(std::stoi(x))
 
 typedef enum{
+    ID_NOOP,
     ID_INTRISIC_DUMP,
     ID_INTRISIC_DUP,
     ID_INTRISIC_EQUALS,
@@ -17,6 +19,8 @@ typedef enum{
     ID_INTRISIC_OVER,
     ID_INTRISIC_ROT,
     ID_INTRISIC_DROP,
+    ID_INTRISIC_DIVMOD,
+    ID_INTRISIC_IDIVMOD,
     ID_WHILE,
     ID_IF,
     ID_DO,
@@ -26,14 +30,15 @@ typedef enum{
     ID_MEM,
     ID_SYSCALL,
     ID_LOAD,
-    ID_STORE
+    ID_STORE,
+    ID_STRING
 }Identifiers;
 typedef enum{
     B_PLUS,
     B_MINUS,
     B_CMP_GT,
     B_CMP_LT,
-    B_MULT
+    B_MULT,
 } BinOpId;
 namespace Parser{
     void parse(std::vector<VR> output, std::vector<Token> &tokens);
@@ -52,30 +57,43 @@ namespace Parser{
         exit(1);
     }
     Identifiers parseIdentifier(std::vector<Token>::iterator& id){
-        if      (id->head.atomName == "dump")  return ID_INTRISIC_DUMP;
-        else if (id->head.atomName == "=")     return ID_INTRISIC_EQUALS; 
-	else if (id->head.atomName == "dup")   return ID_INTRISIC_DUP;
-	else if (id->head.atomName == "swap")  return ID_INTRISIC_SWAP;
-	else if (id->head.atomName == "over")  return ID_INTRISIC_OVER;
-	else if (id->head.atomName == "rot")   return ID_INTRISIC_ROT;
-	else if (id->head.atomName == "drop")  return ID_INTRISIC_DROP;
-        else if (id->head.atomName == "store") return ID_STORE;
-        else if (id->head.atomName == "load")  return ID_LOAD;
-        else if (id->head.atomName == "mem")   return ID_MEM;
-        else if (id->head.atomName == "if")    return ID_IF;
-        else if (id->head.atomName == "while") return ID_WHILE;
-        else if (id->head.atomName == "do")    return ID_DO;
-        else if (id->head.atomName == "elif")  return ID_ELIF;
-        else if (id->head.atomName == "else")  return ID_ELSE;
-        else if (id->head.atomName == "end")   return ID_END;
-	else if (id->head.atomName == "syscall") return ID_SYSCALL;
+        if      (id->head.atomName == "dump")	  return ID_INTRISIC_DUMP;
+        else if (id->head.atomName == "=")     	  return ID_INTRISIC_EQUALS; 
+	else if (id->head.atomName == "dup")   	  return ID_INTRISIC_DUP;
+	else if (id->head.atomName == "swap")  	  return ID_INTRISIC_SWAP;
+	else if (id->head.atomName == "over")  	  return ID_INTRISIC_OVER;
+	else if (id->head.atomName == "rot")   	  return ID_INTRISIC_ROT;
+	else if (id->head.atomName == "drop")  	  return ID_INTRISIC_DROP;
+	else if (id->head.atomName == "divmod")   return ID_INTRISIC_DIVMOD;
+	else if (id->head.atomName == "idivmod")   return ID_INTRISIC_IDIVMOD;
+        else if (id->head.atomName == "store") 	  return ID_STORE;
+        else if (id->head.atomName == "load")  	  return ID_LOAD;
+        else if (id->head.atomName == "mem")   	  return ID_MEM;
+        else if (id->head.atomName == "if")    	  return ID_IF;
+        else if (id->head.atomName == "while") 	  return ID_WHILE;
+        else if (id->head.atomName == "do")    	  return ID_DO;
+        else if (id->head.atomName == "elif")  	  return ID_ELIF;
+        else if (id->head.atomName == "else")  	  return ID_ELSE;
+        else if (id->head.atomName == "end")	  return ID_END;
+	else if (id->head.atomName == "syscall")  return ID_SYSCALL;
+
 	else{
+
+	  if(id->head.atomName[0] == '"'){
+	    id->head.atomName = id->head.atomName.substr(1, id->head.atomName.length() - 2);
+	    if( id->head.atomName.length() == 0 ){
+	      return ID_NOOP;
+	    }
+	    return ID_STRING;
+	  }
+	  else{
             fprintf(stderr, "%lu:%lu: Error: Unreachable identifier at `%s` in the Parsing stage.\n", 
                     id->head.atomIndexLine,
 	            id->head.atomIndex,
                     id->head.atomName.c_str()
 	    );
     	    exit(1);
+	  }
 	}
     }
 
@@ -84,13 +102,20 @@ namespace Parser{
 	std::vector<VR> output;
         while( Node != tokens.end()){
             switch(Node->type){ 
-		case STRING:
-		    assert(false && "String not implemented yet");
-		    ++Node;
-		    break;
                 case NAME:{                                        
                     Identifiers id = Parser::parseIdentifier(Node);
                     switch(id){
+			case ID_NOOP: ++Node; break;
+			case ID_STRING:
+			{
+			  if( Node->head.atomName.length() > 0 ){
+			    std::string __word__byte_array__ = string_to_hex(Node->head.atomName);
+			    Words[std::string("word_string__") + std::to_string(words_count)] =  __word__byte_array__;
+			    output.push_back(VR{ PUSH_STR, (uint64_t)words_count, Node->head.atomName });
+			    ++words_count;
+			  }
+			  ++Node;
+			} break;
                         case ID_STORE:{
                             ++Node;
                             uint64_t storeType;
@@ -180,6 +205,15 @@ namespace Parser{
 			    output.push_back(VR{DROP,	0});
 			    ++Node;
 			    break;
+			case ID_INTRISIC_DIVMOD:
+			    output.push_back(VR{OP_DIVMOD, 0});
+			    ++Node;
+			    break;
+			case ID_INTRISIC_IDIVMOD:
+			    output.push_back(VR{OP_IDIVMOD, 0});
+			    ++Node;
+			    break;
+
                         case ID_END:
                             output.push_back(VR{OP_END, static_cast<uint64_t>(Node->head.atomLinkedIndex)});
                             ++Node;
@@ -240,6 +274,7 @@ namespace Parser{
 			case B_MULT:
 			    output.push_back(VR{OP_MULT,    0, ""});
 			    break;
+
                         case B_PLUS:
                             output.push_back(VR{OP_PLUS,    0, ""});
                             break;

@@ -1,0 +1,12 @@
+include "std/std.gfsl"
+ 
+define fizz as "fizz" end
+define buzz as "buzz\n" end
+
+// FIXME:
+//  went push string the cross-reference outset 1 
+
+fizz puts 
+buzz puts
+
+0 exit

@@ -29,14 +29,11 @@ namespace Crossreference{
 
 		if (src[last_block].head.atomName == "do"){
 		    auto before_do = blocks.back();
-
 		    blocks.pop_back();
 		    if (src[before_do].head.atomName == "if"){
-
 			src[last_block].head.atomLinkedIndex = currentPosition;
 		    }
 		    else if (src[before_do].head.atomName == "while"){
-
 			src[currentPosition].head.atomLinkedIndex  = before_do + 1; // end
 			src[last_block].head.atomLinkedIndex = currentPosition + 1; // do
 		    }

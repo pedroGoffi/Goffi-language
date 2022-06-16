@@ -1,5 +1,3 @@
-// isso é um comentario
-include "./std/std.gfsl"
 
 define factorial as
   // usage:
@@ -24,6 +22,3 @@ define sum_range as
 end
 
 
-
-100 sum_range dump // isso deve retornar a somatoria de 0 a 100 que é igual a 5050 :3
-0 exit

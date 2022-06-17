@@ -46,7 +46,7 @@ typedef struct Token{
 } Token;
 
 static std::map<std::string, std::vector<Token>> Macros;
-static std::map<std::string, std::string> Words;
+static std::map<uint64_t , std::string> Words;
 static int words_count{0};
 namespace Lexer{
     std::string Token_Type_To_String(Token_Type tk){

@@ -62,14 +62,14 @@ namespace SV{
         std::string nextTkName;
         // "word 123"
 	if (sv.src[i] == '/'){
-	  ++i;
-	  if (sv.src[i] == '/'){
+
+	  if (sv.src[i+1] == '/'){
 	    sv.count = 0;
 	    sv.src = "";
 	    return "";
 	  }
 	}
-	else if (sv.src[i] == '"'){
+	if (sv.src[i] == '"'){
 	  result += sv.src[i];
 	  ++i;
 	  while(i < len && sv.src[i] != '"'){

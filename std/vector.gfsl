@@ -1,0 +1,30 @@
+define vector_offset as 8000 end
+define vector_index_count as mem 7999 + end
+
+define vector  as mem vector_offset + end
+define vector.push as 
+  // i (i+1)
+  vector swap 64<- 
+  vector_index_count dup 64-> 1 + 64<-
+  vector
+end
+
+define vector.back as 
+  vector 64-> 
+end
+
+define vector.2push as 
+  vector.push drop
+  vector.push 
+end
+
+define vector.pop as 
+  "Vector.pop is not implemented yet\n" eputs
+  1 exit
+end
+
+
+define vector.size as
+  vector_index_count 8-> 
+end
+

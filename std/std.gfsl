@@ -12,7 +12,8 @@ define false as 0 end
 define False as 0 end
 define FALSE as 0 end
 
-define fputs  as write drop end
+
+define fputs  as swap dup str_len  swap rot write drop end
 define eputs  as stderr fputs end
 define puts   as stdout fputs end
 define print as dup dump end
@@ -23,15 +24,65 @@ define mod as divmod swap drop end
 define 2drop as drop drop end
 define 2dup as over over end
 
+define 8->  as	load8 end
+define 8<-  as	store8 end
+define 64-> as	load64 end 
+define 64<- as	store64 end
+
 define str_len as 
   0 swap while dup load8 0 != do
     1 + swap 1 + swap
   end drop
 end
 
+
 define inc64 as 
-  dup load64 1 + store64
+  dup 64-> 1 + 64<-
 end
 
-define -> as load64 end
-define <- as store64 end
+define dec64 as 
+  dup 64-> 1 - 64<-
+end
+
+define putd as
+  // int-val putd --> "int-val" puts
+  here puts ": ERROR: putd is not implemented yet\n" puts
+  1 exit
+  if dup 0 = do "0" puts
+  else
+    putd-buffer PUTD-BUFFER-CAPACITY +
+    while over 0 > do
+      1 - dup rot 
+      10 - divmod 
+      rot swap "0" + 64<- swap
+    end
+    dup
+    putd-buffer PUTD-BUFFER-CAPACITY + swap - swap puts
+  end
+  drop
+end
+
+
+define assert as
+  // here boolean string
+  swap if false = do
+    swap eputs 
+    ":"  eputs
+    eputs
+    1 exit
+  end
+end
+
+define / as divmod drop end
+define % as divmod swap drop end
+define nth_argv as
+  8 * __argc + 64-> 
+end
+
+define not-implemented as 
+  // here str
+  swap				eputs
+  ":"				eputs
+				eputs
+  ": Is not implemented yet\n"	eputs
+end

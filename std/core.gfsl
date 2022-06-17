@@ -314,14 +314,14 @@ define SYS_process_vm_writev as 311 end
 define SYS_kcmp as 312 end
 define SYS_finit_module as 313 end
 
-
-
 define write as SYS_write syscall3 end
 
 
+define >= as 
+  1 - >
+end
 
-
-
-
-
+define <= as
+  1 + <
+end
 

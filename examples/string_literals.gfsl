@@ -1,7 +1,5 @@
 include "std/std.gfsl"
 
-0 while dup 10 < do
-  "hello\n" puts
-  1 + 
-end
+// puts --> swap dup str_len swap rot write drop
+"hello, world\n" puts
 0 exit

@@ -162,7 +162,7 @@ namespace Parser{
 			case ID_HERE:
 			{
 			    std::string pos =std::to_string(Node->head.atomIndexLine)+":"+std::to_string(Node->head.atomIndex);
-			    Words[std::string("word_string__") + std::to_string(words_count)] =  string_to_hex(pos);
+			    Words[(uint64_t)words_count] =  string_to_hex(pos);
 
 			    output.push_back(VR{ PUSH_STR, (uint64_t)words_count, pos });
 			    ++words_count;
@@ -171,12 +171,24 @@ namespace Parser{
 			case ID_STRING:
 			{
 			  if( Node->head.atomName.length() > 0 ){
+			    std::string res;
 			    uint64_t scape_count{0};
-			    for(const char x: Node->head.atomName){
-			      if (x == '\\') ++scape_count;
+			    for(auto x = Node->head.atomName.begin(); x != Node->head.atomName.end(); ++x){
+
+			      if( *x == '\\' ){
+				++x;
+				switch(*x){
+				  case 'n': 
+				    res += '\n';
+				    scape_count++;
+				    break;
+				}
+			      } else{
+				res  += *x;
+			      }
 			    }
-			    Words[std::string("word_string__") + std::to_string(words_count)] =  string_to_hex(Node->head.atomName);
-			    output.push_back(VR{ PUSH_STR, (uint64_t)words_count, Node->head.atomName, scape_count});
+			    Words[(uint64_t)words_count] = string_to_hex(res);
+			    output.push_back(VR{ PUSH_STR, (uint64_t)words_count, res, scape_count});
 			    ++words_count;
 			  }
 			  ++Node;

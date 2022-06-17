@@ -1,0 +1,34 @@
+include "std/std.gfsl"
+include "std/vector.gfsl"
+
+"Pushing 420 to the vector\n" puts
+
+
+
+
+420 vector.push
+
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+"doing stuff...\n" puts
+
+vector.back dump
+
+vector.size dump
+0 exit

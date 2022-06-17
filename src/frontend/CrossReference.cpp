@@ -20,7 +20,7 @@ namespace Crossreference{
 	    }
 	    if (ipname == "if"
 		|| ipname == "elif"
-		|| ipname == "else"
+		//|| ipname == "else"
 		|| ipname == "while"
 		|| ipname == "do"
 		)

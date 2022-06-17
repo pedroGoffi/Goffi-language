@@ -36,7 +36,8 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
     /*  TODO:
      *      Include by ip
      */
-    out << "dump:\n"
+    out << "BITS 64\n" 
+	<< "dump:\n"
 	<< "  push  rbp\n"
 	<< "  mov   rbp, rsp\n"
 	<< "  sub   rsp, 64\n"
@@ -256,8 +257,8 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
 	    case PUSH_STR:
 		makeLabel;
 		out <<	"   ;; ---- push str\n"
-		    <<	"   mov rax, "		<< ip->op_string.length() - ip->scape_count << "\n"
-		    <<	"   push rax\n"
+		    //<<	"   mov rax, "		<< ip->op_string.length() - ip->scape_count + 1<< "\n"
+		    //<<	"   push rax\n"
 		    <<	"   push word_string__" << ip->operand << "\n"
 		    ;
 		++ip;
@@ -527,8 +528,8 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
     if( Words.empty() == 0 ){
       out <<  "segment .data\n";
       uint64_t words_count{0};
-      for(auto x = Words.begin(); x != Words.end(); ++x){
-	out << "  word_string__" << words_count << ":db " << x->second.data() << "\n";
+      for(uint64_t x = 0; x != Words.size(); ++x){
+	out << "  word_string__" << x << ": db\t" << Words[x]<< ",0\n";
 	++words_count;
       }
     }

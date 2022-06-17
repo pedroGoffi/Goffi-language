@@ -49,26 +49,10 @@ std::string string_to_hex(const std::string& input)
     output.reserve(input.length() * 2);
     for (auto c = input.begin(); c != input.end(); ++c)
     {
-      if (*c == '\\'){
-	++c;
-	switch(*c){
-	  case 'n': 
-	    output.push_back('0');
-	    output.push_back('1');
-	    output.push_back('0');
-	    break;
-	  case 't': 
-	    fprintf(stderr, "escape caracter `\\t` are not implemented yet\n");
-	    exit(1);
-	    break;
-	}
-      }
-      else{
-	output.push_back('0');
-	output.push_back('x');
-        output.push_back(hex_digits[*c >> 4]);
-        output.push_back(hex_digits[*c & 15]);
-      }
+      output.push_back('0');
+      output.push_back('x');
+      output.push_back(hex_digits[*c >> 4]);
+      output.push_back(hex_digits[*c & 15]);
       output.push_back(',');
     }
     if (output[output.length() - 1] == ',')

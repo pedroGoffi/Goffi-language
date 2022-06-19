@@ -3,9 +3,13 @@ include "std/std.gfsl"
 // ... argv[1] argv[0] argc
 
 "argc == " puts
+
 __argc -> dump
+
 ":  ARGV:\n" puts
+
 "----------\n" puts
+
 drop while dup 0 > do
   dup str_len swap puts 
   "\n" puts

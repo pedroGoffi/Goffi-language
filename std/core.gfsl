@@ -1,3 +1,12 @@
+// --- LINUX: FLAGS
+define O_READONLY   as 0 end
+define AT_FDCWD	    as 0 100 - end
+
+define MAP_SHARED   as 1 end
+define MAP_PRIVATE  as 2 end
+define PROT_READ    as 1 end
+define PROT_WRITE   as 2 end
+define PROT_EXEC    as 4 end
 // --- LINUX: SYSCALS
 define SYS_read	as 0 end
 define SYS_write as 1 end
@@ -313,9 +322,12 @@ define SYS_process_vm_readv as 310 end
 define SYS_process_vm_writev as 311 end
 define SYS_kcmp as 312 end
 define SYS_finit_module as 313 end
-
-define write as SYS_write syscall3 end
-
+// LINUX: COMMON SYSCALLS
+define fstat  as SYS_fstat  syscall2 end
+define openat as SYS_openat syscall4 end
+define write  as SYS_write  syscall3 end
+define close  as SYS_close  syscall1 end
+define mmap   as SYS_mmap   syscall6 end
 
 define >= as 
   1 - >

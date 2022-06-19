@@ -1,9 +1,12 @@
 include "./std/core.gfsl"
+include "./std/ascii.gfsl"
 
 define stdin  as 0 end
 define stdout as 1 end
 define stderr as 2 end
 // --- SOME BUILT-IN CONSTANTS
+define null as 0 end
+define NULL as 0 end
 define true as 1 end
 define True as 1 end
 define TRUE as 1 end
@@ -13,23 +16,140 @@ define False as 0 end
 define FALSE as 0 end
 
 
-define fputs  as swap dup str_len  swap rot write drop end
+define sizeof(bool)   as 1 end
+define sizeof(u8)     as 1    end
+define sizeof(u16)    as 2    end
+define sizeof(u32)    as 4    end
+define sizeof(u64)    as 8    end
+define sizeof(size_t) as 8    end
+define sizeof(ptr)    as 8    end
+define sizeof(str)    as 16   end
+define str.count      as null +  end
+define str.data	      as sizeof(size_t) +  end
+
+// --- sizeof structs used in self-hosting
+define sizeof(stat)		as 144	  end
+define stat.st_dev		as 0	+ end
+define sizeof(stat.st_dev)	as 8	  end
+define stat.st_ino		as 8	+ end
+define sizeof(stat.st_ino)	as 8	  end
+define stat.st_mode		as 24	+ end
+define sizeof(stat.st_mode)	as 4	  end
+define stat.st_nlink		as 16 	+ end
+define sizeof(stat.st_nlink)	as 8	  end
+define stat.st_uid		as 28 	+ end
+define sizeof(stat.st_uid)	as 4	  end
+define stat.st_gid		as 32 	+ end
+define sizeof(stat.st_gid)	as 4	  end
+define stat.st_rdev		as 40 	+ end
+define sizeof(stat.st_rdev)	as 8	  end
+define stat.st_size		as 48 	+ end
+define sizeof(stat.st_size)	as 8	  end
+define stat.st_blksize		as 56 	+ end
+define sizeof(stat.st_blksize)	as 8	  end
+define stat.st_blocks		as 64 	+ end
+define sizeof(stat.st_blocks)	as 8	  end
+define stat.st_atim		as 72 	+ end
+define sizeof(stat.st_atim)	as 16	  end
+define stat.st_mtim		as 88 	+ end
+define sizeof(stat.st_mtim)	as 16	  end
+define stat.st_ctim		as 104	+ end
+define sizeof(stat.st_ctim)	as 16	  end
+// --- SOME USEFUL PROCS
+define fputs  as write drop end
 define eputs  as stderr fputs end
 define puts   as stdout fputs end
-define print as dup dump end
-define exit   as SYS_exit syscall1 end
+define print  as dup dump end
+define exit   as SYS_exit syscall1 drop end
 
 define div as divmod drop end
 define mod as divmod swap drop end
 define 2drop as drop drop end
 define 2dup as over over end
 
+
+// string   operation
+define str-> as
+  // accept a ptr to a struct SV{ const char* data; size_t count }
+  dup  str.count  64->
+  swap str.data	  64-> 
+end
+define str<- as
+  dup rot swap
+  str.data	  swap 64<-
+  str.count	  swap 64<-
+end
+
+define chop-line as 
+  2dup str.data 64-> swap str.data swap 64<-
+  over str.count 0 64<-
+  while 
+    if	dup str.count 64->  0 > do 
+        dup str.data  64->  8-> ascii_LF != // LF is '\n'
+    else 
+      false 
+    end
+  do
+
+    dup str.count dec64
+    dup str.data  inc64
+    swap dup str.count inc64
+    swap 
+  end
+
+  if dup str.count 64-> 0 > do 
+    dup str.count dec64
+    dup str.data inc64 
+  end
+  2drop
+end
+define chop-word as 
+  2dup str.data 64-> swap str.data swap 64<-
+  over str.count 0 64<-
+  while 
+    if	dup str.count 64->  0 > do 
+        dup str.data  64->  8-> ascii_SPACE != 
+    else 
+      false 
+    end
+  do
+
+    dup str.count dec64
+    dup str.data  inc64
+    swap dup str.count inc64
+    swap 
+  end
+
+  if dup str.count 64-> 0 > do 
+    dup str.count dec64
+    dup str.data inc64 
+  end
+  2drop
+end
+
+define trim-left as 
+  while
+    if dup str.count 64-> 0 > do
+      dup str.data 64-> 8-> ascii_SPACE =
+    else
+      false
+    end
+  do
+    dup str.count dec64
+    dup str.data inc64
+  end drop
+end
+// pointers operation
 define 8->  as	load8 end
 define 8<-  as	store8 end
 define 64-> as	load64 end 
 define 64<- as	store64 end
+define str.data->  as str.data 64-> end
+define str.count-> as str.count 64-> end
+define str.data<-  as str.data 64<- end
+define str.count<- as str.count 64<- end
 
-define str_len as 
+define str-len as 
   0 swap while dup load8 0 != do
     1 + swap 1 + swap
   end drop
@@ -45,19 +165,15 @@ define dec64 as
 end
 
 define putd as
-  // int-val putd --> "int-val" puts
-  here puts ": ERROR: putd is not implemented yet\n" puts
-  1 exit
   if dup 0 = do "0" puts
   else
     putd-buffer PUTD-BUFFER-CAPACITY +
     while over 0 > do
-      1 - dup rot 
-      10 - divmod 
-      rot swap "0" + 64<- swap
+      1 - dup rot
+      10 divmod
+      rot swap ascii_0 + 8<- swap
     end
-    dup
-    putd-buffer PUTD-BUFFER-CAPACITY + swap - swap puts
+    dup putd-buffer PUTD-BUFFER-CAPACITY + swap - swap puts
   end
   drop
 end
@@ -78,7 +194,8 @@ define % as divmod swap drop end
 define nth_argv as
   8 * __argc + 64-> 
 end
-
+define argc as __argc 64-> end
+define argv as __argv 64-> end
 define not-implemented as 
   // here str
   swap				eputs
@@ -86,3 +203,60 @@ define not-implemented as
 				eputs
   ": Is not implemented yet\n"	eputs
 end
+define cstreq as
+  // true | false
+  while 
+    if over  8-> 0 != over 8-> 0 != and do
+       over  8-> over 8-> =
+    else 
+      false 
+    end
+  do
+    1 + swap 1 + 
+  end
+  8-> 0 = swap 8-> 0 = and  
+end
+define streq as
+  string.a  str<-
+  string.b  str<-
+
+
+  if string.a str.count-> string.b str.count-> = do
+    0 while 
+      if dup  string.a str.count-> < do
+	 dup  string.a str.data-> + 8->
+	 over string.b str.data-> + 8->
+	 =
+      else false end
+    do 1 + end
+    string.a str.count-> >=
+  else false end
+
+end
+define g-streq as swap drop cstreq end
+define g-str as 
+  dup str-len swap
+end
+define str-copy-sv as
+  // dst src 
+  2dup
+  str.data  64-> swap str.data swap 64<-
+  str.count 64-> swap str.count swap 64<-
+end
+define str-sv-to-gstr as 
+  // int &ptr.count
+  rot
+  2dup
+  str.data  swap 64<-
+  swap drop
+  str.count swap 64<-
+end
+define isdigit as
+  dup  ascii_0 >= 
+  swap ascii_9 <= 
+  and
+end
+define +ptr	  as inc64 end 
+define -ptr	  as dec64 end
+define cast(bool) as 64-> 0 > end
+

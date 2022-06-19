@@ -158,6 +158,7 @@ namespace Lexer{
 	    ++i;
 	    if( i->head.atomName != "as" ){
 	      printf("%lu:%lu: ERROR: Macro definition must follow the keyword `as`\nExample: define <macro-name> as <macro-body> end\n", i->head.atomIndexLine, i->head.atomIndex);
+	      printf("MACRO NAME: %s\n", m_name.c_str());
 	      exit(1);
 	    }
 	    ++i;

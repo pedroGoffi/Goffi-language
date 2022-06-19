@@ -257,8 +257,8 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
 	    case PUSH_STR:
 		makeLabel;
 		out <<	"   ;; ---- push str\n"
-		    //<<	"   mov rax, "		<< ip->op_string.length() - ip->scape_count + 1<< "\n"
-		    //<<	"   push rax\n"
+		    <<	"   mov rax, "		<< ip->op_string.length() << "\n"
+		    <<	"   push rax\n"
 		    <<	"   push word_string__" << ip->operand << "\n"
 		    ;
 		++ip;

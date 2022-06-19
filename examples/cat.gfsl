@@ -1,0 +1,57 @@
+include "std/std.gfsl"
+
+define fd	as mem	  end
+define statbuf  as fd 8 + end
+define content  as statbuf sizeof(stat) + end
+
+if argc 2 < do
+  "Usage: " eputs 1 nth_argv c-str eputs " <file>\n" eputs
+  "ERROR: no input file is provided\n" eputs
+  1 exit
+end
+
+define file.read as 
+  // str-file 0
+  O_READONLY  // flags
+  swap
+  AT_FDCWD    // dirfd
+  openat      // syscall
+  if dup 0 < do
+    "ERROR: Could not open the file `"  eputs
+    2 nth_argv c-str			eputs
+    "`\n"		    		eputs
+    1 exit
+  end 
+  // "File is opened\n" eputs 
+  fd swap 64<-
+  
+  if statbuf fd 64-> fstat 0 < do 
+    "ERROR: Could not mesure the size of the file\n" eputs
+    1 exit
+  end
+end
+
+2 nth_argv 
+file.read
+
+// *(buf+size)<-(content+data)
+//statbuf stat.st_size 64-> content str.count 64<-
+statbuf stat.st_size 64-> content str.count swap  64<-
+
+0 fd 64->
+MAP_PRIVATE
+PROT_READ
+statbuf stat.st_size 64->
+// content str.data 64->
+null
+mmap
+content str.data swap 64<-
+
+if content 64-> 0 < do
+  "ERROR: Could not map the memory file\n" eputs
+  1 exit
+end
+
+content str-> puts
+close	drop 
+0 exit

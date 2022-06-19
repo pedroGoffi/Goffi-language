@@ -2,8 +2,8 @@ include "std/std.gfsl"
 
 define ROW_LENGHT as 100  end
 define ROW_HEIGHT as ROW_LENGHT 2 + end
-define TRUE_CHAR  as "*"end
-define FALSE_CHAR as " " end
+define TRUE_CHAR  as "|"end
+define FALSE_CHAR as "-" end
 
 define dump_rule110 as
   mem ROW_LENGHT + 1 store8
@@ -30,7 +30,7 @@ define dump_rule110 as
       swap mem + swap store8
       swap
       1 +
-    end drop drop
+    end drop drop 
     1 +
   end drop
 end

@@ -20,7 +20,7 @@ namespace Crossreference{
 	    }
 	    if (ipname == "if"
 		|| ipname == "elif"
-		//|| ipname == "else"
+		|| ipname == "else"
 		|| ipname == "while"
 		|| ipname == "do"
 		)
@@ -30,8 +30,6 @@ namespace Crossreference{
 	    else if (ipname == "end") {
 		//if (blocks.size() < 1) continue;
 		auto last_block = blocks.back();blocks.pop_back();
-
-
 
 		if (src[last_block].head.atomName == "do"){
 		    auto before_do = blocks.back();
@@ -48,28 +46,10 @@ namespace Crossreference{
 		    }
 		} 
 		else if (src[last_block].head.atomName == "else"){
-
 		  auto before_do = blocks.back();blocks.pop_back();
-		  src[before_do].head.atomLinkedIndex  = last_block + 1; // else
-		  src[last_block].head.atomLinkedIndex = currentPosition + 1; // do
-									      //
-		  while(src[before_do].head.atomName != "if"){
-		    // TODO:
-		    //	  if <> do
-		    //	    <..>
-		    //	    <..>
-		    //	    <..>
-		    //	  elif <> do
-		    //	    <..>
-		    //	    <..>
-		    //	  else
-		    //	    <..>
-		    //	    <..>
-		    //	  end
-		    //	  
-		    break;
-		  }
-		  //src[last_block].head.atomLinkedIndex = before_do + 1; // if
+		  src[last_block].head.atomLinkedIndex = currentPosition + 1;
+		  src[before_do].head.atomLinkedIndex  = last_block + 1;
+		  blocks.pop_back();
 		}
 
 

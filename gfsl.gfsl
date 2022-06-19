@@ -11,11 +11,10 @@ define usage as
 end
 
 // CONSTANTS -----------------------------
+static reserve-in-bss		  69000 end
 define BUFFER_MEMORY_CAPACITY	  as 69000  end
 define SIMULATION_STACK_CAPACITY  as 1024   end
-define PUTD-BUFFER-CAPACITY	  as 32	    end
-define putd-buffer		  as mem    end
-define sim-stack-count		  as putd-buffer PUTD-BUFFER-CAPACITY + end
+define sim-stack-count		  as 0 end
 define sim-stack		  as sim-stack-count 8 +		end
 define int-iterator		  as sim-stack sizeof(size_t) + end
 define input-file-path		  as int-iterator sizeof(size_t) + end
@@ -27,6 +26,7 @@ define line-file-content	  as file-content sizeof(str) + end
 define word-line-content	  as line-file-content sizeof(str) + end
 define string.a			  as word-line-content sizeof(str) + end
 define string.b			  as string.a sizeof(str) + end
+
 define loc			  as string.b sizeof(size_t) 2 * + end
 define loc.line			  as 0 + end
 define loc.col			  as loc.line sizeof(size_t) + end
@@ -40,10 +40,12 @@ define loc.col			  as loc.line sizeof(size_t) + end
 define SIMULATION_MODE	as 1 end
 define COMPILATION_MODE as 2 end
 // OPERATIONS START ----------------------
-define OP_INTRISIC_PLUS as 0 end
-define OP_PUSH_INT	as 1 end
-define OP_DUMP		as 2 end
-define NUM_OF_OPS	as 3 end
+
+define OP_INTRISIC_PLUS  as 0 end
+define OP_INTRISIC_MINUS as 1 end
+define OP_PUSH_INT	 as 2 end
+define OP_DUMP		 as 3 end
+define NUM_OF_OPS	 as 4 end
 // OPERATIONS END ------------------------
 define sizeof(VR)	as sizeof(size_t) sizeof(size_t) + end
 define sizeof(op)	as 16	end
@@ -102,13 +104,17 @@ define lex-file as
 
       //loc loc.line 64-> putd ":" puts loc loc.col 64-> putd ": " puts
       if word-line-content str-> "+" streq do 
-	OP_INTRISIC_PLUS 0 push-op
+	OP_INTRISIC_PLUS 0  push-op
+
+      else if word-line-content str-> "-" streq do
+	OP_INTRISIC_MINUS 0 push-op
       else if word-line-content str-> "dump" streq do
 	OP_DUMP 0 push-op
+
       else
 	//OP_PUSH_INT word-line-content str-> try-lex-int push-op 
-	OP_PUSH_INT word-line-content str-> try-lex-int push-op
-      end end 
+	OP_PUSH_INT word-line-content str-> try-lex-int push-op 
+      end end end
       loc loc.col inc64
     end
     loc loc.col 0 64<-
@@ -143,9 +149,18 @@ define simulate-ops as
   0 while dup ops-count 64-> < do
     dup sizeof(op) * ops +
 
-    if dup 64-> OP_PUSH_INT	  =  do dup 8 + 64-> sim-stack-push		      end
-    if dup 64-> OP_INTRISIC_PLUS  =  do sim-stack-pop sim-stack-pop + sim-stack-push  end
-    if dup 64-> OP_DUMP		  =  do sim-stack-pop dump			      end
+
+    // intrisics
+    if dup 64-> OP_INTRISIC_PLUS = do 
+      sim-stack-pop sim-stack-pop	+ sim-stack-push  
+    else if dup 64-> OP_INTRISIC_MINUS = do
+      sim-stack-pop sim-stack-pop swap	- sim-stack-push
+    else if dup 64-> OP_PUSH_INT = do  
+      dup 8 + 64-> sim-stack-push		      
+    else if dup 64-> OP_DUMP = do 
+      sim-stack-pop dump			      
+    
+    end end end end
 
     drop 
     1 +
@@ -300,6 +315,8 @@ define main as
     1 exit
   end
   input-file-path 64-> nth_argv // FILE ptr
+
+  // since this is stack based there is no need to parsing
   lex-file // :3 
   goffi-mode 64-> 
 
@@ -317,6 +334,5 @@ end
 //main
 // 420 putd
 
-"1" isdigit dump
-//main
+main
 0 exit

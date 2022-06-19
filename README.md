@@ -9,6 +9,7 @@ that can be compiled or simulated.
 * [Macros](#Macro-definition)
 * [standart lib](#stdlib)
 * [argc and argv](#argc-argv)
+* [static alocation](#static-keyword)
 ## <div id="Aritmetric-Operators">Aritmetric-Operators</div>	
     result of any operation will be pushed automatically ot the top of the stack
 	In comparasions `<` or `>` will push 1 if true and 0 if false.
@@ -82,7 +83,7 @@ More examples in examples folder, kinda obvious.
 
 
 
-#<div id=argc-argv>Argument count and argument value</div>
+# <div id="argc-argv">Argument count and argument value</div>
 
 To access command argc/argv you can use the built-in keyword __argc and __argv
 
@@ -90,7 +91,26 @@ __argc and __argv
 
 NOTE: __argc is a pointer so to access you have to dereference the ptr. 
 
-Example: __argc -> dump
+Example: __argc 64-> dump
 
-OBS: -> is inside std.gfsl but is equivalent to load64
+OBS: 64-> is inside std.gfsl but is equivalent to load64
 
+
+# <div id="static-keyword">Static-alocation</div>
+-- `static` keyword will try to parse in compiler-time the value of the expression
+
+Example:
+
+:: static my-static 10 end
+
+will reserve 10 bytes in the bss
+
+you can chain static with macros
+
+define X as sizeof(str) end
+
+static my-bss as X 10 + end
+
+will evaluate it as
+
+static my-bss 16 end

@@ -24,6 +24,7 @@ typedef enum{
     OVER, // a b -> a b a 
     SWAP, // a b -> b a
     ROT,// a b c -> c b a
+    PUSH_PTR,
     //  -----
     SHIFT_LEFT,
     SHIFT_RIGHT,
@@ -38,6 +39,7 @@ typedef enum{
     OP_WHILE,
     OP_DO,
     OP_END,
+
 
     OP_SYSCALL,
 

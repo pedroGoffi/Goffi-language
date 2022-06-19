@@ -4,9 +4,9 @@ include "std/vector.gfsl"
 "Pushing 420 to the vector\n" puts
 
 
-
-
 420 vector.push
+60 vector.push
+
 
 "doing stuff...\n" puts
 "doing stuff...\n" puts
@@ -27,8 +27,13 @@ include "std/vector.gfsl"
 "doing stuff...\n" puts
 "doing stuff...\n" puts
 "doing stuff...\n" puts
+
 
 vector.back dump
-
+vector.pop dump
 vector.size dump
+
+vector.pop dump
+vector.size dump
+vector.back dump
 0 exit

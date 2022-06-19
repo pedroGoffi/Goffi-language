@@ -47,7 +47,9 @@ typedef struct Token{
 
 static std::map<std::string, std::vector<Token>> Macros;
 static std::map<uint64_t , std::string> Words;
+static std::map<std::string, uint64_t> static_addresses;
 static int words_count{0};
+static int static_mem_capacity{0};
 namespace Lexer{
     std::string Token_Type_To_String(Token_Type tk){
 	switch(tk){
@@ -100,6 +102,43 @@ namespace Lexer{
       }
       else
 	result.push_back(it);
+    }
+    std::vector<uint64_t> extend_static_definition_body(std::vector<Token> vec){        
+        std::vector<uint64_t> mem_vec;
+	std::vector<Token>::iterator i = vec.begin();
+        while(i != vec.end()){
+          if (i->type == BINARY_OPERAND){
+            if( i->head.atomName == "+" ){
+              auto a = mem_vec.back(); mem_vec.pop_back();auto b = mem_vec.back(); mem_vec.pop_back();
+              mem_vec.push_back(a + b);
+            }
+            else if( i->head.atomName == "-" ){
+              auto a = mem_vec.back(); mem_vec.pop_back();auto b = mem_vec.back(); mem_vec.pop_back();
+              mem_vec.push_back(b - a);
+                                                                                                       
+            }
+            else if( i->head.atomName == "*" ){
+              auto a = mem_vec.back(); mem_vec.pop_back();auto b = mem_vec.back(); mem_vec.pop_back();
+              mem_vec.push_back(b*a);
+            }
+            else if( i->head.atomName == "/" ){
+              auto a = mem_vec.back(); mem_vec.pop_back();auto b = mem_vec.back(); mem_vec.pop_back();
+              mem_vec.push_back(b / a);
+            }
+          } 
+          
+          else if( SV::str_is_num(i->head.atomName) ){
+            mem_vec.push_back(std::stoul(i->head.atomName));
+          }
+          ++i;
+	}
+        if( mem_vec.size() > 1 ){
+          fprintf(stderr, "%lu:%lu:ERROR: after static definition not empty stack of operations\n",
+              i->head.atomIndexLine, i->head.atomIndex);
+          exit(1);
+        }
+	return mem_vec;
+                                                                                                       
     }
     void lex_line(std::vector<Token> &tokenVector, std::string source, uint64_t line){
         SV::stringView src = SV::SV(source);
@@ -197,6 +236,43 @@ namespace Lexer{
 	    for(auto& content: __include__content){
 	      result.push_back(content);
 	    }
+	  } 
+	  else if ( i->head.atomName == "static" ){
+
+	    ++i;
+	    if( i->type != NAME ){
+	      fprintf(stderr, 
+	          "%lu:%lu: ERROR: expected token kind NAME after static keyword but got %s\n",
+	          i->head.atomIndexLine, i->head.atomIndex, Token_Type_To_String( i->type ).c_str()
+	      );
+	      // TODO: report definition of static address
+	      // TODO: report redefinition of intrisics
+	      // i = mem_name 
+	      // sintax: static steq.mem 8 end
+	      exit(1);
+	    }
+	    // 
+	    std::string mem_name = i->head.atomName;
+	    ++i;
+	    std::vector<Token> static_vec;
+	    while( i->head.atomName != "end" ){
+	      if( Macros.find(i->head.atomName) != Macros.end() ){
+		for(Token& tk: Macros[i->head.atomName]){
+		  extend_macro(static_vec, tk);
+		}
+	      }
+	      else{
+		static_vec.push_back(Token{
+		    .type=i->type,
+		    .head=i->head
+		    });
+	      }
+	      ++i;
+	    }
+	    std::vector<uint64_t> static_resb_result = extend_static_definition_body(static_vec);
+	    static_addresses[mem_name] = static_resb_result.back();
+	    static_mem_capacity += (int)static_resb_result.back();
+
 	  }
 	  else
 	  {

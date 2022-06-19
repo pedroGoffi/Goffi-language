@@ -1,30 +1,39 @@
-define vector_offset as 8000 end
-define vector_index_count as mem 7999 + end
+define vector_capacity as 8000	end
+static vector	vector_capacity	end
+static index   sizeof(u64)	end
 
-define vector  as mem vector_offset + end
+// struct itself
+//	index: uint64_t
+//	uint64_t vector[]
+index  0 64<- 
+vector 0 64<-
+
 define vector.push as 
-  // i (i+1)
-  vector swap 64<- 
-  vector_index_count dup 64-> 1 + 64<-
-  vector
+  vector inc64
+  vector swap 64<-
+  index inc64 
 end
 
 define vector.back as 
   vector 64-> 
 end
 
+
 define vector.2push as 
   vector.push drop
   vector.push 
 end
 
-define vector.pop as 
-  "Vector.pop is not implemented yet\n" eputs
+define vector.pop as
+  "vector.pop is not implemented yet\n" eputs
   1 exit
+  index  dec64
+  // vec (vec+*(idx-1))
+  vector index 64-> + vector 64<-
 end
 
 
 define vector.size as
-  vector_index_count 8-> 
+  index 8-> 
 end
 

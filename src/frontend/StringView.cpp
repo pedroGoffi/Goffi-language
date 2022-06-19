@@ -109,5 +109,11 @@ namespace SV{
         SV::trimLeft(sv);
         return (SV::chopRight(sv));
     }
+    bool str_is_num(std::string str){
+      for(char const &c: str){
+	if( std::isdigit(c) == 0 ) return false;
+      }
+      return true;
+    }
 }
 #endif /* ifndef STRING_VIEW */

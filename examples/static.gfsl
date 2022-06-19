@@ -1,0 +1,16 @@
+include "std/std.gfsl"
+
+
+static name sizeof(str) end
+// semms better 
+name str.data "hello\n" swap drop 64<-
+name str.count "hello\n" drop 64<-
+
+name str-> eputs
+
+
+"howdy\n" name str<-
+name str-> puts
+0 exit
+
+

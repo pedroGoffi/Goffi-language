@@ -52,7 +52,8 @@ typedef enum{
     ID_LOAD64,
     ID_STORE8,
     ID_STORE64,
-    ID_STRING
+    ID_STRING,
+    ID_STATIC_MEM_USE
 }Identifiers;
 typedef enum{
     B_PLUS,
@@ -139,6 +140,9 @@ namespace Parser{
 	    }
 	    return ID_STRING;
 	  }
+	  else if( static_addresses.find(id->head.atomName) != static_addresses.end() ){
+	    return ID_STATIC_MEM_USE;
+	  }
 	  else{
             fprintf(stderr, "%lu:%lu: Error: Unreachable identifier at `%s` in the Parsing stage.\n", 
                     id->head.atomIndexLine,
@@ -193,7 +197,11 @@ namespace Parser{
 			  }
 			  ++Node;
 			} break;
-
+			case ID_STATIC_MEM_USE:
+			{
+			  output.push_back(VR{PUSH_PTR, 0, Node->head.atomName});
+			  ++Node;
+			} break;
                         case ID_STORE8:output.push_back(VR{OP_STOREBYTE, 8}); ++Node;break;
                         case ID_STORE64:output.push_back(VR{OP_STOREBYTE, 64}); ++Node;break;
                         

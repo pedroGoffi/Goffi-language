@@ -164,6 +164,8 @@ define dec64 as
   dup 64-> 1 - 64<-
 end
 
+define PUTD-BUFFER-CAPACITY as 32 end
+static putd-buffer 8 end
 define putd as
   if dup 0 = do "0" puts
   else

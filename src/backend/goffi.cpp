@@ -28,7 +28,7 @@ static size_t addrCount = 0;
  * This will compile the program to assembly x86_64
  */
 void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
-    assert(NUM_OF_OPERANDS == 33 && "Exhaustive time handling operand, please update the compile_program in ");
+    assert(NUM_OF_OPERANDS == 34 && "Exhaustive time handling operand, please update the compile_program in ");
 
     std::fstream out("out.asm", std::ios::out);
 
@@ -253,6 +253,16 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
                     <<  "   push 0x" << std::hex << (int)ip->operand << std::dec <<"\n"
                     ;
                 ++ip;
+	    } break;
+	    case PUSH_PTR:
+	    {
+		makeLabel;
+		out <<	"   ;; ---- push ptr\n"
+		    <<	"   mov rax, buffer\n"
+		    <<	"   add rax, " << static_addresses[ip->op_string] << "\n"
+		    <<	"   push rax\n"
+		    ;
+		++ip;
 	    } break;
 	    case PUSH_STR:
 		makeLabel;
@@ -534,7 +544,7 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
       }
     }
     out <<  "segment .bss\n"
-        <<  "buffer:    resb    " << MEMORY_SIZE << "\n"
+        <<  "buffer:    resb    " << /*MEMORY_SIZE+ */static_mem_capacity << "\n"
         ;
     out <<  "args_ptr:	resq	1\n"
 	;

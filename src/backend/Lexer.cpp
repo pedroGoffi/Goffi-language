@@ -270,7 +270,8 @@ namespace Lexer{
 	      ++i;
 	    }
 	    std::vector<uint64_t> static_resb_result = extend_static_definition_body(static_vec);
-	    static_addresses[mem_name] = static_resb_result.back();
+
+	    static_addresses[mem_name] = (size_t)static_mem_capacity; // - (size_t)(static_resb_result.back());
 	    static_mem_capacity += (int)static_resb_result.back();
 
 	  }

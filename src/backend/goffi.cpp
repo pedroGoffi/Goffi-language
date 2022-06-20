@@ -259,7 +259,7 @@ void Goffi::compile_program(std::vector<VR>program, std::string outputFilePath){
 		makeLabel;
 		out <<	"   ;; ---- push ptr\n"
 		    <<	"   mov rax, buffer\n"
-		    <<	"   add rax, " << static_addresses[ip->op_string] << "\n"
+		    <<	"   add rax, "  << static_addresses[ip->op_string]<< "\n" 
 		    <<	"   push rax\n"
 		    ;
 		++ip;

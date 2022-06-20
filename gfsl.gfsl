@@ -1,62 +1,97 @@
 include "std/std.gfsl"
+// debug porpuse
+define fixme as
+  // @usage: here fixme
+  eputs ": Compiler note, FIXME\n" eputs
+  1 exit
+end
 
 define usage as 
-    dup "Usage: %s [OPTIONS] input-file-path\n"		rot fputs
-    dup "OPTIONS:\n"					rot fputs
-    dup "    -h          print this help in stdout\n"	rot fputs
-    dup "    -o  <path>  provide output path\n"		rot fputs
-    dup "    sim <file>  simulate the program\n"	rot fputs
-    dup "    com <file>  compile the program\n"		rot fputs
-    drop
+  // @usage: FILEstream usage
+  dup "Usage: %s [OPTIONS] input-file-path\n"	    rot fputs
+  dup "OPTIONS:\n"				    rot fputs
+  dup "    -h          print this help in stdout\n" rot fputs
+  dup "    -o  <path>  provide output path\n"	    rot fputs
+  dup "    sim <file>  simulate the program\n"	    rot fputs
+  dup "    com <file>  compile the program\n"	    rot fputs
+  drop
 end
 
 // CONSTANTS -----------------------------
-static reserve-in-bss		  69000 end
-define BUFFER_MEMORY_CAPACITY	  as 69000  end
-define SIMULATION_STACK_CAPACITY  as 1024   end
-define sim-stack-count		  as 0 end
-define sim-stack		  as sim-stack-count 8 +		end
-define int-iterator		  as sim-stack sizeof(size_t) + end
-define input-file-path		  as int-iterator sizeof(size_t) + end
-define goffi-mode		  as input-file-path sizeof(size_t) + end
-define fd			  as goffi-mode 8 + end
-define statbuffer		  as fd 8 + end
-define file-content		  as statbuffer sizeof(stat) + end
-define line-file-content	  as file-content sizeof(str) + end
-define word-line-content	  as line-file-content sizeof(str) + end
-define string.a			  as word-line-content sizeof(str) + end
-define string.b			  as string.a sizeof(str) + end
-
-define loc			  as string.b sizeof(size_t) 2 * + end
-define loc.line			  as 0 + end
-define loc.col			  as loc.line sizeof(size_t) + end
-
-
-
-
+define BUFFER_MEMORY_CAPACITY	  as 69000	      end
+define SIMULATION_STACK_CAPACITY  as 1024	      end
+static goffi-mode		  sizeof(size_t)      end
+static sim-stack-count		  sizeof(size_t)      end
+static sim-stack		  sizeof(size_t)      end
+static fd			  sizeof(size_t)      end
+static statbuffer		  sizeof(size_t)      end
+static int-iterator		  sizeof(size_t)      end
+static input-file-path		  sizeof(size_t)      end 
+static file-content		  sizeof(stat)	      end
+static line-file-content	  sizeof(str)         end
+static word-line-content	  sizeof(str)         end
+static string.a			  sizeof(str)         end
+static string.b			  sizeof(str)         end
+static loc.line			  as sizeof(size_t)   end
+static loc.col			  as sizeof(size_t)   end
 
 // set int-iterator to choose witch mode you want to perfome
 // MACROS 
 define SIMULATION_MODE	as 1 end
 define COMPILATION_MODE as 2 end
 // OPERATIONS START ----------------------
+// @STATUS: NOT IMPLEMENTED YET  -- O MEM
+// @STATUS: NOT IMPLEMENTED YET P STR
+// @STATUS: NOT IMPLEMENTED YET OP_IDIVMOD
+// @STATUS: NOT IMPLEMENTED YET ARGC
+// @STATUS: NOT IMPLEMENTED YET ARGV
+// @STATUS: NOT IMPLEMENTED YET DUMP
+// @STATUS: NOT IMPLEMENTED YET DUMP
+// @STATUS: NOT IMPLEMENTED YET DROP
+// @STATUS: NOT IMPLEMENTED YET OVER
+// @STATUS: NOT IMPLEMENTED YET SWAP
+// @STATUS: NOT IMPLEMENTED YET ROT
+// @STATUS: NOT IMPLEMENTED YET P PTR
+// @STATUS: NOT IMPLEMENTED YET SHIFT LEFT
+// @STATUS: NOT IMPLEMENTED YET SHIFT RIGHT
+// @STATUS: NOT IMPLEMENTED YET OR
+// @STATUS: NOT IMPLEMENTED YET AND
+// @STATUS: NOT IMPLEMENTED YET NOT
+// @STATUS: NOT IMPLEMENTED YET O IF
+// @STATUS: NOT IMPLEMENTED YET O ELSE
+// @STATUS: NOT IMPLEMENTED YET O WHILE
+// @STATUS: NOT IMPLEMENTED YET O DO
+// @STATUS: NOT IMPLEMENTED YET O END
+// @STATUS: NOT IMPLEMENTED YET O SYSCALL
+// @STATUS: NOT IMPLEMENTED YET OP_INTRISIC_DIVMOD
+// @STATUS: NOT IMPLEMENTED YET O LOADBYTE  8 - 64
+// @STATUS: NOT IMPLEMENTED YET O STOREBYTE 8 - 64
+// @STATUS: NOT IMPLEMENTED YET O DIVMOD     
 
-define OP_INTRISIC_PLUS  as 0 end
-define OP_INTRISIC_MINUS as 1 end
-define OP_PUSH_INT	 as 2 end
-define OP_DUMP		 as 3 end
-define NUM_OF_OPS	 as 4 end
+// TODO:
+//    enums and struct will be cool 
+define OP_INTRISIC_PLUS	      as 0 end
+define OP_INTRISIC_MINUS      as 1 end
+define OP_INTRISIC_EQUALS     as 2 end //
+define OP_INTRISIC_MULT       as 3 end  
+define OP_INTRISIC_GTHAN      as 4 end
+define OP_INTRISIC_LTHAN      as 5 end
+define OP_INTRISIC_NOT_EQUALS as 6 end 
+define OP_PUSH_INT	      as 7 end
+define OP_DUMP		      as 8 end
+define NUM_OF_OPS	      as 9 end
 // OPERATIONS END ------------------------
-define sizeof(VR)	as sizeof(size_t) sizeof(size_t) + end
 define sizeof(op)	as 16	end
-define ops-count	as sim-stack SIMULATION_STACK_CAPACITY 8 * + end
-define ops		as ops-count 8 + end	
+static ops-count	SIMULATION_STACK_CAPACITY 8 * end
+static ops		8 end	
+
 
 define push-op as
   // @stack: type operand
+  // (((*ops-count)*sizeof(op))+ops)
   ops-count 64-> sizeof(op) * ops +
-  dup 8 + rot  64<-
-	  swap 64<-
+  dup 8 + rot 64<-
+	      swap  64<-
   ops-count inc64
 end
 // LEX FILE SECTION ---------------------------------------
@@ -67,71 +102,102 @@ define lex-file as
   if dup 0 < do
     stderr usage 
     "ERROR: could not open the file `"	eputs
-    input-file-path 64-> nth_argv g-streq eputs
+    input-file-path 64-> nth_argv g-str eputs
     "`\n"				eputs
     1 exit
   end
   fd swap 64<-
   if statbuffer fd 64-> fstat 0 < do
-    stderr usage
     "ERROR: could not mesure the file size\n" eputs
     1 exit
   end
-  statbuffer stat.st_size 64-> file-content str.count swap 64<-
-  0 
-  fd 64->
+  statbuffer stat.st_size     64-> 
+  file-content str.count swap 64<-
+  0 fd 64-> 
   MAP_PRIVATE
   PROT_READ
-  statbuffer stat.st_size 64->
+  file-content str.count 64-> 
   null 
   mmap
   file-content str.data swap 64<-
+
+  // str.data swap 64<-
+  //file-content str.data swap 64<-
 
   if file-content 64-> 0 < do
     stderr usage
     "ERROR: Could not memory map the file in lexing-stage\n" eputs
     1 exit
-  end
-  close drop
+  end close drop
   // At this point the file is open and is inside file-content
-  loc loc.line 0 64<-
+  //loc.line 0 64<-
   while file-content str.count 64-> 0 > do
     line-file-content file-content chop-line
-    loc loc.line inc64
-    while line-file-content str.count 64-> 0 > do
+    //loc.line inc64
+    while line-file-content str.count 64-> 0 > do 
         		line-file-content trim-left
       word-line-content line-file-content chop-word
 
-      //loc loc.line 64-> putd ":" puts loc loc.col 64-> putd ": " puts
-      if word-line-content str-> "+" streq do 
-	OP_INTRISIC_PLUS 0  push-op
+      if word-line-content	str-> "+" streq do 
+        OP_INTRISIC_PLUS 0  push-op
 
       else if word-line-content str-> "-" streq do
-	OP_INTRISIC_MINUS 0 push-op
+        OP_INTRISIC_MINUS 0 push-op
+
+      else if word-line-content str-> "=" streq do 
+	OP_INTRISIC_EQUALS 0 push-op
+
+      else if word-line-content str-> "*" streq do 
+	OP_INTRISIC_MULT  0 push-op
+
+      else if word-line-content str-> "<" streq do 
+	OP_INTRISIC_LTHAN 0 push-op
+
+      else if word-line-content str-> ">" streq do 
+	OP_INTRISIC_GTHAN 0 push-op
+
+
+      else if word-line-content str-> "=" streq do 
+	OP_INTRISIC_EQUALS 0 push-op
+
+      else if word-line-content str-> "!=" streq do 
+	OP_INTRISIC_NOT_EQUALS 0 push-op
+
       else if word-line-content str-> "dump" streq do
 	OP_DUMP 0 push-op
-
+      
       else
-	//OP_PUSH_INT word-line-content str-> try-lex-int push-op 
-	OP_PUSH_INT word-line-content str-> try-lex-int push-op 
-      end end end
-      loc loc.col inc64
+        OP_PUSH_INT 
+	word-line-content str-> // stack: op ptr->count ptr->data
+	try-lex-int 
+	push-op 
+      end end end end end end end end end
+      //loc.col inc64 // loc.col += 1 TODO: += prev string length
     end
-    loc loc.col 0 64<-
+    //loc.line 0 64<- // loc.line = 0
   end
-end
-define try-lex-int as 
-  string.a str<-
+end 
+define try-lex-int  as // n1 s1 -> ret
+  // NOTE: this assume the input is a number 
+  // pre-stack: op ptr->count ptr->data 
+  // note: ptr is a pointer to a string
+  string.a str.data   swap 64<-
+  string.a str.count  swap 64<-
+  // string.a->count = ptr->count
+  // string.a->data  = ptr->data
+  //  after-stack: op
   0 0 while dup string.a str.count-> < do
-    dup string.a str.data-> + 8-> ascii_0 -
+    dup string.a str.data-> + 8-> ascii_0 - 
     rot  10 * +
-    swap 1 +
-  end drop
+    swap 
+    1 +
+  end drop 
 end
 // SIMULATION SECTION -------------------------------------
 define sim-stack-push as 
   if sim-stack-count 64-> SIMULATION_STACK_CAPACITY >= do 
-    here false ": ERROR: data stack overflow in simulation mode\n" assert
+    here eputs ": ERROR: data stack overflow in simulation mode\n" eputs
+    1 exit
   end
   //
   sim-stack sim-stack-count 64-> 8 * + swap 64<-
@@ -139,37 +205,62 @@ define sim-stack-push as
 end
 define sim-stack-pop as 
   if sim-stack-count 64-> 0 = do
-    here false ": ERROR: data stack underflow in simulation mode\n" assert
+    here eputs ": ERROR: data stack underflow in simulation mode\n" eputs
+    1 exit
   end
   sim-stack-count dec64
   sim-stack sim-stack-count 64-> 8 * + 64->
 end
 define simulate-ops as
-  here NUM_OF_OPS 3 = "Exhaustive handling operations in simulate-mode\n" assert
+  if NUM_OF_OPS 9 != do
+    here						  puts 
+    ": Exhaustive handling operations in simulate-mode\n" puts
+    1 exit
+  end
   0 while dup ops-count 64-> < do
     dup sizeof(op) * ops +
 
 
     // intrisics
-    if dup 64-> OP_INTRISIC_PLUS = do 
+    if dup 64->	    OP_INTRISIC_PLUS = do 
       sim-stack-pop sim-stack-pop	+ sim-stack-push  
+
     else if dup 64-> OP_INTRISIC_MINUS = do
       sim-stack-pop sim-stack-pop swap	- sim-stack-push
+
+    else if dup 64-> OP_INTRISIC_EQUALS = do
+      sim-stack-pop sim-stack-pop = sim-stack-push
+
+    else if dup 64-> OP_INTRISIC_MULT = do
+      sim-stack-pop sim-stack-pop * sim-stack-push
+
+    else if dup 64-> OP_INTRISIC_GTHAN = do 
+      sim-stack-pop sim-stack-pop < sim-stack-push
+
+    else if dup 64-> OP_INTRISIC_LTHAN = do 
+      sim-stack-pop sim-stack-pop > sim-stack-push
+
+    else if dup 64-> OP_INTRISIC_NOT_EQUALS = do 
+      sim-stack-pop sim-stack-pop != sim-stack-push
+
     else if dup 64-> OP_PUSH_INT = do  
       dup 8 + 64-> sim-stack-push		      
+
+    // built-in procs
     else if dup 64-> OP_DUMP = do 
       sim-stack-pop dump			      
     
-    end end end end
-
-    drop 
+    end end end end end end end end end drop 
     1 +
   end
 end
 // COMPILATION SECTION -------------------------------------
 define compile-ops as 
-  here NUM_OF_OPS 3 = "Exhaustive handling operations in compile-mode\n" assert
-  here false "compilation mode is not implemented yet\n" assert
+  if NUM_OF_OPS 9 != do
+    here						  eputs
+    ": Exhaustive handling operations in compile-mode\n"  eputs
+    1 exit
+  end
   // TODO:
   //	External commands
   "BITS 64\n" puts
@@ -231,27 +322,66 @@ define compile-ops as
   0 while dup ops-count 64-> < do
    dup sizeof(op) * ops +
    if dup 64-> OP_PUSH_INT = do 
-     "    ;; ---- push int (" puts dup 8 + 64-> putd  ")\n" puts
-     "    push "	      puts dup 8 + 64-> putd  "\n"  puts
+      "    ;; ---- push int value=`" puts dup 8 + 64-> putd  "`\n" puts
+      "    push "		     puts dup 8 + 64-> putd  "\n"  puts
    
-   else if dup 64-> OP_INTRISIC_PLUS = do  
-     "    ;; ---- op-plus\n"  puts
-     "    pop rbx\n"	      puts
-     "    pop rax\n"	      puts
-     "    add rax, rbx\n"     puts
-     "    push rax\n"	      puts
-   
-   else if dup 64-> OP_DUMP = do 
-     "    ;; ---- call dump\n"	puts
-     "    pop rdi\n"		puts
-     "    call dump\n"		puts
-   end end end drop 
+    else if dup 64-> OP_INTRISIC_PLUS = do  
+      "    ;; ---- op-plus\n"	puts
+      "    pop rbx\n"		puts
+      "    pop rax\n"		puts
+      "    add rax, rbx\n"	puts
+      "    push rax\n"		puts
+
+    else if dup 64-> OP_INTRISIC_MINUS = do
+      "	   ;; ---- op-minus\n"	puts
+      "	   pop rax\n"		puts
+      "	   pop rbx\n"		puts
+      "	   sub rbx, rax\n"    	puts
+      "	   push rbx\n"	      	puts
+    else if dup 64-> OP_INTRISIC_MULT = do
+      "    ;; ---- mult\n"    puts
+      "    pop rax\n"         puts   
+      "    pop rbx\n"         puts   
+      "    mul rbx\n"         puts   
+      "    push rax\n"	      puts		   
+    else if dup 64-> OP_INTRISIC_GTHAN = do
+      "    ;; ---- cmpGT\n"   puts
+      "    mov rcx, 0\n"      puts
+      "    mov rdx, 1\n"      puts
+      "    pop rbx\n"	      puts
+      "    pop rax\n"	      puts
+      "    cmp rax, rbx\n"    puts
+      "    cmovg rcx, rdx\n"  puts
+      "    push rcx\n"	      puts
+    else if dup 64-> OP_INTRISIC_EQUALS = do
+      "    ;; ---- equals\n"  puts
+      "    mov rcx, 0\n"      puts
+      "    mov rdx, 1\n"      puts
+      "    pop rax\n"	      puts
+      "    pop rbx\n"	      puts
+      "    cmp rax,rbx\n"     puts
+      "    cmove rcx, rdx\n"  puts
+      "    push rcx\n"	      puts
+    else if dup 64-> OP_INTRISIC_NOT_EQUALS = do
+      "    ;; --- NOT equals\n"	  puts 
+      "    mov rcx, 0\n"	  puts 
+      "    mov rdx, 1\n"	  puts 
+      "    pop rbx\n"		  puts 
+      "    pop rax\n"		  puts	
+      "    cmp rax, rbx\n"	  puts
+      "    cmovne rcx, rdx\n"	  puts
+      "    push rcx\n"		  puts 
+    else if dup 64-> OP_DUMP = do 
+      "    ;; ---- call dump\n"	puts
+      "    pop rdi\n"		puts
+      "    call dump\n"		puts
+   end end end end end end end end drop 
    1 +
   end
 
    "segment .bss\n"	      puts
-   "buffer:    resb " puts BUFFER_MEMORY_CAPACITY dump 
-   // drop
+   "buffer:    resb " puts BUFFER_MEMORY_CAPACITY putd "\n" puts
+   drop
 end
 define print-ops as
   0 while dup ops-count  64-> < do
@@ -262,43 +392,47 @@ define print-ops as
     1 +
   end drop
 end
+// v ptr v -- <-64
+// ptr v   -- 64<-
+// *ptr	   -- 64->
+// *ptr _  -- ->64
 define main as 
   if argc 2 < do
     stderr usage
     "ERROR: Not enough arguments\n" eputs
     1 exit
   end 
-
   goffi-mode	  0 64<- // goffi-mode = 0
   input-file-path 0 64<-
   int-iterator	  1 64<- // int-iterator = 1
 
   // filter CMD arguments
   while int-iterator  64-> argc <= do
-    int-iterator      64-> nth_argv // ptr-to(argv[int-iterator])
-    if dup "sim" g-streq do
-      goffi-mode
-      if dup 64-> 0 != do 
-	stderr usage
-	"ERROR: Can not use two modes at the same time\n" eputs
-	1 exit
-      end SIMULATION_MODE 64<-
+    int-iterator 64-> nth_argv 
+
+    if dup "sim" g-streq do 
+    goffi-mode  
+    if dup 64-> 0 != do
+      here						eputs
+      ":ERROR: can not use two modes at the same time\n" eputs
+      1 exit
+    end SIMULATION_MODE 64<-
 
     else if dup "com" g-streq do
-      "com\n" puts
-      goffi-mode
-      if dup 64-> 0 != do 
-	stderr usage
-	"ERROR: Can not use two modes at the same time\n" eputs
+      goffi-mode 
+      if dup 64-> 0 != do
+	here						  eputs 
+	":ERROR: can not use two modes at the same time\n" eputs
+	"    NOTE: trying to use compilation-mode\n"	  eputs
 	1 exit
       end COMPILATION_MODE 64<-
-
     else if dup "-h" g-streq do
       stdout usage
+      "THIS IS HELP\n" puts
       0 exit
     else 
       input-file-path int-iterator 64-> 64<-
-    end end end
+    end end end 
     int-iterator inc64
   end
   // TOOD
@@ -314,25 +448,25 @@ define main as
     "ERROR: No input file is provided\n" eputs
     1 exit
   end
-  input-file-path 64-> nth_argv // FILE ptr
-
+  //1 + nth_argv str-> eputs // FILE ptr
   // since this is stack based there is no need to parsing
+  //fixme
+  input-file-path 64-> nth_argv 
   lex-file // :3 
-  goffi-mode 64-> 
-
+  goffi-mode 64->
   if dup SIMULATION_MODE = do  
     simulate-ops
   else if dup COMPILATION_MODE = do  
     compile-ops
   else
     stderr usage
-    here eputs ": ERROR: Unknown subcommand\n" eputs
+    here			    eputs 
+    ": ERROR: Unknown subcommand\n" eputs
     1 exit
   end end 
   drop
 end
-//main
-// 420 putd
-
+"OBS: Goffi-slang is not self-hosted yet\n" eputs
+1 exit
 main
 0 exit

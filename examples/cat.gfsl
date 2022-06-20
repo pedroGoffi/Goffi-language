@@ -1,43 +1,43 @@
 include "std/std.gfsl"
-
-define fd	as mem	  end
-define statbuf  as fd 8 + end
-define content  as statbuf sizeof(stat) + end
+//static bss 69000 end
+static fd	8 end
+static statbuf  8 end
+static content  sizeof(stat) end
 
 if argc 2 < do
-  "Usage: " eputs 1 nth_argv c-str eputs " <file>\n" eputs
+  "Usage: " eputs 1 nth_argv g-str eputs " <file>\n" eputs
   "ERROR: no input file is provided\n" eputs
   1 exit
 end
 
-define file.read as 
-  // str-file 0
-  O_READONLY  // flags
-  swap
-  AT_FDCWD    // dirfd
-  openat      // syscall
-  if dup 0 < do
-    "ERROR: Could not open the file `"  eputs
-    2 nth_argv c-str			eputs
-    "`\n"		    		eputs
-    1 exit
-  end 
-  // "File is opened\n" eputs 
-  fd swap 64<-
-  
-  if statbuf fd 64-> fstat 0 < do 
-    "ERROR: Could not mesure the size of the file\n" eputs
-    1 exit
-  end
-end
-
+// str-file 0
+O_READONLY  // flags
 2 nth_argv 
-file.read
+AT_FDCWD    // dirfd
+openat      // syscall
+if dup 0 < do
+  "ERROR: Could not open the file `"  eputs
+  2 nth_argv g-str			eputs
+  "`\n"		    		eputs
+  1 exit
+end 
+// "File is opened\n" eputs 
+fd swap 64<-
+
+if statbuf fd 64-> fstat 0 < do 
+  "ERROR: Could not mesure the size of the file\n" eputs
+  1 exit
+end
+//  
+
 
 // *(buf+size)<-(content+data)
 //statbuf stat.st_size 64-> content str.count 64<-
 statbuf stat.st_size 64-> content str.count swap  64<-
 
+statbuf stat.st_size 64->
+dump
+1 exit
 0 fd 64->
 MAP_PRIVATE
 PROT_READ

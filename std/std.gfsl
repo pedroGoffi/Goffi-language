@@ -16,16 +16,16 @@ define False as 0 end
 define FALSE as 0 end
 
 
-define sizeof(bool)   as 1 end
-define sizeof(u8)     as 1    end
-define sizeof(u16)    as 2    end
-define sizeof(u32)    as 4    end
-define sizeof(u64)    as 8    end
-define sizeof(size_t) as 8    end
-define sizeof(ptr)    as 8    end
-define sizeof(str)    as 16   end
-define str.count      as null +  end
-define str.data	      as sizeof(size_t) +  end
+define sizeof(bool)	  as 1      end
+define sizeof(int8_t)	  as 1      end
+define sizeof(int16_t)	  as 2      end
+define sizeof(int32_t)    as 4      end
+define sizeof(int64_t)    as 8      end
+define sizeof(size_t)	  as 8      end
+define sizeof(ptr)	  as 8      end
+define sizeof(str)	  as 16	    end
+define str.count	  as null + end
+define str.data		  as 8 +    end
 
 // --- sizeof structs used in self-hosting
 define sizeof(stat)		as 144	  end
@@ -140,10 +140,11 @@ define trim-left as
   end drop
 end
 // pointers operation
-define 8->  as	load8 end
-define 8<-  as	store8 end
-define 64-> as	load64 end 
-define 64<- as	store64 end
+// ptr -- *ptr
+define 8->  as	load8	      end
+define 8<-  as	store8	      end
+define 64-> as	load64	      end 
+define 64<- as	store64	      end
 define str.data->  as str.data 64-> end
 define str.count-> as str.count 64-> end
 define str.data<-  as str.data 64<- end
@@ -181,10 +182,9 @@ define putd as
 end
 
 
-define assert as
-  // here boolean string
-  swap if false = do
-    swap eputs 
+define assert as // here bool int string 
+  rot if false = do
+    rot  eputs 
     ":"  eputs
     eputs
     1 exit

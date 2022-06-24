@@ -1,0 +1,13 @@
+include "std/std.gfsl"
+
+
+"examples/some_random_file.text" swap drop
+SYS_unlink
+syscall1
+
+if dup 0 < do
+  "Could not rm the file\n" eputs
+  1 exit
+end
+
+0 exit

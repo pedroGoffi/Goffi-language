@@ -31,6 +31,7 @@ typedef enum{
     OR,
     AND,
     NOT,
+    CAST,
     // -----
 
 

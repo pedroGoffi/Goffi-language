@@ -1,7 +1,8 @@
-#include "goffi.h"
-#include <string>
+
 #ifndef PARSER
 #define PARSER value
+
+#include <string>
 #include <iostream>
 #include <vector>
 #include "./Lexer.cpp"
@@ -53,6 +54,7 @@ typedef enum{
     ID_STORE8,
     ID_STORE64,
     ID_STRING,
+    ID_CAST,
     ID_STATIC_MEM_USE
 }Identifiers;
 typedef enum{
@@ -121,6 +123,10 @@ namespace Parser{
 	else if (id->head.atomName == "end")	  return ID_END;
 	else if (id->head.atomName == "!=")	  return ID_INTRISIC_NOT_EQ;
 	else if (id->head.atomName == "here")	  return ID_HERE;
+
+	else if (id->head.atomName == "cast(ptr)")return ID_CAST;
+	else if (id->head.atomName == "cast(int)")return ID_CAST;
+	else if (id->head.atomName == "cast(bool)")return ID_CAST;
 	
 
 	else if (id->head.atomName == "syscall0")  return ID_SYSCALL_0;
@@ -154,7 +160,7 @@ namespace Parser{
 	}
     }
 
-    std::vector<VR> parse(std::vector<Token> &tokens){
+    std::vector<std::pair<VR, Token>> parse(std::vector<Token> &tokens){
         std::vector<Token>::iterator Node = tokens.begin();
 	std::vector<VR> output;
         while( Node != tokens.end()){
@@ -162,7 +168,14 @@ namespace Parser{
                 case NAME:{                                        
                     Identifiers id = Parser::parseIdentifier(Node);
                     switch(id){
-			case ID_NOOP: ++Node; break;
+			case ID_NOOP: 
+			  ++Node; break;
+			case ID_CAST:
+			{
+			  output.push_back(VR{ CAST, 0, Node->head.atomName, 0 });
+			  ++Node;
+			  break;
+			}
 			case ID_HERE:
 			{
 			    std::string pos =std::to_string(Node->head.atomIndexLine)+":"+std::to_string(Node->head.atomIndex);
@@ -339,7 +352,14 @@ namespace Parser{
                 
             }
         }
-	return output;
+	// make the pair
+	std::vector<std::pair<VR, Token>> FINAL;
+	size_t i = 0;
+	for(auto& ins: output){
+	  FINAL.push_back(std::pair<VR, Token>(ins, tokens[i]));
+	  ++i;
+	}
+	return FINAL;
     }
 }
 #endif /* ifndef PARSER */

@@ -1,7 +1,7 @@
 include "std/std.gfsl"
 
-static buffer 100 end // need to reserve in the bss
-define ROW_LENGHT as 100  end
+define ROW_LENGHT as 30  end
+static buffer ROW_LENGHT end // reserve in the bss
 define ROW_HEIGHT as ROW_LENGHT 2 + end
 define TRUE_CHAR  as "*" end
 define FALSE_CHAR as " " end
@@ -34,7 +34,4 @@ define dump_rule110 as
     end drop drop 
     1 +
   end drop
-end
-
-dump_rule110
-0 exit 
+end dump_rule110 0 exit 

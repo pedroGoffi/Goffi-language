@@ -9,13 +9,13 @@
 #include "./backend/goffi.cpp"
 #include "./backend/Lexer.cpp"
 #include "./backend/Parser.cpp"
-#include "backend/goffi.h"
+#include "./backend/TypeCheck.cpp"
 
 #define SHIFT shift(&argc, &argv)
 int main(int argc, char** argv){
     std::string const program         = SHIFT;
     std::string inputFilePath;
-    std::string outputFilePath        = "out.gf";
+    std::string outputFilePath        = "./output.gfsl";
     std::string flag;
     while(argc > 0){
         flag = SHIFT;
@@ -44,8 +44,9 @@ int main(int argc, char** argv){
 
     std::vector<Token>  tokens = Lexer::lex(INPUT_FILE);
     Crossreference::analyze(tokens);
-    std::vector<VR>     instructions = Parser::parse(tokens);
+    std::vector<std::pair<VR, Token>>     instructions = Parser::parse(tokens);
 
+    type_checking_walk(instructions);
     Goffi::compile_program(instructions, outputFilePath);
 
     return 0;

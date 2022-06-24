@@ -1,0 +1,27 @@
+include "std/std.gfsl"
+static fd sizeof(size_t) end
+
+define file.create as 
+  O_CREAT O_WRONLY + 
+  2 nth_argv
+  AT_FDCWD
+  openat
+  if dup 0 < do
+    "Was not possible to create the file\n" eputs
+    1 exit
+  end
+  fd swap 64<-
+  //int ptr fd
+  close drop
+
+
+end
+define file.write as
+  fd 64-> write
+end
+
+file.create
+
+"hello" fd 64-> write
+"- world\n" fd 64-> write
+0 exit

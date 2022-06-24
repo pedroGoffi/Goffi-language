@@ -33,6 +33,9 @@ that can be compiled or simulated.
 
 `dump` print the last (int) digit in the stack
 
+--`64->` ptr -- *ptr
+--`64<-` value ptr --- *ptr = value
+
 
 # <div id="Flow-Control">Flow Control</div>
 

@@ -1,118 +1,105 @@
-include "./std/core.gfsl"
-include "./std/ascii.gfsl"
+#include "std/ascii.gfsl"
+#include "std/core.gfsl"
 
-define stdin  as 0 end
-define stdout as 1 end
-define stderr as 2 end
+#define stdin  as 0 end
+#define stdout as 1 end
+#define stderr as 2 end
 // --- SOME BUILT-IN CONSTANTS
-define null as 0 end
-define NULL as 0 end
-define true as 1 cast(bool) end
-define True as 1 cast(bool) end
-define TRUE as 1 cast(bool) end
+#define null as 0 end
+#define NULL as 0 end
+#define true as 1 cast(bool) end
+#define True as 1 cast(bool) end
+#define TRUE as 1 cast(bool) end
 
-define false as 0 cast(bool) end
-define False as 0 cast(bool) end
-define FALSE as 0 cast(bool) end
+#define false as 0 cast(bool) end
+#define False as 0 cast(bool) end
+#define FALSE as 0 cast(bool) end
 
 
-define sizeof(bool)	  as 1      end
-define sizeof(int8_t)	  as 1      end
-define sizeof(int16_t)	  as 2      end
-define sizeof(int32_t)    as 4      end
-define sizeof(int64_t)    as 8      end
-define sizeof(size_t)	  as 8      end
-define sizeof(ptr)	  as 8      end
-define sizeof(str)	  as 16	    end
-define str.count	  as null + end
-define str.data		  as 8 +    end
+#define sizeof(bool)	  as 1      end
+#define sizeof(int8_t)	  as 1      end
+#define sizeof(int16_t)	  as 2      end
+#define sizeof(int32_t)    as 4      end
+#define sizeof(int64_t)    as 8      end
+#define sizeof(size_t)	  as 8      end
+#define sizeof(ptr)	  as 8      end
+#define sizeof(str)	  as 16	    end
+#define str.count	  as null + end
+#define str.data		  as 8 +    end
 
 // --- sizeof structs used in self-hosting
-define sizeof(stat)		as 144	  end
-define stat.st_dev		as 0	+ end
-define sizeof(stat.st_dev)	as 8	  end
-define stat.st_ino		as 8	+ end
-define sizeof(stat.st_ino)	as 8	  end
-define stat.st_mode		as 24	+ end
-define sizeof(stat.st_mode)	as 4	  end
-define stat.st_nlink		as 16 	+ end
-define sizeof(stat.st_nlink)	as 8	  end
-define stat.st_uid		as 28 	+ end
-define sizeof(stat.st_uid)	as 4	  end
-define stat.st_gid		as 32 	+ end
-define sizeof(stat.st_gid)	as 4	  end
-define stat.st_rdev		as 40 	+ end
-define sizeof(stat.st_rdev)	as 8	  end
-define stat.st_size		as 48 	+ end
-define sizeof(stat.st_size)	as 8	  end
-define stat.st_blksize		as 56 	+ end
-define sizeof(stat.st_blksize)	as 8	  end
-define stat.st_blocks		as 64 	+ end
-define sizeof(stat.st_blocks)	as 8	  end
-define stat.st_atim		as 72 	+ end
-define sizeof(stat.st_atim)	as 16	  end
-define stat.st_mtim		as 88 	+ end
-define sizeof(stat.st_mtim)	as 16	  end
-define stat.st_ctim		as 104	+ end
-define sizeof(stat.st_ctim)	as 16	  end
+#define sizeof(stat)		 as 144	  end
+#define stat.st_dev		 as 0	+ end
+#define sizeof(stat.st_dev)	 as 8	  end
+#define stat.st_ino		 as 8	+ end
+#define sizeof(stat.st_ino)	 as 8	  end
+#define stat.st_mode		 as 24	+ end
+#define sizeof(stat.st_mode)	 as 4	  end
+#define stat.st_nlink		 as 16 	+ end
+#define sizeof(stat.st_nlink)	 as 8	  end
+#define stat.st_uid		 as 28 	+ end
+#define sizeof(stat.st_uid)	 as 4	  end
+#define stat.st_gid		 as 32 	+ end
+#define sizeof(stat.st_gid)	 as 4	  end
+#define stat.st_rdev		 as 40 	+ end
+#define sizeof(stat.st_rdev)	 as 8	  end
+#define stat.st_size		 as 48 	+ end
+#define sizeof(stat.st_size)	 as 8	  end
+#define stat.st_blksize		 as 56 	+ end
+#define sizeof(stat.st_blksize)	 as 8	  end
+#define stat.st_blocks		 as 64 	+ end
+#define sizeof(stat.st_blocks)	 as 8	  end
+#define stat.st_atim		 as 72 	+ end
+#define sizeof(stat.st_atim)	 as 16	  end
+#define stat.st_mtim		 as 88 	+ end
+#define sizeof(stat.st_mtim)	 as 16	  end
+#define stat.st_ctim		 as 104	+ end
+#define sizeof(stat.st_ctim)	 as 16	  end
 // --- SOME USEFUL PROCS
-define fputs  as write drop end
-define eputs  as stderr fputs end
-define puts   as stdout fputs end
-define print  as dup dump end
-define exit   as SYS_exit syscall1 drop end
+#define fputs  as write drop end
+#define eputs  as stderr fputs end
+#define puts   as stdout fputs end
+#define print  as dup dump end
+#define exit   as SYS_exit syscall1 drop end
 
-define div as divmod drop end
-define mod as divmod swap drop end
-define 2drop as drop drop end
-define 2dup as over over end
+#define div as divmod drop end
+#define mod as divmod swap drop end
+#define 2drop as drop drop end
+#define 2dup as over over end
 
 
 // string   operation
-define str-> as
-  // accept a ptr to a struct SV{ const char* data; size_t count }
+#define str-> as 
+  // accept a ptr to a struct SV as const char* data; size_t count end
   dup  str.count  64->
   swap str.data	  64-> 
 end
-define str<- as
+#define cstr-> as 
+  dup str-len swap     
+end
+#define str<- as 
   dup rot swap
   str.data	  swap 64<-
   str.count	  swap 64<-
+   
 end
 
-define chop-line as 
+
+#define chop-line as   
+  here eputs ": chop-line is not implemented yet\n" eputs
+  drop drop
+  1 exit
+end
+#define chop-word as 
   2dup str.data 64-> swap str.data swap 64<-
   over str.count 0 64<-
   while 
-    if	dup str.count 64->  0 > do 
-        dup str.data  64->  8-> ascii_LF != // LF is '\n'
-    else 
-      false 
-    end
-  do
-
-    dup str.count dec64
-    dup str.data  inc64
-    swap dup str.count inc64
-    swap 
-  end
-
-  if dup str.count 64-> 0 > do 
-    dup str.count dec64
-    dup str.data inc64 
-  end
-  2drop
-end
-define chop-word as 
-  2dup str.data 64-> swap str.data swap 64<-
-  over str.count 0 64<-
-  while 
-    if	dup str.count 64->  0 > do 
+    if	dup str.count 64->  0 > do
         dup str.data  64->  8-> ascii_SPACE != 
     else 
       false 
     end
-  do
+  do 
 
     dup str.count dec64
     dup str.data  inc64
@@ -120,14 +107,14 @@ define chop-word as
     swap 
   end
 
-  if dup str.count 64-> 0 > do 
+  if dup str.count 64-> 0 > do
     dup str.count dec64
     dup str.data inc64 
   end
   2drop
 end
 
-define trim-left as 
+#define trim-left as 
   // x a b
   while
     if dup str.count 64-> 0 > do
@@ -135,7 +122,7 @@ define trim-left as
     else
       false
     end
-  do
+  do 
     dup str.count dec64
     dup str.data  inc64
   end 
@@ -144,60 +131,49 @@ define trim-left as
 end
 // pointers operation
 // ptr -- *ptr
-define 8->  as	load8	      end
-define ->8  as  swap load8    end
-define 8<-  as	store8	      end
-define <-8  as  swap store8   end
-define 64-> as	load64	      end 
-define ->64 as	swap laod64   end
-define 64<- as	store64	      end
-define <-64 as  swap store64  end
-define str.data->  as str.data 64-> end
-define str.count-> as str.count 64-> end
-define str.data<-  as str.data 64<- end
-define str.count<- as str.count 64<- end
+#define 8->  as 	load8	      end
+#define ->8  as  swap load8    end
+#define 8<-  as 	store8	      end
+#define <-8  as  swap store8   end
+#define 64-> as 	load64	      end 
+#define ->64 as 	swap laod64   end
+#define 64<- as 	store64	      end
+#define <-64 as  swap store64  end
+#define str.data->  as str.data 64-> end
+#define str.count-> as str.count 64-> end
+#define str.data<-  as str.data 64<- end
+#define str.count<- as str.count 64<- end
 
-define str-len as 
+#define str-len as 
   0 swap while dup load8 0 != do
     1 + swap 1 + swap
   end drop
 end
 
 
-define inc64 as 
+#define inc64 as 
   dup 64-> 1 + 64<-
 end
-define inc64-by as 
+#define inc64-by as 
   // ptr val
   over 64-> + 64<-
 end
-define dec64 as 
+#define dec64 as 
   dup 64-> 1 - 64<-
 end
 
-define PUTD-BUFFER-CAPACITY as 32 end
-static putd-buffer 8 end
+#define PUTD-BUFFER-CAPACITY as 32 end
 
-define int-to-string as
-  if dup 0 = do
-    "0" 
-  else
-    putd-buffer PUTD-BUFFER-CAPACITY + 
-    while over 0 > do
-      1 - dup rot
-      10 divmod
-      rot swap ascii_0 + 8<- swap
-    end
-    dup
-    putd-buffer PUTD-BUFFER-CAPACITY + swap - swap
-  end
-  rot drop
+static putd-buffer 8 end
+#define int-to-string as
+  "TODO: USE TYPE_CHECK PROC ARGUMENTS\n" eputs
+  1 exit
 end
-define putd as
+#define putd as 
   int-to-string puts 
 end
 
-define assert as // here bool int string 
+#define assert as // here bool int string 
   rot if false = do
     rot  eputs 
     ":"  eputs
@@ -205,51 +181,21 @@ define assert as // here bool int string
     1 exit
   end
 end
-define % as divmod swap drop end
-define nth_argv as
-  8 * __argc cast(int) + cast(ptr) load64
+#define % as divmod swap drop end
+#define nth_argv as 
+  8 * __argc cast(int) + cast(ptr) load64 cast(ptr)
 end
-define argc as __argc 64-> end
-define argv as __argv 64-> end
-define not-implemented as 
+#define argc as __argc 64-> end
+#define argv as __argv 64-> end
+#define not-implemented as 
   // here str
   swap				eputs
   ":"				eputs
 				eputs
   ": Is not implemented yet\n"	eputs
 end
-static cstreq-mem as sizeof(bool) end
-define cstreq as
-  // ptr.a str.b.data ptr.b
-  string.b str.data swap 64-> 64<-
-  string.a str.data swap 64-> 64<-
-  // pta ptrb *pta==0
-  // pta ptb *pta==0 *ptb==0
-  // pta ptb *pta==*ptb
-  while 
-    false // TODO: change the Type chekini
-    if
-      string.a 8-> 0 !=
-      string.b 8-> 0 !=
-      and
-    do	
-      drop
-      string.a 8->
-      string.b 8->
-      =
-    else
-      drop
-      false
-    end
-  do
-    string.a inc64 
-    string.b inc64 
-  end 
-  string.a 8-> 0 =
-  string.b 8-> 0 =
-  and
-end
-define streq as
+//static cstreq-mem sizeof(bool) end
+#define streq as 
   string.a  str<-
   string.b  str<-
   if string.a str.count-> string.b str.count-> = do
@@ -263,17 +209,18 @@ define streq as
     string.a str.count-> >=
   else false end
 end
-define g-streq as swap drop cstreq end
-define g-str as 
+
+#define g-streq as swap drop cstreq end
+#define g-str as 
   dup str-len swap
 end
-define str-copy-sv as
+#define str-copy-sv as 
   // dst src 
   2dup
   str.data  64-> swap str.data swap 64<-
   str.count 64-> swap str.count swap 64<-
 end
-define str-sv-to-gstr as 
+#define str-sv-to-gstr as 
   // int &ptr.count
   rot
   2dup
@@ -281,11 +228,11 @@ define str-sv-to-gstr as
   swap drop
   str.count swap 64<-
 end
-define is-digit as
-  dup  ascii_0 >= 
-  swap ascii_9 <= 
+#define is-digit as 
+  dup  as cii_0 >= 
+  swap as cii_9 <= 
   and
 end
-define +ptr	  as inc64 end 
-define -ptr	  as dec64 end
+#define +ptr	  as inc64 end 
+#define -ptr	  as dec64 end
  

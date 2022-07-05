@@ -1,4 +1,0 @@
-include "./examples/syscall.gfsl"
-
-420 dump
-1 exit

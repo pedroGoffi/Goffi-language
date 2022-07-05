@@ -1,53 +1,18 @@
-include "std/std.gfsl"
-
-define calculate_number_factorial 
-as 
-  1 swap while dup 1 > do
-      dup
-      swap rot *
-      swap 1 -
+#include "std/std.gfsl"
+#define N as 5 end
+// NOTE: procedure return does not work with safe mode
+proc main do
+  "5 factorial is equal to " puts
+  local result sizeof(size_t) end
+  local i      sizeof(size_t) end
+  result 1 64<-
+  i      1 64<-
   
-  end drop
+  while i 64-> N <= do
+    i 64-> result 64-> *	// result = result*(*i)
+    result swap 64<-
+    i inc64			// i += 1
+  end 
+  result 64-> dump		
 end
 
-define calc_and_dump 
-as 
-  calculate_number_factorial 
-  dump
-end
-
-define main 
-as
-  2  calc_and_dump 
-  3  calc_and_dump 
-  4  calc_and_dump 
-  5  calc_and_dump 
-  6  calc_and_dump 
-  7  calc_and_dump 
-  8  calc_and_dump 
-  9  calc_and_dump 
-  10 calc_and_dump 
-  11 calc_and_dump 
-  12 calc_and_dump 
-  13 calc_and_dump 
-  14 calc_and_dump 
-  15 calc_and_dump 
-  16 calc_and_dump 
-  17 calc_and_dump 
-  18 calc_and_dump 
-  19 calc_and_dump 
-  20 calc_and_dump 
-end
-
-
-// python equivalent:
-// fact = lambda: 1 if x <= 1 else x*fact(x-1)
-// for i in range(11):
-//    for k in range(21):
-//	print(fact(k))
-
-0 while dup 100 < do
-  main
-  1 +
-end
-0 exit

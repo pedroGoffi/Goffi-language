@@ -6,37 +6,65 @@
 #define TypeChecker
 #include <array>
 #include <vector>
+#include <algorithm>
 #include "./Core/Instructions.cpp"
 #include "./Lexer.cpp"
 #define __token &ins[i].second
+
+static std::string        proc_ctx;
+static std::vector<Token> proc_args;
+static std::vector<Token> proc_ret;
+
 enum Types{
   INT,
   PTR,
   BOOL
 };
+std::vector<Types> string_to_type(std::string pname){
+  std::vector<Types> ret;
+  if(pname == "int"){
+    ret.push_back(Types::INT);
+  }
+  else if (pname == "str"){
+    ret.push_back(Types::INT);
+    ret.push_back(Types::PTR);
+  }
+  else if (pname == "bool"){
+    ret.push_back(Types::BOOL);
+  }
+  else if (pname == "ptr"){
+    ret.push_back(Types::PTR);
+  }    
+  else if (pname == "void"){
+  }
+  else{
+    assert(false);
+  }
+    return ret;
+}
 
 std::string get_loc_from_Token(Token *token){
   return std::to_string(token->head.atomIndexLine) 
-	  + ":" 
-	  + std::to_string(token->head.atomIndex);
+    + ":" 
+    + std::to_string(token->head.atomIndex);
 }
 void compiler_note(Token *token, std::string note){
   printf("OBS: location is based on macros location, please update the lexer\n");
   printf(
-    "%s\n",
-    (get_loc_from_Token(token)
-    + ": NOTE: "
-    + note).c_str()
-  );
+	 "%s\n",
+	 (get_loc_from_Token(token)
+	  + ": NOTE: "
+	  + note).c_str()
+	 );
 }
 void compiler_error(Token *token, std::string note){
   printf("OBS: location is based on macros location, please update the lexer\n");
   printf(
-    "%s\n",
-    (get_loc_from_Token(token)
-    + ": ERROR: "
-    + note).c_str()
-  );
+	 "%s\n",
+	 (get_loc_from_Token(token)
+	  + ": ERROR: "
+	  + note).c_str()
+	 );
   exit(1);
 }
 void compiler_not_enough_arguments(Token *token, std::string note){
@@ -45,32 +73,32 @@ void compiler_not_enough_arguments(Token *token, std::string note){
 }
 std::string Types_to_human_readable(Types type){
   switch(type){
-    case Types::INT:
-      return "integer";
-    case Types::PTR:
-      return "pointer";
-    case Types::BOOL:
-      return "boolean";
+  case Types::INT:
+    return "integer";
+  case Types::PTR:
+    return "pointer";
+  case Types::BOOL:
+    return "boolean";
   }
   assert(false && "unreachable");
 }
 void compiler_expected_but_got(Token *token, Types expected, Types got){
   compiler_error(
-      token, 
-      "expected `" 
-        + Types_to_human_readable(expected)
-        + "` but got `"
-        + Types_to_human_readable(got)
-        + "`\n"
-  );  
+		 token, 
+		 "expected `" 
+		 + Types_to_human_readable(expected)
+		 + "` but got `"
+		 + Types_to_human_readable(got)
+		 + "`\n"
+		 );  
   exit(1);
 }
 void dump_stack(std::vector<Types> *stack){
   printf("stack : (");
   for(auto& type: *stack){
     printf("<%s>, ",
-	Types_to_human_readable(type).c_str()
-	);
+	   Types_to_human_readable(type).c_str()
+	   );
   }
   printf(")\n");
 }
@@ -81,7 +109,7 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
   std::vector<std::vector<Types>>   stack_snapshot;
   for(uint64_t i =  0; i < ins.size(); ++i){
     switch(ins[i].first.op){
-      case CAST:
+    case CAST:
       {
 	if( stack.size() < 1 ){
 	  compiler_not_enough_arguments(__token, "for casting");
@@ -93,10 +121,10 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	else if( ins[i].first.op_string == "cast(bool)" ) stack.push_back(Types::BOOL);
 	break;
       }
-      case PUSH_INT:
-	stack.push_back(Types::INT);
-	break;
-      case OP_PLUS:
+    case PUSH_INT:
+      stack.push_back(Types::INT);
+      break;
+    case OP_PLUS:
       {
 	if( stack.size() < 2 ){
 	  compiler_not_enough_arguments(__token, "for the PLUS intrisic");
@@ -118,16 +146,16 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	}
 	else{
 	  compiler_error(__token, 
-	      "expected `INT` and `INT` or `PTR` and `INT` on the top of the stack but got"
-	      + Types_to_human_readable(a)
-	      + ", "
-	      + Types_to_human_readable(b)
-	      +"\n"
-	      );
+			 "expected `INT` and `INT` or `PTR` and `INT` on the top of the stack but got"
+			 + Types_to_human_readable(a)
+			 + ", "
+			 + Types_to_human_readable(b)
+			 +"\n"
+			 );
 	}
 	break;
       } 
-      case DUMP:
+    case DUMP:
       {
 	if(stack.size() < 1){
 	  compiler_not_enough_arguments(__token, "for the DUMP operation");
@@ -140,7 +168,7 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	stack.pop_back();
 	break;
       }
-      case DROP:
+    case DROP:
       {
 	if( stack.size() < 1 ){
 	  compiler_note(__token, "DROP operation can works with any data type");
@@ -149,13 +177,13 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	stack.pop_back();
 	break;
       }
-      case PUSH_STR: 
+    case PUSH_STR: 
       {
 	stack.push_back(Types::INT);
 	stack.push_back(Types::PTR);
         break;
       }
-      case OP_MINUS:
+    case OP_MINUS:
       {
 	if(stack.size() < 2){	  
 	  compiler_not_enough_arguments(__token, "for MINUS operation");
@@ -169,13 +197,13 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	if( a == b && a == Types::INT )
 	  stack.push_back(Types::INT);
 	else if ((a == Types::INT && b == Types::PTR)
-	    || (b == Types::PTR && a == Types::INT))
-	{
-	  stack.push_back(Types::PTR);
-	}
+		 || (b == Types::PTR && a == Types::INT))
+	  {
+	    stack.push_back(Types::PTR);
+	  }
 	break;
       }
-      case OP_DIVMOD:
+    case OP_DIVMOD:
       {
 	if( stack.size() < 2 ){
 	  compiler_not_enough_arguments(__token, "for divmod operation");
@@ -192,12 +220,12 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	stack.push_back(Types::INT);
 	break;
       }
-      case OP_IDIVMOD:
+    case OP_IDIVMOD:
       {
 	compiler_error(__token, "IDIVMOD is not implemented yet");
 	break;
       }
-      case OP_EQUALS:
+    case OP_EQUALS:
       {
 	if(stack.size() < 2){
 	  compiler_not_enough_arguments(__token, "for EQUALS intrisic");
@@ -214,7 +242,7 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 
 	break;
       }
-      case OP_NOT_EQUALS:
+    case OP_NOT_EQUALS:
       {
 	if( stack.size() < 2 ){
 	  compiler_not_enough_arguments(__token, "for NOT EQUALS intrisic");
@@ -233,7 +261,7 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 
 	break;
       }
-      case OP_MULT:
+    case OP_MULT:
       {
         if(stack.size() < 2){	  
 	  compiler_not_enough_arguments(__token, "for MINUS intrisic\n");
@@ -251,7 +279,7 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 
 
 
-      case OP_GTHAN:
+    case OP_GTHAN:
       {
 	if( stack.size() < 2 ){
 	  compiler_not_enough_arguments(__token, "for GTHAN `>` intrisic");
@@ -267,17 +295,17 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	  stack.push_back(Types::BOOL);
 	else{
 	  compiler_error(__token, 
-	      "`>` intrisic only works between "
-	      + Types_to_human_readable(Types::INT)
-	      + " and with "
-	      + Types_to_human_readable(Types::INT)
-	      + " with "
-	      + Types_to_human_readable(Types::PTR)
-	  );
+			 "`>` intrisic only works between "
+			 + Types_to_human_readable(Types::INT)
+			 + " and with "
+			 + Types_to_human_readable(Types::INT)
+			 + " with "
+			 + Types_to_human_readable(Types::PTR)
+			 );
 	}
 	break;
       }
-      case OP_LTHAN:
+    case OP_LTHAN:
       {
 	if( stack.size() < 2 ){
 	  compiler_not_enough_arguments(__token, "for LTHAN `<` intrisic");
@@ -292,32 +320,32 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	  stack.push_back(Types::BOOL);
 	else{
 	  compiler_error(__token, 
-	      "`<` intrisic only works between "
-	      + Types_to_human_readable(Types::INT)
-	      + " and with "
-	      + Types_to_human_readable(Types::INT)
-	      + " with "
-	      + Types_to_human_readable(Types::PTR)
-	  );
+			 "`<` intrisic only works between "
+			 + Types_to_human_readable(Types::INT)
+			 + " and with "
+			 + Types_to_human_readable(Types::INT)
+			 + " with "
+			 + Types_to_human_readable(Types::PTR)
+			 );
 	}
 	break;
       }
-      case OP_MEM:
+    case OP_MEM:
       {
 	stack.push_back(Types::PTR);
 	break;
       }
-      case ARGC:
+    case ARGC:
       {
 	stack.push_back(Types::PTR);
 	break;
       }
-      case ARGV:
+    case ARGV:
       {
 	stack.push_back(Types::PTR);
 	break;
       }
-      case DUP:
+    case DUP:
       {
 	if( stack.size() < 1){
 	  compiler_not_enough_arguments(__token, "for DUP intrisic\n");
@@ -327,7 +355,7 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	stack.push_back(a);
 	break;
       }
-      case OVER:
+    case OVER:
       {
 	if( stack.size() < 2 ){
 	  compiler_not_enough_arguments(__token, "for OVER intrisic\n");
@@ -341,7 +369,7 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	stack.push_back(b);
 	break;
       }
-      case SWAP:
+    case SWAP:
       {
 	if( stack.size() < 2 ){
 	  compiler_not_enough_arguments(__token, "for SWAP intrisic\n");
@@ -357,7 +385,7 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	break;
       }
 
-      case ROT:
+    case ROT:
       {
 	if( stack.size() < 3 ){
 	  compiler_not_enough_arguments(__token, "for ROT intrisic");
@@ -376,13 +404,13 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	
 	break;
       }
-      case PUSH_PTR:
+    case PUSH_PTR:
       {
 	stack.push_back(Types::PTR);
 	break;
       }
-    ////  -----
-      case SHIFT_LEFT:
+      ////  -----
+    case SHIFT_LEFT:
       {
 	if( stack.size() < 1 ){
 	  compiler_not_enough_arguments(__token, "for shl `<<` intrisic");
@@ -391,7 +419,7 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	stack.pop_back();
 	break;
       }
-      case SHIFT_RIGHT:
+    case SHIFT_RIGHT:
       {
 	if( stack.size() < 1 ){
 	  compiler_not_enough_arguments(__token, "for shr `>>` operation\n");
@@ -399,8 +427,8 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	stack.pop_back();
 	break;
       }
-      case AND:
-      case OR:
+    case AND:
+    case OR:
       {
 	if( stack.size() < 2 ){
 	  compiler_not_enough_arguments(__token, "for logical intrisic");
@@ -418,7 +446,7 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	break;
       }
 
-      case NOT:
+    case NOT:
       {
 	if( stack.size() < 1 ){
 	  compiler_not_enough_arguments(__token, "for OR operation");
@@ -428,21 +456,21 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	}
 	break;
       }
-    //// -----
+      //// -----
 
 
-      case OP_IF:
+    case OP_IF:
       {
 	stack_snapshot.push_back(stack);
 	break;
       }
-      case OP_ELSE:
+    case OP_ELSE:
       {
 	stack_snapshot.pop_back();
 	stack_snapshot.push_back(stack);
 	break;
       }
-      case OP_DO:
+    case OP_DO:
       {
 	if(stack.size() < 1){
 	  compiler_not_enough_arguments(__token, "for DO operation");
@@ -454,20 +482,20 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	stack.pop_back();
 	break;
       }
-      case OP_WHILE:
+    case OP_WHILE:
       {
 	// Do expects a boolean on the top of the stack
 	stack_snapshot.push_back(stack);
 	break;
       }
-      case OP_END:
+    case OP_END:
       {
 	if(stack != stack_snapshot.back() ){
 	  printf("expected\t");
 	  dump_stack(&stack_snapshot.back());
 	  printf("got\t\t");
 	  dump_stack(&stack);
-	  compiler_error(__token, "blocks are not allowed to change to outside stack");
+	  compiler_error(__token, "blocks are not allowed to change the outside stack");
 	}
 	stack = stack_snapshot.back();
 	stack_snapshot.pop_back();
@@ -475,7 +503,7 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
       }
 
 
-      case OP_SYSCALL:
+    case OP_SYSCALL:
       {
 	if (stack.size() < ins[i].first.operand + 1){
 	  compiler_not_enough_arguments(__token, "for the syscall\n");
@@ -488,7 +516,7 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
       }
 
 
-      case OP_LOADBYTE:
+    case OP_LOADBYTE:
       {
 	if( stack.size() < 1 ){
 	  compiler_not_enough_arguments(__token, "for loadbyte intrisic");
@@ -500,27 +528,27 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	stack.push_back(Types::INT);
 	break;
       }
-      case OP_STOREBYTE:
+    case OP_STOREBYTE:
       {
 	if( stack.size() < 2 ){
 	  compiler_not_enough_arguments(
-	      __token, 
-	      "expected at least 2 elements on the top of the stack "
-	      + Types_to_human_readable(Types::PTR)
-	      + " followed by a "
-	      + Types_to_human_readable(Types::INT)
-	  );
+					__token, 
+					"expected at least 2 elements on the top of the stack "
+					+ Types_to_human_readable(Types::PTR)
+					+ " followed by a "
+					+ Types_to_human_readable(Types::INT)
+					);
 	}
 	auto a = stack.back(); stack.pop_back();
 	if( a != Types::INT ){
 	  compiler_note(
-	      __token, 
-	      "Trying to use loadbyte? hint, use like this: "
-	      + Types_to_human_readable(Types::PTR)
-	      + " "
-	      + Types_to_human_readable(Types::INT)
-	      + " store-byte"
-	  );
+			__token, 
+			"Trying to use loadbyte? hint, use like this: "
+			+ Types_to_human_readable(Types::PTR)
+			+ " "
+			+ Types_to_human_readable(Types::INT)
+			+ " store-byte"
+			);
 	  compiler_expected_but_got(__token, Types::INT, a);
 	}
 	auto b = stack.back(); stack.pop_back();
@@ -529,10 +557,26 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	}
 	break;
       }
+    case PUSH_LOCAL_MEM:
+      stack.push_back(Types::PTR);
+      break;
+    case ALLOC_LOCAL_MEM:
+      // TODO
+    case PROC_LEAVE:
+      // TODO
+    case PROC_SKIP:
+      // TODO
+      break;
+    case CALL_PROC:
+      break;
+    case PROC_ENTRY:
 
-      case NUM_OF_OPERANDS:
-      default:
-	compiler_error(__token, "OP_TYPE not handled in type checking phase, please update the TypeCheck.cpp");
+      break;
+    case PROC_RETURN:
+      break;
+    case NUM_OF_OPERANDS:     
+    default:
+      compiler_error(__token, "OP_TYPE not handled in type checking phase, please update the TypeCheck.cpp");
     }
   }
   if( stack.size() != 0 ){

@@ -48,8 +48,19 @@ typedef struct Token{
 static std::map<std::string, std::vector<Token>> Macros;
 static std::map<uint64_t , std::string> Words;
 static std::map<std::string, uint64_t> static_addresses;
+static std::map<std::string, int> proc_definitions;
+static std::map<std::string, std::pair<std::vector<Token>, std::vector<Token>>> proc_args_context;
+static std::string proc_context;
+// NOTE:
+//   local_memories[0] == mem_name
+//   local_memories[1] == proc_context, mem_size
+
+static std::map<std::string, std::pair<std::string, int>> local_memories;
+static std::map<std::string, int> proc_need_allocate;
+int proc_count{0};
 static int words_count{0};
 static int static_mem_capacity{0};
+static uint64_t proc_local_vars{0};
 namespace Lexer{
     std::string Token_Type_To_String(Token_Type tk){
 	switch(tk){
@@ -90,7 +101,41 @@ namespace Lexer{
             return ("NAME_TYPE");
         }
     }
-    void extend_macro(std::vector<Token>& result, Token &it){
+  auto parse_proc_args(
+		       std::vector<Token>::iterator& i)
+    -> std::pair<std::vector<Token>, std::vector<Token>>
+  {
+    std::vector<Token> args;
+    std::vector<Token> ret;
+    
+    bool is_arg = true;
+    while(i->head.atomName !="do")
+    {
+      if( i->head.atomName == "->")
+	{
+	  is_arg = false;
+	  ++i;
+	}
+      if( is_arg )
+	{
+	  args.push_back(Token{
+	      .type = i->type,
+	      .head = i->head
+	    });
+	}
+      else
+	{
+	  ret.push_back(Token{
+	      .type = i->type,
+	      .head = i->head
+	    });
+	}
+
+      ++i;
+    }
+    return std::pair<std::vector<Token>, std::vector<Token>>(args, ret);    
+  }
+  void extend_macro(std::vector<Token>& result, Token &it){
       if (Macros.find(it.head.atomName) != Macros.end()){
 	for(Token& tk: Macros[it.head.atomName]){
 	  if( Macros.find(tk.head.atomName) != Macros.end()){
@@ -103,7 +148,7 @@ namespace Lexer{
       else
 	result.push_back(it);
     }
-    std::vector<uint64_t> extend_static_definition_body(std::vector<Token> vec){        
+      std::vector<uint64_t> compiler_time_eval(std::vector<Token> vec){        
         std::vector<uint64_t> mem_vec;
 	std::vector<Token>::iterator i = vec.begin();
         while(i != vec.end()){
@@ -140,6 +185,82 @@ namespace Lexer{
 	return mem_vec;
                                                                                                        
     }
+  void extend_block(std::vector<Token>& result, std::vector<Token>::iterator& i){
+    int do_count = 0;
+    std::string local_mem_name;
+    
+
+    while(do_count > 0 || i->head.atomName != "end"){
+      if( i->head.atomName == "local"){
+	result.push_back(Token{
+	    .type = i->type,
+	    .head = {
+	      .atomName		= "__ALOCATE__",
+	      .atomType         = i->head.atomType,
+	      .atomIndex	= i->head.atomIndex,
+	      .atomIndexLine	= i->head.atomIndexLine,
+	      .atomLinkedIndex	= i->head.atomLinkedIndex
+	  
+	    }
+	  });
+	++i;
+	std::string local_mem_name = i->head.atomName;
+	++i;
+	std::vector<Token> local_mem_vec;
+	while(i->head.atomName != "end"){
+	  if (Macros.find(i->head.atomName) != Macros.end()){
+	    for(Token& tk: Macros[i->head.atomName])
+	      extend_macro(local_mem_vec, tk);
+	  }
+	  else{
+	    local_mem_vec.push_back(Token{
+		.type = i->type,
+		.head = i->head
+	      });
+	  }
+	  ++i;	    
+	}
+
+	++i;
+
+	std::vector<uint64_t> local_mem_size = compiler_time_eval(local_mem_vec);
+
+	local_memories[local_mem_name] = {
+	  proc_context, proc_local_vars 
+	};
+
+
+	proc_local_vars += (int)local_mem_size[0];
+	proc_need_allocate[proc_context] = (int)proc_local_vars;
+
+	result.push_back(Token{
+	    .type = i->type,
+	    .head = {
+	      .atomName		= local_mem_name,
+	      .atomType         = i->head.atomType,
+	      .atomIndex	= i->head.atomIndex,
+	      .atomIndexLine	= i->head.atomIndexLine,
+	      .atomLinkedIndex	= i->head.atomLinkedIndex
+	  
+	    }
+	  });
+	continue;
+	
+      }
+      if      (i->head.atomName == "do") do_count++;
+      else if (i->head.atomName == "end") do_count--;
+	      
+      if (Macros.find(i->head.atomName) != Macros.end()){
+	for(Token& tk: Macros[i->head.atomName])
+	  extend_macro(result, tk);
+      }
+      else
+	result.push_back(Token{.type=i->type, .head=i->head});	      
+      ++i;
+    }
+
+  }
+
     void lex_line(std::vector<Token> &tokenVector, std::string source, uint64_t line){
         SV::stringView src = SV::SV(source);
         uint64_t  start = src.count;
@@ -182,7 +303,7 @@ namespace Lexer{
 	file.close();
 	std::vector<Token> result;
 	for(auto i = pre_result.begin(); i != pre_result.end(); ++i){
-	  if( i->head.atomName == "define" ){
+	  if( i->head.atomName == "#define" ){
 	    ++i;
 	    std::string m_name = i->head.atomName;
 	    if( Macros.find(m_name) != Macros.end()){
@@ -196,7 +317,7 @@ namespace Lexer{
 	    }
 	    ++i;
 	    if( i->head.atomName != "as" ){
-	      printf("%lu:%lu: ERROR: Macro definition must follow the keyword `as`\nExample: define <macro-name> as <macro-body> end\n", i->head.atomIndexLine, i->head.atomIndex);
+	      printf("%lu:%lu: ERROR: Macro definition must follow the keyword `do`\nExample: define <macro-name> as <macro-body> end\n", i->head.atomIndexLine, i->head.atomIndex);
 	      printf("MACRO NAME: %s\n", m_name.c_str());
 	      exit(1);
 	    }
@@ -227,7 +348,7 @@ namespace Lexer{
 	      extend_macro(result, tk);
 	    }
 	  }
-	  else if ( i->head.atomName == "include" ){
+	  else if ( i->head.atomName == "#include" ){
 	    ++i;
 
 	    i->head.atomName = i->head.atomName.substr(1, i->head.atomName.length() - 2);
@@ -269,14 +390,55 @@ namespace Lexer{
 	      }
 	      ++i;
 	    }
-	    std::vector<uint64_t> static_resb_result = extend_static_definition_body(static_vec);
+	    std::vector<uint64_t> static_resb_result = compiler_time_eval(static_vec);
 
 	    static_addresses[mem_name] = (size_t)static_mem_capacity; // - (size_t)(static_resb_result.back());
 	    static_mem_capacity += (int)static_resb_result.back();
 
 	  }
+	  else if (i->head.atomName == "proc"){
+	    ++i;
+	    proc_local_vars = 0;
+	    if( proc_definitions.find(i->head.atomName) != proc_definitions.end())
+	     {
+	       printf("%lu:%lu: ERROR can not define the same proc twice\n",
+		      i->head.atomIndexLine,
+		      i->head.atomIndex);
+	       exit(1);
+	     }
+	    proc_definitions[i->head.atomName] = 1;	    
+	    std::string proc_name = i->head.atomName;
+
+	    ++i;
+	    std::vector<Token> proc_args;
+
+	    proc_args_context[proc_name] = parse_proc_args(i);
+
+	    i->head.atomName = "___SKIP_PROC";
+	    result.push_back(Token{.type=i->type, .head=i->head});
+	    // proc NAME __SKIP_PROC PROC_ENTRY ... __PROC_LEAVE
+
+	    i->head.atomName = "__PROC_ENTRY";
+	    result.push_back(Token{.type=i->type, .head=i->head});
+	    i->head.atomName = proc_name;
+	    result.push_back(Token{.type=i->type, .head=i->head});
+	    // proc -> __SKIP PROC -> __PROC_ENTRY ... __PROC_END	    
+	    ++i;
+
+	    proc_context = proc_name;
+	    extend_block(result, i);
+	    
+	    
+	    i->head.atomName = "__PROC_RETURN";
+	    result.push_back(Token{.type=i->type, .head=i->head});
+	    
+ 	    i->head.atomName = "__PROC_LEAVE";
+	    result.push_back(Token{.type=i->type, .head=i->head});
+	    
+	  }
 	  else
 	  {
+
 	    result.push_back(
 		Token{ 
 		  .type=i->type,

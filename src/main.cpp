@@ -17,6 +17,7 @@ int main(int argc, char** argv){
     std::string inputFilePath;
     std::string outputFilePath        = "./output.gfsl";
     std::string flag;
+    bool unsafe_mode = false;
     while(argc > 0){
         flag = SHIFT;
 
@@ -28,8 +29,10 @@ int main(int argc, char** argv){
             outputFilePath = SHIFT;
 	} else if (flag == "-h"){
             usage(stdout, program);
-            exit(0);
-        } else{
+            exit(0);	    
+        } else if (flag == "--unsafe"){
+	  unsafe_mode = true;
+	} else{
 	  inputFilePath = flag;
 	}
     }
@@ -46,7 +49,8 @@ int main(int argc, char** argv){
     Crossreference::analyze(tokens);
     std::vector<std::pair<VR, Token>>     instructions = Parser::parse(tokens);
 
-    type_checking_walk(instructions);
+    if(!unsafe_mode)
+      type_checking_walk(instructions);
     Goffi::compile_program(instructions, outputFilePath);
 
     return 0;

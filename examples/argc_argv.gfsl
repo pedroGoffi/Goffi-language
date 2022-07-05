@@ -1,19 +1,21 @@
-include "std/std.gfsl"
-// stack:
-// ... argv[1] argv[0] argc
+#include "std/std.gfsl"
 
-"argc == " puts
-
-__argc -> dump
-
-":  ARGV:\n" puts
-
-"----------\n" puts
-
-drop while dup 0 > do
-  dup str_len swap puts 
-  "\n" puts
+proc main do
+  local i sizeof(ptr) end
+  local j sizeof(ptr) end
+  local j sizeof(ptr) end
+  local j sizeof(ptr) end
+  local j sizeof(ptr) end
+  local j sizeof(ptr) end
+  local j sizeof(ptr) end
+  local j sizeof(ptr) end
+  local j sizeof(ptr) end
+  local j sizeof(ptr) end
+  local j sizeof(ptr) end
+  
+  // This generate a bug
+  0 while dup 10 < do
+    dup dump
+    1 +
+  end drop
 end
-"----------" puts
-0 exit
-

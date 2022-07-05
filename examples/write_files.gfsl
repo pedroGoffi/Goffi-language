@@ -1,27 +1,21 @@
-include "std/std.gfsl"
-static fd sizeof(size_t) end
+#include "std/std.gfsl"
 
-define file.create as 
-  O_CREAT O_WRONLY + 
+proc main do
+  if argc 2 < do
+    "ERROR: could not found the second argument on the arguments\n"	eputs
+    "NOTE: usage is ./program <file>\n"					eputs
+    1 exit
+  end
+  420
+  O_CREAT O_WRONLY +
   2 nth_argv
   AT_FDCWD
   openat
   if dup 0 < do
-    "Was not possible to create the file\n" eputs
+    "Could not create the file\n" eputs
     1 exit
   end
+  local fd sizeof(size_t) end
   fd swap 64<-
-  //int ptr fd
-  close drop
-
-
+  "Im writing to this file\n" fd 64-> write drop
 end
-define file.write as
-  fd 64-> write
-end
-
-file.create
-
-"hello" fd 64-> write
-"- world\n" fd 64-> write
-0 exit

@@ -1,6 +1,9 @@
-define oneLineMacro as 69 end
-define print	    as dump end
+#include "std/std.gfsl"
 
+#define my_macro as
+  "This is my macro uwu\n" puts
+end
 
-oneLineMacro print
-69 dump
+proc main do
+  my_macro
+end

@@ -1,19 +1,18 @@
 // TODO: type cheking before further development.
-
-include "std/std.gfsl"
+#include "std/std.gfsl"
 // debug porpuse
-define stack as
+#define stack as
   "stack: " puts
   print
   "\n"	    puts
 end
-define fixme as
+#define fixme as
   // @usage: here fixme
   eputs ": Compiler note, FIXME\n" eputs
   1 exit
 end
 
-define usage as 
+#define usage as 
   // @usage: FILEstream usage
   dup "Usage: %s [OPTIONS] input-file-path\n"	    rot fputs
   dup "OPTIONS:\n"				    rot fputs
@@ -23,7 +22,7 @@ define usage as
   dup "    com <file>  compile the program\n"	    rot fputs
   drop
 end
-define puts-loc as 
+#define puts-loc as 
   loc loc.line	64-> putd
   ":" puts
   loc loc.col	64-> putd
@@ -31,10 +30,10 @@ define puts-loc as
   
 end
 // CONSTANTS -----------------------------
-define BUFFER_MEMORY_CAPACITY	  as 69000	      end
+#define BUFFER_MEMORY_CAPACITY	  as 69000	      end
 
-// define SIMULATION_STACK_CAPACITY  as 1024 	      end
-define SIMULATION_STACK_CAPACITY  as 1024 10 * end
+// #define SIMULATION_STACK_CAPACITY  as 1024 	      end
+#define SIMULATION_STACK_CAPACITY  as 1024 10 * end
 static goffi-mode		  sizeof(size_t)      end
 static com-label-count		  sizeof(size_t)      end
 static sim-stack-count		  sizeof(size_t)      end
@@ -50,16 +49,16 @@ static word-line-content	  sizeof(str)         end
 static string.a			  sizeof(str)         end
 static string.b			  sizeof(str)         end
 
-define sizeof(loc)		  as 16		      end // size_t * 2
+#define sizeof(loc)		  as 16		      end // size_t * 2
 static loc			  sizeof(loc)	      end
-define loc.line			  as 0		    + end
-define loc.col			  as sizeof(size_t) + end
+#define loc.line			  as 0		    + end
+#define loc.col			  as sizeof(size_t) + end
 
 // set int-iterator to choose witch mode you want to perfome
 // MACROS 
-define SIMULATION_MODE	as 1 end
-define COMPILATION_MODE as 2 end
-define LEX_MODE		as 3 end
+#define SIMULATION_MODE	as 1 end
+#define COMPILATION_MODE as 2 end
+#define LEX_MODE		as 3 end
 // OPERATIONS START ----------------------
 // @STATUS: NOT IMPLEMENTED YET  -- O MEM
 // @STATUS: NOT IMPLEMENTED YET P STR
@@ -91,40 +90,40 @@ define LEX_MODE		as 3 end
 
 // TODO:
 //    enums and struct will be cool 
-define OP_INTRISIC_PLUS	      as 0 end
-define OP_INTRISIC_MINUS      as 1 end
-define OP_INTRISIC_EQUALS     as 2 end 
-define OP_INTRISIC_MULT       as 3 end  
-define OP_INTRISIC_GTHAN      as 4 end
-define OP_INTRISIC_LTHAN      as 5 end
-define OP_INTRISIC_NOT_EQUALS as 6 end 
-define OP_PUSH_INT	      as 7 end
+#define OP_INTRISIC_PLUS	      as 0 end
+#define OP_INTRISIC_MINUS      as 1 end
+#define OP_INTRISIC_EQUALS     as 2 end 
+#define OP_INTRISIC_MULT       as 3 end  
+#define OP_INTRISIC_GTHAN      as 4 end
+#define OP_INTRISIC_LTHAN      as 5 end
+#define OP_INTRISIC_NOT_EQUALS as 6 end 
+#define OP_PUSH_INT	      as 7 end
 
-define OP_DUMP		      as 8  end
-define OP_DUP		      as 9  end
-define OP_DROP		      as 10 end
-define OP_OVER		      as 11 end
-define OP_ROT		      as 12 end
+#define OP_DUMP		      as 8  end
+#define OP_DUP		      as 9  end
+#define OP_DROP		      as 10 end
+#define OP_OVER		      as 11 end
+#define OP_ROT		      as 12 end
 
-define OP_IF		      as 13 end  
-define OP_ELSE  	      as 14 end 
-define OP_WHILE 	      as 15 end  
-define OP_DO		      as 16 end
-define OP_END		      as 17 end
-define NUM_OF_OPS	      as 18 end
+#define OP_IF		      as 13 end  
+#define OP_ELSE  	      as 14 end 
+#define OP_WHILE 	      as 15 end  
+#define OP_DO		      as 16 end
+#define OP_END		      as 17 end
+#define NUM_OF_OPS	      as 18 end
 // OPERATIONS END ------------------------
-define sizeof(op)	as 48			      end
+#define sizeof(op)	as 48			      end
 static ops-count	SIMULATION_STACK_CAPACITY 8 * end
 static ops		32 end	
 // u64-ops-8
-define ops.op		as 8  +	end
-define ops.type		as 16 + end
-define ops.linked_to	as 24 + end
-define ops.loc		as 32 +	end
-define ops.head		as ops-count 64-> sizeof(op) * ops + end
+#define ops.op		as 8  +	end
+#define ops.type		as 16 + end
+#define ops.linked_to	as 24 + end
+#define ops.loc		as 32 +	end
+#define ops.head		as ops-count 64-> sizeof(op) * ops + end
 
 
-define push-op as
+#define push-op as
   // _ _ 
   // type=op.head.type
   // op=op.head.op
@@ -136,7 +135,7 @@ end
 // CROSS-REFERENCE SECTION --------------------------------
 static iter sizeof(size_t) end
 iter 0 64<- 
-define cross-reference as
+#define cross-reference as
 
   0 while dup ops-count 64-> < do
     dup sizeof(op) * ops + 
@@ -163,18 +162,22 @@ define cross-reference as
   end
 end
 // LEX FILE SECTION ---------------------------------------
-define lex-file as 
+#define lex-file as 
   // OPEN THE FILE
   // stack: ptr thats is the file-namme
+  420 
+  O_READONLY
+  input-file-path 64-> nth_argv 
+  AT_FDCWD
+  openat
 
-  O_READONLY swap AT_FDCWD openat
-  if dup 0 < do
+  if dup  0 < do
     stderr usage 
     "ERROR: could not open the file `"	eputs
     input-file-path 64-> nth_argv g-str eputs
     "`\n"				eputs
     1 exit
-  end
+  end 
   fd swap 64<-
   if statbuffer fd 64-> fstat 0 < do
     "ERROR: could not mesure the file size\n" eputs
@@ -190,107 +193,108 @@ define lex-file as
   null 
   mmap
   file-content str.data swap 64<-
-  
+
 
   if file-content 64-> 0 < do
     stderr usage
-    "ERROR: Could not memory map the file in lexing-stage\n" eputs
+    "ERROR: Could not memory map the file in lexing-stage\n" puts
     1 exit
-  end close drop 
-  // At this point the file is open and is inside file-content
+  end 
+  //// At this point the file is open and is inside file-content
   loc loc.line  0 64<-
   loc loc.col   0 64<-
-  while file-content str.count 64-> 0 > do
-    line-file-content file-content chop-line 
-    loc loc.line inc64 
+  while file-content str.count cast(ptr) 64-> 0 > do
+    line-file-content cast(ptr) 
+    file-content cast(ptr) chop-line 
+    loc loc.line  inc64  
 
-    while line-file-content str.count 64-> 0 > do 
-        		line-file-content trim-left
-      word-line-content line-file-content chop-word
+  //  while line-file-content str.count 64-> 0 > do 
+  //      		line-file-content trim-left
+  //    word-line-content line-file-content chop-word
 
-      // ptr val
-      loc loc.col
-      word-line-content str.count-> // word-line-content->count
-      inc64-by // loc.loc += word-line-content->count
-      word-line-content
-      if dup str-> "+" streq do 
-        OP_INTRISIC_PLUS 0  push-op
+  //    // ptr val
+  //    loc loc.col
+  //    word-line-content str.count-> // word-line-content->count
+  //    inc64-by // loc.loc += word-line-content->count
+  //    word-line-content
+  //    if dup str-> "+" streq do 
+  //      OP_INTRISIC_PLUS 0  push-op
 
-      else if dup str-> "-" streq do
-        OP_INTRISIC_MINUS 0 push-op
+  //    else if dup str-> "-" streq do
+  //      OP_INTRISIC_MINUS 0 push-op
 
-      else if dup str-> "=" streq do 
-	OP_INTRISIC_EQUALS 0 push-op
+  //    else if dup str-> "=" streq do 
+  //      OP_INTRISIC_EQUALS 0 push-op
 
-      else if dup str-> "*" streq do 
-	OP_INTRISIC_MULT  0 push-op
+  //    else if dup str-> "*" streq do 
+  //      OP_INTRISIC_MULT  0 push-op
 
-      else if dup str-> "<" streq do 
-	OP_INTRISIC_LTHAN 0 push-op
+  //    else if dup str-> "<" streq do 
+  //      OP_INTRISIC_LTHAN 0 push-op
 
-      else if dup str-> ">" streq do 
-	OP_INTRISIC_GTHAN 0 push-op
-
-
-      else if dup str-> "=" streq do 
-	OP_INTRISIC_EQUALS 0 push-op
-
-      else if dup str-> "!=" streq do 
-	OP_INTRISIC_NOT_EQUALS 0 push-op
-
-      else if dup str-> "dump" streq do
-	OP_DUMP	0 push-op
-
-      else if dup str-> "dup" streq do
-	OP_DUP  0 push-op
-
-      else if dup str-> "drop" streq do
-	OP_DROP 0 push-op
-
-      else if dup str-> "over" streq do
-	OP_OVER 0 push-op
-
-      else if dup str-> "rot" streq do
-	OP_ROT 0 push-op
+  //    else if dup str-> ">" streq do 
+  //      OP_INTRISIC_GTHAN 0 push-op
 
 
+  //    else if dup str-> "=" streq do 
+  //      OP_INTRISIC_EQUALS 0 push-op
 
-      else if dup str-> "if" streq do
-	OP_IF 0 push-op
-      else if dup str-> "else" streq do
-	OP_ELSE 0 push-op
-      else if dup str-> "while" streq do
-	OP_WHILE 0 push-op
-      else if dup str-> "do" streq do
-	OP_DO 0 push-op
-      else if dup str-> "end" streq do
-	OP_END 0 push-op
+  //    else if dup str-> "!=" streq do 
+  //      OP_INTRISIC_NOT_EQUALS 0 push-op
 
-      else if dup str-> swap drop 8-> is-digit do // this will read the char a ascii
+  //    else if dup str-> "dump" streq do
+  //      OP_DUMP	0 push-op
 
-        OP_PUSH_INT 
-	10
-	//word-line-content 
-	//try-lex-int 
-	push-op
+  //    else if dup str-> "dup" streq do
+  //      OP_DUP  0 push-op
 
-      else
-	loc loc.line		    64->    putd
-	":"				    eputs
-	loc loc.col		    64-> 
-	word-line-content str.count 64-> -  // loc->col - word->count 
-					    putd
-	": ERROR: Unreachable keyword	`"  eputs 
-	word-line-content str->		    eputs 
-	"` at lexing stage\n"	    	    eputs
-	1 exit
+  //    else if dup str-> "drop" streq do
+  //      OP_DROP 0 push-op
 
-      end end end end end end end end end end end end end end end end end end end
-    end
-    loc loc.col 0 64<-
+  //    else if dup str-> "over" streq do
+  //      OP_OVER 0 push-op
+
+  //    else if dup str-> "rot" streq do
+  //      OP_ROT 0 push-op
+
+
+
+  //    else if dup str-> "if" streq do
+  //      OP_IF 0 push-op
+  //    else if dup str-> "else" streq do
+  //      OP_ELSE 0 push-op
+  //    else if dup str-> "while" streq do
+  //      OP_WHILE 0 push-op
+  //    else if dup str-> "do" streq do
+  //      OP_DO 0 push-op
+  //    else if dup str-> "end" streq do
+  //      OP_END 0 push-op
+
+  //    else if dup str-> swap drop 8-> is-digit do // this will read the char a ascii
+
+  //      OP_PUSH_INT 
+  //      10
+  //      //word-line-content 
+  //      //try-lex-int 
+  //      push-op
+
+  //    else
+  //      loc loc.line		    64->    putd
+  //      ":"				    eputs
+  //      loc loc.col		    64-> 
+  //      word-line-content str.count 64-> -  // loc->col - word->count 
+  //      				    putd
+  //      ": ERROR: Unreachable keyword	`"  eputs 
+  //      word-line-content str->		    eputs 
+  //      "` at lexing stage\n"	    	    eputs
+  //      1 exit
+
+  //    end end end end end end end end end end end end end end end end end end end
+  //  end
+    //loc loc.col 0 64<-
   end
 end 
-define try-lex-int  as // n1 s1 -> ret
+#define try-lex-int  as // n1 s1 -> ret
   // pre-stack: op ptr->count ptr->data 
   // note: ptr is a pointer to a string
   // _ 
@@ -313,7 +317,7 @@ define try-lex-int  as // n1 s1 -> ret
   end drop 
 end
 // SIMULATION SECTION -------------------------------------
-define sim-stack-push as 
+#define sim-stack-push as 
   if sim-stack-count 64-> SIMULATION_STACK_CAPACITY >= do 
     here eputs ": ERROR: data stack overflow in simulation mode\n" eputs
     1 exit
@@ -322,7 +326,7 @@ define sim-stack-push as
   sim-stack sim-stack-count 64-> 8 * + swap 64<-
   sim-stack-count inc64
 end
-define sim-stack-pop as 
+#define sim-stack-pop as 
   if sim-stack-count 64-> 0 = do
     here eputs ": ERROR: data stack underflow in simulation mode\n" eputs
     1 exit
@@ -330,7 +334,7 @@ define sim-stack-pop as
   sim-stack-count dec64
   sim-stack sim-stack-count 64-> 8 * + 64->
 end
-define simulate-ops as
+#define simulate-ops as
   if NUM_OF_OPS 13 != do
     here						  puts 
     ": Exhaustive handling operations in simulate-mode\n" puts
@@ -388,7 +392,7 @@ define simulate-ops as
   end
 end
 // COMPILATION SECTION -------------------------------------
-define compile-ops as 
+#define compile-ops as 
   if NUM_OF_OPS 13 != do
     here						  eputs
     ": Exhaustive handling operations in compile-mode\n"  eputs
@@ -464,7 +468,7 @@ define compile-ops as
   // drop
   0 while dup ops-count 64-> < do
    // index+1
-    // index ()sizeof(op)*ops+ptr) -- ptr)
+   // index ()sizeof(op)*ops+ptr) -- ptr)
    dup sizeof(op) * ops + 
 
    if dup ops.type 64-> OP_PUSH_INT = do 
@@ -563,7 +567,7 @@ define compile-ops as
    "buffer:    resb "  fd fwrite BUFFER_MEMORY_CAPACITY int-to-string  fd fwrite "\n"  fd fwrite
    drop
 end
-define create-file as 
+#define create-file as 
   O_CREAT O_WRONLY +
   output-file-path str.data 64-> // file-name
   AT_FDCWD
@@ -578,13 +582,13 @@ define create-file as
   end
 
 end
-define make-label as
+#define make-label as
   "__nat_label_"		      fd fwrite
   com-label-count 64-> int-to-string  fd fwrite 
   ":\n"				      fd fwrite 
   com-label-count inc64
 end
-define print-ops as
+#define print-ops as
   0 while dup ops-count  64-> < do
     dup sizeof(op) * ops +
     "Type: "  eputs dup	ops.type      64-> dump
@@ -593,97 +597,18 @@ define print-ops as
     1 +
   end drop
 end
-// v ptr v -- <-64
-// ptr v   -- 64<-
-// *ptr	   -- 64->
-// *ptr _  -- ->64
-define main as 
-  if argc 2 < do
+
+proc main do
+  "TODO: parse cmd arguments\n"puts
+  if argc 1 < do
     stderr usage
     "ERROR: Not enough arguments\n" eputs
     1 exit
-  end 
-  goffi-mode	  0 64<- // goffi-mode = 0
-  input-file-path 0 64<-
-  int-iterator	  1 64<- // int-iterator = 1
-
-  // filter CMD arguments
-  while int-iterator  64-> argc <= do
-    int-iterator 64->  nth_argv 
-
-    if dup "sim" g-streq do 
-    goffi-mode  
-    if dup 64-> 0 != do
-      here						eputs
-      ":ERROR: can not use two modes at the same time\n" eputs
-      1 exit
-    end SIMULATION_MODE 64<-
-
-    else if dup "com" g-streq do
-      goffi-mode 
-      if dup 64-> 0 != do
-	here						  eputs 
-	":ERROR: can not use two modes at the same time\n" eputs
-	"    NOTE: trying to use compilation-mode\n"	  eputs
-	1 exit
-      end COMPILATION_MODE 64<-
-    else if dup "-h" g-streq do
-      stdout usage
-      "THIS IS HELP\n" puts
-      0 exit
-    else if dup "--lex" g-streq do
-      goffi-mode 
-      if dup 64-> 0 != do
-	":ERROR: can not use two modes at the same time\n" eputs
-	1 exit
-      end
-      LEX_MODE 64<-
-    else 
-      input-file-path int-iterator 64-> 64<-
-    end end end end
-    int-iterator inc64
   end
-//  // TOOD
-//  //  OPEN FILE
-//  //  LEX FILE
-//  //  SIM-COM mode
-//  //  assert file-path exits
-//  // OPEN FILE -----------------------------
-//
-//
-//  if argc 3 < do 
-//    stderr usage
-//    "ERROR: No input file is provided\n" eputs
-//    1 exit
-//  end
-//  //1 + nth_argv str-> eputs // FILE ptr
-//  // since this is stack based there is no need to parsing
-//  input-file-path 64-> nth_argv 
-//
-//  "lexing-file\n" puts
-//  lex-file // :3 
-//  "cross-reference\n" puts
-//  //cross-reference
-//  goffi-mode 64->
-//
-//
-//  if dup SIMULATION_MODE = do  
-//    simulate-ops
-//  else if dup COMPILATION_MODE = do  
-//    com-label-count 0 64<-
-//    // TODO: better output-file name NOTE: concat the name with the input-file-path
-//    "native-debug-app" output-file-path str<-
-//    compile-ops
-//  else if dup LEX_MODE = do
-//    print-ops
-//  else
-//    stderr usage
-//    here			    eputs 
-//    ": ERROR: Unknown subcommand\n" eputs
-//    1 exit
-//  end end end
-//  drop
+  goffi-mode	  COMPILATION_MODE 64<-
+  input-file-path 1 64<-
+  // TODO: change the file to fit the new update of procedures
+  //lex-file
 end
-"OBS - after type checking i have to re-write this\n" puts
-//main
-0 exit
+
+

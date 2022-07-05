@@ -1,14 +1,15 @@
-include "std/std.gfsl"
+#include "std/std.gfsl"
 
-define ++ as 
+#define ++ as 
   "this is a plus :3 " puts 69
 end
 
-define ->> as 
+#define ->> as 
   "->> 'operator'\n" puts 
 end
 
-++ dump
-->>
+proc main do
+  ++ dump
+  ->>
+end
 
-0 exit

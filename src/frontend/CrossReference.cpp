@@ -10,14 +10,23 @@ namespace Crossreference{
         std::vector<uint64_t> blocks;
 	
         uint64_t currentPosition{};
+	uint64_t currentProcPos{};
 //        for(std::vector<Token>::iterator x = src.begin(); x !=  src.end(); ++x){
         for(auto x = src.begin(); x != src.end(); ++x){
-	    std::string ipname = x->head.atomName;
-	    if (ipname == "syscall"){
-	      std::cout << x->head.atomName << "  ---\n";
-	      ++currentPosition;
-	      continue;
+	    std::string ipname = x->head.atomName;	    
+
+	    
+
+
+	    if(ipname == "___SKIP_PROC")
+	    {
+	      currentProcPos = currentPosition;
 	    }
+	    else if(ipname == "__PROC_LEAVE")
+	    {
+	      src[currentProcPos].head.atomLinkedIndex = currentPosition;
+	    }
+	    
 	    if (ipname == "if"
 		|| ipname == "elif"
 		|| ipname == "else"
@@ -57,7 +66,8 @@ namespace Crossreference{
 
 	    ++currentPosition;
         }
-	if(0){
+	if(0)
+	{
 	    size_t i = 0;
 	    for(auto vr = src.begin(); vr != src.end(); ++vr){
 		printf("NAME:\t`%s`\tLINE:`%lu`\tINDEX:`%lu`\tLINKED_TO:`%lu`\tINST:`%lu`\n", 

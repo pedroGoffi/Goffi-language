@@ -413,6 +413,30 @@ namespace Lexer{
 	    std::vector<Token> proc_args;
 
 	    proc_args_context[proc_name] = parse_proc_args(i);
+	    if(proc_name == "main"){
+	      if(proc_args_context[proc_name].first.size() != 0
+		 || proc_args_context[proc_name].second.size() != 0)
+		{
+		  printf("%lu:%lu: ERROR the main function does not support input type or return type \n",
+			 i->head.atomIndexLine,
+			 i->head.atomIndex);
+		  exit(1);
+		}
+	    }
+	    else{
+	      if(proc_args_context[proc_name].first.size() == 0 ){
+		printf("%lu:%lu: ERROR expected input data type of the procedure \n",
+		       i->head.atomIndexLine,
+		       i->head.atomIndex);
+		exit(1);
+	      }
+	      else if (proc_args_context[proc_name].second.size() == 0){
+		printf("%lu:%lu: ERROR expected return data type of the procedure\n",
+		       i->head.atomIndexLine,
+		       i->head.atomIndex);
+		exit(1);
+	      }
+	    }
 
 	    i->head.atomName = "___SKIP_PROC";
 	    result.push_back(Token{.type=i->type, .head=i->head});

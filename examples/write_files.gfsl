@@ -16,6 +16,8 @@ proc main do
     1 exit
   end
   local fd sizeof(size_t) end
+
   fd swap 64<-
-  "Im writing to this file\n" fd 64-> write drop
+
+  "Im writing to this file\n" fd 64-> write drop  
 end

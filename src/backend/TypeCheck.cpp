@@ -11,6 +11,7 @@
 #include "./Lexer.cpp"
 #define __token &ins[i].second
 
+
 static std::string        proc_ctx;
 static std::vector<Token> proc_args;
 static std::vector<Token> proc_ret;
@@ -20,6 +21,7 @@ enum Types{
   PTR,
   BOOL
 };
+void dump_stack(std::vector<Types> *stack);
 std::vector<Types> string_to_type(std::string pname){
   std::vector<Types> ret;
   if(pname == "int"){
@@ -42,7 +44,70 @@ std::vector<Types> string_to_type(std::string pname){
   }
     return ret;
 }
+bool check_for_proc_return(std::vector<Types>& stack)
+{
+  std::vector<Types> return_expected_stack;
+  for(auto& tk: proc_args_context[proc_ctx].second){
+    for(auto& type: string_to_type(tk.head.atomName)){
+      return_expected_stack.push_back(type);
+    }
+  }
+  std::reverse(return_expected_stack.begin(),
+	       return_expected_stack.end());
+  for(auto& type: return_expected_stack){
+    if(stack.back() != type){
+      printf("expected\t");
+      dump_stack(&return_expected_stack);
+      printf("got\t\t");
+      dump_stack(&stack);
+      return false;
+    }
+    stack.pop_back();
+  }
+  return true;
+}
+void extend_stack_for_proc_entry(std::vector<Types>& stack, std::string proc_name)
+{
+  proc_ctx = proc_name;
+  for(auto& tk: proc_args_context[proc_name].first){
+    for(auto& type: string_to_type(tk.head.atomName)){
+      stack.push_back(type);
+    }
+  }
+}
+bool check_stack_for_proc_call(std::vector<Types>& stack, std::string proc_name)
+{
 
+  std::vector<Types> expected_stack;
+  //  std::vector<Types> stack_snapshot = stack;
+  for(auto& type: proc_args_context[proc_name].first){
+    for(auto& e: string_to_type(type.head.atomName)){
+      expected_stack.push_back(e);
+    }
+  }
+  std::reverse(expected_stack.begin(),
+	       expected_stack.end());
+  for(auto& tk: expected_stack){
+    if( stack.back() != tk)
+      {
+	printf("expected\t");
+	dump_stack(&expected_stack);
+	printf("got\t");
+	dump_stack(&stack);
+	return false;
+      }
+    stack.pop_back();
+      
+  }
+
+  for(auto& tk: proc_args_context[proc_name].second){
+    for(auto& type: string_to_type(tk.head.atomName))
+      stack.push_back(type);
+  }
+;
+  return true;
+  
+}
 std::string get_loc_from_Token(Token *token){
   return std::to_string(token->head.atomIndexLine) 
     + ":" 
@@ -568,11 +633,19 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
       // TODO
       break;
     case CALL_PROC:
+      if(!check_stack_for_proc_call(stack, ins[i].first.op_string))
+	{
+	  compiler_error(__token, "Expected diferent data type in proc call");
+	}
       break;
     case PROC_ENTRY:
-
+      extend_stack_for_proc_entry(stack, ins[i].first.op_string);      
       break;
     case PROC_RETURN:
+      if(!check_for_proc_return(stack))
+	{
+	  compiler_error(__token, "Expected diferent data type in the return of the " + proc_ctx+ " procedure");
+	}
       break;
     case NUM_OF_OPERANDS:     
     default:
@@ -580,7 +653,9 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
     }
   }
   if( stack.size() != 0 ){
-    printf("ERROR: Unhandled data on the stack\n");
+    printf("ERROR: Unhandled data on the stack\n\t");
+
+    dump_stack(&stack);
     exit(1);
   }
   if( stack_snapshot.size() != 0 ){

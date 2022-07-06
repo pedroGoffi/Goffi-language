@@ -5,8 +5,6 @@ static fd     sizeof(size_t)       end
 static buffer PUTD-BUFFER-CAPACITY end
 
 
-proc mmap do
-end
 proc main do
   local i sizeof(size_t) end
   

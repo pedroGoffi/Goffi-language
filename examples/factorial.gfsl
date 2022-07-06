@@ -1,6 +1,7 @@
 #include "std/std.gfsl"
 #define N as 5 end
 // NOTE: procedure return does not work with safe mode
+
 proc main do
   "5 factorial is equal to " puts
   local result sizeof(size_t) end

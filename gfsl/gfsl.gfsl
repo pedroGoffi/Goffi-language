@@ -1,4 +1,7 @@
-#include "std/std.gfsl"
+// NOTE: include path are relative to the root dir
+#include "./std/std.gfsl"
+#include "./gfsl/Token.gfsl"
+
 
 proc usage int -> void do
   local stream sizeof(u64) end
@@ -11,16 +14,27 @@ proc usage int -> void do
   "    com <file>  compile the program\n"	stream 64-> fputs
 end
 
-
-proc lex_file ptr -> void do
+proc ptr_w_str_streq  ptr int ptr -> bool
+do
+  // ptr int ptr
+  local tmp sizeof(str) end
+  tmp str.data  swap ptr<-
+  tmp str.count swap ptr<-
+  
+  tmp
+  streq
+end
+// LEXER \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+// BUGS: this will crash the program if the file is empty
+proc lex_file ptr -> void do 
   local fc sizeof(str) end
+  local token sizeof(Token) end
   
 
   dup str.count 64-> fc str.count swap ptr<-
       str.data  64-> fc str.data  swap ptr<-
   while fc str.count 64-> 0 > do
-     local f_line sizeof(str) end
-     
+     local f_line sizeof(str) end     
      fc
      chop_line
      trim_left     
@@ -35,11 +49,14 @@ proc lex_file ptr -> void do
 	  dup str.data 64->  word str.data swap ptr<-	  
 	      str.count 64-> word str.count swap ptr<-
 	      
-     	  "|"		puts
-	  word str->	puts
+
+
+	  "|"		puts
+	  word str->	putls
 	  "|\n"		puts
+
      end
-     "------------------\n" puts
+     "------------------\n"	puts
    end
 
 
@@ -56,14 +73,12 @@ proc main do
    local a sizeof(str) end
    local b sizeof(str) end
    
-
-   
- 
    2 nth_argv open_file 64->  
    local file_content sizeof(str) end
    file_content str.data  swap ptr<-
    file_content str.count swap ptr<-   
    file_content lex_file
+
 
    
 end

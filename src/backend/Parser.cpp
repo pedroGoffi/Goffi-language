@@ -15,7 +15,7 @@ std::string current_proc;
 
 typedef enum{
   ID_NOOP,
-
+  ID_DUMP_STACK,
   ID_PUSH_LOCAL_MEM,
   ID_ALLOCATE_LOCAL_MEM,
   ID_PROC_ENTRY,
@@ -73,15 +73,18 @@ typedef enum{
   B_CMP_GT,
   B_CMP_LT,
   B_MULT,
+  B_EQ,
 } BinOpId;
 namespace Parser{
   void parse(std::vector<VR> output, std::vector<Token> &tokens);
   BinOpId parseBinOp(std::vector<Token>::iterator& boid){
-    if	(boid->head.atomName == "+")    return B_PLUS;
-    else if (boid->head.atomName == "-")    return B_MINUS;
-    else if (boid->head.atomName == "<")    return B_CMP_LT;
-    else if (boid->head.atomName == ">")    return B_CMP_GT;
+    if	(boid->head.atomName == "+")		return B_PLUS;
+    else if (boid->head.atomName == "-")	return B_MINUS;
+    else if (boid->head.atomName == "<")	return B_CMP_LT;
+    else if (boid->head.atomName == ">")	return B_CMP_GT;
     else if (boid->head.atomName == "*")	return B_MULT;
+    else if (boid->head.atomName == "=")	return B_EQ;
+
 
     fprintf(stderr, "%lu:%lu: Error: Unreachable binary operand (%s)\n", 
             boid->head.atomIndexLine,
@@ -92,6 +95,7 @@ namespace Parser{
   }
   Identifiers parseIdentifier(std::vector<Token>::iterator& id){    
     if (id->head.atomName == "dump")			return ID_INTRISIC_DUMP;
+    else if (id->head.atomName == "???") return ID_DUMP_STACK;
     else if (id->head.atomName == "___SKIP_PROC")	return ID_SKIP_PROC;
     else if(id->head.atomName == "__PROC_ENTRY")	return ID_PROC_ENTRY;
     else if(id->head.atomName == "__PROC_RETURN")       return ID_PROC_RETURN;
@@ -186,6 +190,15 @@ namespace Parser{
       case NAME:{                                        
 	Identifiers id = Parser::parseIdentifier(Node);
 	switch(id){
+	case ID_DUMP_STACK:
+	  output.push_back(VR{
+	      DUMP_STACK,
+	      0,
+	      "",
+	      0
+	    });
+	  ++Node;
+	  break;
 	case ID_NOOP: 
 	  ++Node;
 	  break;
@@ -399,6 +412,9 @@ namespace Parser{
 	}
       case BINARY_OPERAND:
 	switch(Parser::parseBinOp(Node)){
+	case B_EQ:
+	  output.push_back(VR{OP_EQUALS,  0});
+	  break;
 	case B_MULT:
 	  output.push_back(VR{OP_MULT,    0, ""});
 	  break;

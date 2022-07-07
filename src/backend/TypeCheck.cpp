@@ -646,7 +646,14 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	{
 	  compiler_error(__token, "Expected diferent data type in the return of the " + proc_ctx+ " procedure");
 	}
+      // empty the stack in function returns
+      // reason: trust me :3
+      stack = std::vector<Types>{};
       break;
+    case DUMP_STACK:
+      dump_stack(&stack);
+      exit(0);
+      break;;
     case NUM_OF_OPERANDS:     
     default:
       compiler_error(__token, "OP_TYPE not handled in type checking phase, please update the TypeCheck.cpp");

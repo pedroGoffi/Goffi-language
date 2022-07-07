@@ -1,0 +1,32 @@
+// A TOKEN TYPE CAN BA A NUMBER BINARY OR NUMBER
+enum token_type
+   NUMBER
+   BINARY_OP
+   NAME
+   token_type_count
+end
+static_assert "Exhaustive handling token_type, please update the program"
+              token_type::token_type_count 3 =
+	      end
+	      
+#define tk.type		as 0 +  end	// u64 enum token_type
+#define tk.atomName	as 8 +  end 	// string
+#define tk.loc.col	as 16 + end	// u64
+#define tk.loc.line	as 24 + end	// u64
+#define tk.linked_to	as 32 + end	// u64
+#define sizeof(Token)	as 40  end
+
+
+proc dump_token ptr -> ptr
+do
+  // ptr
+  "Token name: " puts
+  dup tk.atomName str-> puts
+  ", Token loc.col: " puts
+  dup tk.loc.col 64-> dump
+  ", Token loc.line: " puts
+  dup tk.loc.line 64-> dump
+  ", Token linked_to: " puts
+  dup tk.linked_to 64-> dump
+
+end

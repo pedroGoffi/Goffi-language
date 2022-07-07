@@ -78,13 +78,13 @@ end
 #define cstr-> as 
   dup str-len swap     
 end
-#define str<- as 
-  dup rot swap
-  str.data	  swap 64<-
-  str.count	  swap 64<-
-   
+#define str<- as // ptr ptr
+  // dst src
+  over
+  str.count over str.count 64-> cast(int) ptr<-
+  str.data 64-> cast(int)
+  swap str.data swap ptr<-    
 end
-
 
 
 #define chop-word as 

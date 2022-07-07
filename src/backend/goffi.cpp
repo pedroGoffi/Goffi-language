@@ -35,7 +35,7 @@ static size_t addrCount = 0;
 namespace Goffi{
   void compile_program(std::vector<std::pair<VR, Token>>program, std::string outputFilePath){
 
-    assert(NUM_OF_OPERANDS == 42 && "Exhaustive time handling operand, please update the compile_program in ");
+    assert(NUM_OF_OPERANDS == 43 && "Exhaustive time handling operand, please update the compile_program in ");
   
     std::fstream out("out.asm", std::ios::out);
   
@@ -99,6 +99,9 @@ namespace Goffi{
   
     while( ip != program.end()){
       switch(ip->first.op){
+      case DUMP_STACK:
+	++ip;
+	break;
       case PUSH_LOCAL_MEM:
 	makeLabel;
 

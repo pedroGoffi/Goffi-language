@@ -78,28 +78,31 @@ namespace Lexer{
 	}
     }
     std::string Tokenize(std::string& word, Token_Type &op){
-	if( is_number(word)){
-            op = NUMBER;
-            return ("NUMERICAL_TYPE");
-        } else if (word == "+"){
-            op = BINARY_OPERAND;
-            return ("OP_PLUS");
-        } else if (word == "-"){
-            op = BINARY_OPERAND;
-            return ("OP_MINUS");
-        } else if (word == "*"){
-	    op = BINARY_OPERAND;
-	    return ("OP_MULT");
-	} else if (word == "<"){
-            op = BINARY_OPERAND;
-            return ("OP_CMP_LT");
-        } else if (word == ">"){
-            op = BINARY_OPERAND;
-            return ("OP_CMP_GT");
-	} else{
-            op = NAME;
-            return ("NAME_TYPE");
-        }
+      if( is_number(word)){
+	op = NUMBER;
+	return ("NUMERICAL_TYPE");
+      } else if (word == "+"){
+	op = BINARY_OPERAND;
+	return ("OP_PLUS");
+      } else if (word == "-"){
+	op = BINARY_OPERAND;
+	return ("OP_MINUS");
+      } else if (word == "*"){
+	op = BINARY_OPERAND;
+	return ("OP_MULT");
+      } else if (word == "="){
+	op = BINARY_OPERAND;
+	return ("OP_EQ");
+      } else if (word == "<"){
+	op = BINARY_OPERAND;
+	return ("OP_CMP_LT");
+      } else if (word == ">"){
+	op = BINARY_OPERAND;
+	return ("OP_CMP_GT");
+      } else{
+	op = NAME;
+	return ("NAME_TYPE");
+      }
     }
   auto parse_proc_args(
 		       std::vector<Token>::iterator& i)
@@ -170,11 +173,20 @@ namespace Lexer{
               auto a = mem_vec.back(); mem_vec.pop_back();auto b = mem_vec.back(); mem_vec.pop_back();
               mem_vec.push_back(b / a);
             }
+	    else if( i->head.atomName == "=" ){
+              auto a = mem_vec.back(); mem_vec.pop_back();auto b = mem_vec.back(); mem_vec.pop_back();
+              mem_vec.push_back(b == a);
+            }
           } 
           
           else if( SV::str_is_num(i->head.atomName) ){
             mem_vec.push_back(std::stoul(i->head.atomName));
           }
+	  else {
+	    fprintf(stderr, "%lu:%lu:ERROR: expected number or binary operation but got `%s`\n",
+		    i->head.atomIndexLine, i->head.atomIndex, i->head.atomName.c_str());
+	    exit(1);
+	  }
           ++i;
 	}
         if( mem_vec.size() > 1 ){
@@ -353,6 +365,14 @@ namespace Lexer{
 
 	    i->head.atomName = i->head.atomName.substr(1, i->head.atomName.length() - 2);
 	    std::fstream include_file(i->head.atomName, std::ios::in);
+	    if (!include_file.is_open()){
+	      fprintf(stderr, 
+		      "%lu:%lu: ERROR: could not open the include file `%s`\n",
+		      i->head.atomIndexLine,
+		      i->head.atomIndex,
+		      i->head.atomName.c_str());
+	      exit(1);
+	    }
 	    std::vector<Token> __include__content = Lexer::lex(include_file);
 	    for(auto& content: __include__content){
 	      result.push_back(content);
@@ -423,6 +443,7 @@ namespace Lexer{
 		  exit(1);
 		}
 	    }
+	   
 	    else{
 	      if(proc_args_context[proc_name].first.size() == 0 ){
 		printf("%lu:%lu: ERROR expected input data type of the procedure \n",
@@ -459,6 +480,55 @@ namespace Lexer{
  	    i->head.atomName = "__PROC_LEAVE";
 	    result.push_back(Token{.type=i->type, .head=i->head});
 	    
+	  }
+	  else if (i->head.atomName == "enum"){
+	    ++i;
+	    std::string enum_name = i->head.atomName;
+	    ++i;
+	    int enum_count = 0;
+	    while(i->head.atomName != "end"){
+	      std::string name_snapshot =
+		enum_name + "::" + i->head.atomName;
+	      // this will help to diferenciate from normal macros
+	      i->head.atomName = std::to_string(enum_count);
+	      i->type = NUMBER;
+	      Macros[name_snapshot] = std::vector<Token>{{
+		  .type = i->type,
+		  .head = i->head
+		}};
+	      ++enum_count;
+	      ++i;
+	    }
+	  }
+	  else if (i->head.atomName == "static_assert"){
+	    ++i;
+	    std::string message = i->head.atomName;
+	    ++i;
+	    std::vector<Token> assert_tokens;
+	    while(i->head.atomName != "end"){
+	      if( Macros.find(i->head.atomName) != Macros.end() ){
+		for(Token& tk: Macros[i->head.atomName]){
+		  extend_macro(assert_tokens, tk);
+		}
+	      }
+	      else{
+	        assert_tokens.push_back(Token{
+		    .type=i->type,
+		    .head=i->head
+		  });
+	      }
+	      ++i;
+	    }
+	    
+
+	    std::vector<uint64_t> assert_result = compiler_time_eval(assert_tokens);
+	    if(assert_result[0] != 1){
+	      printf("%lu:%lu: static assert error: %s\n",
+		     i->head.atomIndexLine,
+		     i->head.atomIndex,
+		     message.c_str());
+	      exit(1);
+	    }
 	  }
 	  else
 	  {

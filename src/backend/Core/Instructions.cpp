@@ -4,6 +4,7 @@
 #include <string>
 
 typedef enum{
+  DUMP_STACK,
   CALL_PROC,
   PUSH_LOCAL_MEM,
   ALLOC_LOCAL_MEM,

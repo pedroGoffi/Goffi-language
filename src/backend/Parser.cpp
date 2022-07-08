@@ -16,6 +16,7 @@ std::string current_proc;
 typedef enum{
   ID_NOOP,
   ID_DUMP_STACK,
+  ID_STRUCT_ACCESS,
   ID_PUSH_LOCAL_MEM,
   ID_ALLOCATE_LOCAL_MEM,
   ID_PROC_ENTRY,
@@ -171,6 +172,9 @@ namespace Parser{
       else if( local_memories.find(id->head.atomName) != local_memories.end()){
 	return ID_PUSH_LOCAL_MEM;
       }
+      else if( struct_def.find(id->head.atomName) != struct_def.end()){
+	return ID_STRUCT_ACCESS;
+      }
       else{
 	fprintf(stderr, "%lu:%lu: Error: Unreachable identifier at `%s` in the Parsing stage.\n", 
 		id->head.atomIndexLine,
@@ -190,6 +194,21 @@ namespace Parser{
       case NAME:{                                        
 	Identifiers id = Parser::parseIdentifier(Node);
 	switch(id){
+	case ID_STRUCT_ACCESS: {
+	  ++Node;
+	  std::string access_type = Node->head.atomName;
+	  if( access_type != ":" && access_type != "->"){
+	    fprintf(stderr, "%lu:%lu: Error: you can only access struct with `:` or `->`, found `%s`\n",
+		    Node->head.atomIndexLine,
+		    Node->head.atomIndex,
+		    Node->head.atomName.c_str()
+		    );
+	    exit(1);	    
+	  }
+	  printf("ERROR: structs are not implemented yet\n");
+	  exit(1);
+	  break;
+	}
 	case ID_DUMP_STACK:
 	  output.push_back(VR{
 	      DUMP_STACK,

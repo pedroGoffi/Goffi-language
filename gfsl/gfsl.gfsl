@@ -25,12 +25,18 @@ do
   streq
 end
 // LEXER \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+
+
+proc push_to_token_list ptr -> void do
+  local _ptr sizeof(Token) end
+  64-> _ptr swap ptr<-
+
+end
 // BUGS: this will crash the program if the file is empty
 proc lex_file ptr -> void do 
   local fc sizeof(str) end
-  local token sizeof(Token) end
   
-
   dup str.count 64-> fc str.count swap ptr<-
       str.data  64-> fc str.data  swap ptr<-
   while fc str.count 64-> 0 > do
@@ -45,15 +51,17 @@ proc lex_file ptr -> void do
           f_line
           chop_word
 
- 	  local word sizeof(str) end
+ 	  local word sizeof(str)    end
+	  local token sizeof(Token) end
 	  dup str.data 64->  word str.data swap ptr<-	  
 	      str.count 64-> word str.count swap ptr<-
-	      
 
 
-	  "|"		puts
-	  word str->	putls
-	  "|\n"		puts
+	  token
+	  word
+	  save_token_from_word
+	  push_to_token_list
+	  
 
      end
      "------------------\n"	puts

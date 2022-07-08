@@ -50,6 +50,8 @@ static std::map<uint64_t , std::string> Words;
 static std::map<std::string, uint64_t> static_addresses;
 static std::map<std::string, int> proc_definitions;
 static std::map<std::string, std::pair<std::vector<Token>, std::vector<Token>>> proc_args_context;
+static std::map<std::string, std::vector<std::pair<std::string, std::string>>> struct_def;
+
 static std::string proc_context;
 // NOTE:
 //   local_memories[0] == mem_name
@@ -437,7 +439,7 @@ namespace Lexer{
 	      if(proc_args_context[proc_name].first.size() != 0
 		 || proc_args_context[proc_name].second.size() != 0)
 		{
-		  printf("%lu:%lu: ERROR the main function does not support input type or return type \n",
+		  printf("%lu:%lu: ERROR the main procedure does not support input type or return type \n",
 			 i->head.atomIndexLine,
 			 i->head.atomIndex);
 		  exit(1);
@@ -480,6 +482,33 @@ namespace Lexer{
  	    i->head.atomName = "__PROC_LEAVE";
 	    result.push_back(Token{.type=i->type, .head=i->head});
 	    
+	  }
+	  else if (i->head.atomName == "struct"){
+	    ++i;
+	    std::string struct_name = i->head.atomName;
+	    ++i;
+
+	    while(i->head.atomName != "end"){	      
+	      if(i->type != Token_Type::NAME){
+		fprintf(stderr,
+			"ERROR: expected name inside strut definition\n");
+		exit(1);
+	      }
+
+	      std::string struct_field = i->head.atomName; ++i;
+	      std::string struct_data_type  = i->head.atomName; ++i;
+
+	      struct_def[struct_name].push_back(
+                std::pair<std::string, std::string>{
+		  struct_field, struct_data_type
+	        });
+	    }
+	    printf("STRUCT: %s\n", struct_name.c_str());
+	    for(auto& p: struct_def[struct_name]){
+	      printf("STR: data %s, type: %s\n",
+		     p.first.c_str(), p.second.c_str());
+	      printf("----------------------------\n");
+	    }
 	  }
 	  else if (i->head.atomName == "enum"){
 	    ++i;

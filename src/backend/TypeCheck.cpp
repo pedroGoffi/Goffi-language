@@ -11,7 +11,7 @@
 #include "./Lexer.cpp"
 #define __token &ins[i].second
 
-
+static bool main_entry;
 static std::string        proc_ctx;
 static std::vector<Token> proc_args;
 static std::vector<Token> proc_ret;
@@ -19,7 +19,8 @@ static std::vector<Token> proc_ret;
 enum Types{
   INT,
   PTR,
-  BOOL
+  BOOL,
+  VOID
 };
 void dump_stack(std::vector<Types> *stack);
 std::vector<Types> string_to_type(std::string pname){
@@ -42,28 +43,62 @@ std::vector<Types> string_to_type(std::string pname){
   else{
     assert(false);
   }
-    return ret;
+  return ret;
+}
+std::vector<Types> string_to_return_type(std::string pname){
+  std::vector<Types> ret;
+  if(pname == "int"){
+    ret.push_back(Types::INT);
+  }
+  else if (pname == "str"){
+    ret.push_back(Types::INT);
+    ret.push_back(Types::PTR);
+  }
+  else if (pname == "bool"){
+    ret.push_back(Types::BOOL);
+  }
+  else if (pname == "ptr"){
+    ret.push_back(Types::PTR);
+  }    
+  else if (pname == "void"){
+    ret.push_back(Types::VOID);
+  }
+  else{
+    assert(false);
+  }
+  return ret;
 }
 bool check_for_proc_return(std::vector<Types>& stack)
 {
   std::vector<Types> return_expected_stack;
   for(auto& tk: proc_args_context[proc_ctx].second){
-    for(auto& type: string_to_type(tk.head.atomName)){
+    for(auto& type: string_to_return_type(tk.head.atomName)){
       return_expected_stack.push_back(type);
     }
   }
   std::reverse(return_expected_stack.begin(),
 	       return_expected_stack.end());
+
   for(auto& type: return_expected_stack){
-    if(stack.back() != type){
+    if(stack.back() != type && type != Types::VOID){
       printf("expected\t");
       dump_stack(&return_expected_stack);
       printf("got\t\t");
       dump_stack(&stack);
       return false;
     }
+    else if (type == Types::VOID){   
+      if(stack.size() != 0){
+    	printf("expected\t");
+    	dump_stack(&return_expected_stack);
+    	printf("got\t\t");
+    	dump_stack(&stack);
+    	return false;
+      }      
+    }
     stack.pop_back();
   }
+
   return true;
 }
 void extend_stack_for_proc_entry(std::vector<Types>& stack, std::string proc_name)
@@ -104,7 +139,6 @@ bool check_stack_for_proc_call(std::vector<Types>& stack, std::string proc_name)
     for(auto& type: string_to_type(tk.head.atomName))
       stack.push_back(type);
   }
-;
   return true;
   
 }
@@ -144,6 +178,8 @@ std::string Types_to_human_readable(Types type){
     return "pointer";
   case Types::BOOL:
     return "boolean";
+  case Types::VOID:
+    return "void";
   }
   assert(false && "unreachable");
 }
@@ -396,20 +432,11 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	break;
       }
     case OP_MEM:
-      {
-	stack.push_back(Types::PTR);
-	break;
-      }
-    case ARGC:
-      {
-	stack.push_back(Types::PTR);
-	break;
-      }
-    case ARGV:
-      {
-	stack.push_back(Types::PTR);
-	break;
-      }
+    case ARGC:      
+    case ARGV:{
+      stack.push_back(Types::PTR);
+      break;
+    }
     case DUP:
       {
 	if( stack.size() < 1){
@@ -635,19 +662,26 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
     case CALL_PROC:
       if(!check_stack_for_proc_call(stack, ins[i].first.op_string))
 	{
-	  compiler_error(__token, "Expected diferent data type in proc call");
+	  compiler_error(__token, "Expected diferent data type for call the procedure "
+			 + ins[i].first.op_string
+			 + " in the "
+			 + proc_ctx
+			 + " context"
+			 );
 	}
       break;
     case PROC_ENTRY:
+      if(ins[i].first.op_string == "main"){
+	main_entry = true;
+      }
       extend_stack_for_proc_entry(stack, ins[i].first.op_string);      
       break;
     case PROC_RETURN:
-      if(!check_for_proc_return(stack))
-	{
-	  compiler_error(__token, "Expected diferent data type in the return of the " + proc_ctx+ " procedure");
-	}
-      // empty the stack in function returns
-      // reason: trust me :3
+      if(!check_for_proc_return(stack)){
+	compiler_error(__token, "Expected diferent data type in the return of the "
+		       + proc_ctx
+		       + " context");
+      }
       stack = std::vector<Types>{};
       break;
     case DUMP_STACK:
@@ -667,6 +701,10 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
   }
   if( stack_snapshot.size() != 0 ){
     printf("ERROR: Unhandled data on the stack stack_snapshot this might be a bug on the type cheking\n");
+    exit(1);
+  }
+  if(!main_entry){
+    printf("ERROR: please define the `main` entry point\n");
     exit(1);
   }
 }

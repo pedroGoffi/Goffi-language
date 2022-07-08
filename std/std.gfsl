@@ -16,17 +16,17 @@
 #define FALSE as 0 cast(bool) end
 
 
-#define sizeof(bool)	  as 1      end
-#define sizeof(int8_t)	  as 1      end
-#define sizeof(int16_t)	  as 2      end
-#define sizeof(int32_t)    as 4      end
-#define sizeof(int64_t)    as 8      end
-#define sizeof(u64)       as 8      end
-#define sizeof(size_t)	  as 8      end
-#define sizeof(ptr)	  as 8      end
-#define sizeof(str)	  as 16	    end
-#define str.count	  as null + end
-#define str.data		  as 8 +    end
+#define sizeof(bool)	as 1      end
+#define sizeof(int8_t)	as 1      end
+#define sizeof(int16_t)	as 2      end
+#define sizeof(int32_t) as 4      end
+#define sizeof(int64_t) as 8      end
+#define sizeof(u64)     as 8      end
+#define sizeof(size_t)	as 8      end
+#define sizeof(ptr)	as 8      end
+#define sizeof(str)	as 16	  end
+#define str.count	as null + end
+#define str.data	as 8 +    end
 
 // --- sizeof structs used in self-hosting
 #define sizeof(stat)		 as 144	  end
@@ -57,11 +57,35 @@
 #define stat.st_ctim		 as 104	+ end
 #define sizeof(stat.st_ctim)	 as 16	  end
 // --- SOME USEFUL PROCS
-#define fputs  as write drop end
-#define eputs  as stderr fputs end
-#define puts   as stdout fputs end
-#define print  as dup dump end
-#define exit   as SYS_exit syscall1 drop end
+#define str-> as 
+  // accept a ptr to a struct SV as const char* data; size_t count end
+  dup  str.count  load64
+  swap str.data	  load64 cast(ptr)
+end
+// INPUT STREAM
+proc fcin int ptr int -> int do SYS_read syscall3 end
+proc cin  int ptr     -> int do stdin fcin end
+
+
+#define MAX_WORD_INPUT_CAP as 1024 end
+proc console.getLine ptr -> void do
+  local result MAX_WORD_INPUT_CAP end
+
+  MAX_WORD_INPUT_CAP
+  result
+  cin
+  if result over + 1 - load8 10 = do 1 - end
+  over str.count swap       store64
+  str.data result cast(int) store64
+   
+end
+// PRINT STREAM
+proc fputs  str int -> void	do write drop			end
+proc eputs  str     -> void	do stderr fputs			end
+proc puts   str     -> void	do stdout fputs			end
+proc putstr ptr     -> void     do str-> puts                   end
+proc print  int     -> int	do dup dump			end
+proc exit   int	    -> void	do SYS_exit syscall1 drop	end
 
 #define div as divmod drop end
 #define mod as divmod swap drop end
@@ -70,11 +94,7 @@
 
 
 // string   operation
-#define str-> as 
-  // accept a ptr to a struct SV as const char* data; size_t count end
-  dup  str.count  64->
-  swap str.data	  64-> 
-end
+
 #define cstr-> as 
   dup str-len swap     
 end
@@ -148,10 +168,10 @@ end
 end
 
 
-#define inc64 as 
+proc inc64 ptr -> void do
   dup 64-> 1 + 64<-
 end
-#define inc64-by as 
+proc inc64_by ptr int -> void do
   // ptr val
   over 64-> + 64<-
 end
@@ -170,27 +190,13 @@ end
   int-to-string puts 
 end
 
-#define assert as // here bool int string 
-  rot if false = do
-    rot  eputs 
-    ":"  eputs
-    eputs
-    1 exit
-  end
-end
-#define % as divmod swap drop end
+
 proc  nth_argv int -> ptr do
   8 * __argc cast(int) + cast(ptr) load64 cast(ptr)
 end
-#define argc as __argc 64-> end
-#define argv as __argv 64-> end
-#define not-implemented as 
-  // here str
-  swap				eputs
-  ":"				eputs
-				eputs
-  ": Is not implemented yet\n"	eputs
-end
+proc argc void -> int do __argc 64-> end
+proc argv void -> ptr do __argv 64-> cast(ptr) end
+
 //static cstreq-mem sizeof(bool) end
 #define __streq as 
   string.a  str<-
@@ -240,7 +246,7 @@ end
 //   file_string size
 //   ptr to the file string
 
-proc open_file ptr -> int ptr do
+proc open_file ptr -> str do
   local file_path       sizeof(str)  end
   local file_descriptor sizeof(ptr)  end
   local stat_buffer     sizeof(stat) end

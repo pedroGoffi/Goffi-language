@@ -491,8 +491,8 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
 	auto c = stack.back(); stack.pop_back();
 
 	stack.push_back(b);
-	stack.push_back(c);
 	stack.push_back(a);
+	stack.push_back(c);
 	
 	break;
       }
@@ -558,7 +558,8 @@ void type_checking_walk(std::vector<std::pair<VR, Token>> ins){
       }
     case OP_ELSE:
       {
-	stack_snapshot.pop_back();
+	stack = stack_snapshot.back();
+	stack_snapshot.pop_back();	
 	stack_snapshot.push_back(stack);
 	break;
       }
